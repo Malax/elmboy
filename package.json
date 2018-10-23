@@ -1,0 +1,27 @@
+{
+  "name": "elmboy",
+  "version": "1.0.0",
+  "description": "A Nintendo™ Game Boy™ Emulator written in Elm",
+  "main": "elmboy.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "start": "parcel src/index.html",
+    "postinstall": "parcel build src/index.html",
+    "test": "standard src/js && elm-format --validate src/elm"
+  },
+  "author": "",
+  "license": "AGPL-3.0-or-later",
+  "dependencies": {
+    "@fortawesome/fontawesome-free": "^5.4.1",
+    "bootstrap": "^4.0.0"
+  },
+  "devDependencies": {
+    "elm-format": "^0.8.1",
+    "node-elm-compiler": "^5.0.1",
+    "parcel-bundler": "^1.10.2",
+    "sass": "^1.14.1",
+    "standard": "^12.0.1"
+  }
+}

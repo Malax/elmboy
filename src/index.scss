@@ -1,0 +1,189 @@
+$fa-font-path: '../node_modules/@fortawesome/fontawesome-free/webfonts/';
+@import '~@fortawesome/fontawesome-free/scss/regular.scss';
+@import '~@fortawesome/fontawesome-free/scss/solid.scss';
+@import '~@fortawesome/fontawesome-free/scss/brands.scss';
+@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
+
+@import "~bootstrap/scss/bootstrap.scss";
+
+// Game Boy shades of green
+$color-darkest: rgb(15, 56, 15);
+$color-dark: rgb(48, 98, 48);
+$color-light: rgb(139, 172, 15);
+$color-lightest: rgb(155, 188, 15);
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .links {
+    display: flex;
+    flex-wrap: nowrap;
+    margin-left: 50px;
+
+    > a {
+      display: inline-block;
+      color: $gray-600;
+
+      &:not(:last-child) {
+        margin-right: 15px;
+      }
+
+      &:hover, &:focus {
+        color: black;
+      }
+    }
+  }
+
+  @include media-breakpoint-down('md') {
+    small {
+      font-size: .4em;
+    }
+  }
+}
+
+.custom-column-layout {
+  display: flex;
+
+  &> *:first-child {
+    flex: 0 0 auto;
+  }
+
+  &> *:last-child {
+    flex: 1 1 auto;
+    margin-left: 35px;
+  }
+
+  @include media-breakpoint-down('md') {
+    flex-direction: column;
+    align-items: center;
+
+    &> *:last-child {
+      margin-top: 40px;
+      margin-left: 0;
+    }
+  }
+
+}
+
+.project-description {
+  font-size: 18px;
+
+  a {
+    color: $color-light;
+
+    &:hover, &:focus {
+      color: $color-lightest;
+    }
+  }
+
+  kbd {
+    font-size: 14px;
+    color: #444444;
+    font-weight: normal;
+    font-style: normal;
+    text-align: center;
+    line-height: 1em;
+    text-shadow: 0 1px 0 #fff;
+    display: inline;
+    padding: .1em .55em;
+    border-radius: 4px;
+    background-clip: padding-box;
+    border: 1px solid #bbb;
+    background-color: #f7f7f7;
+    background-image: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0));
+    background-repeat: repeat-x;
+    box-shadow: 0px 2px 0 #bbbbbb, 0 3px 1px #999999, 0 3px 0 #bbbbbb, inset 0 1px 1px #ffffff, inset 0 -1px 3px #cccccc;
+  }
+}
+
+.screen-wrapper {
+  width: 160px * 3;
+  height: 144px * 3;
+  box-sizing: content-box;
+
+  border: 5px solid $gray-200;
+  border-radius: 2px;
+
+  background: $color-lightest;
+
+  image-rendering: pixelated; // For Chrome
+  image-rendering: -moz-crisp-edges; // For Firefox
+
+  @include media-breakpoint-down('xs') {
+    width: 160px * 2;
+    height: 144px * 2;
+  }
+}
+
+.screen-canvas {
+  width: 100%;
+  height: 100%;
+}
+
+.rom-selector {
+  width: 100%;
+  height: 100%;
+  position: relative;
+
+  input {
+    visibility: hidden;
+    position: absolute;
+    top: 0;
+    left: 0;
+  }
+
+  label {
+    cursor: pointer;
+    color: $color-dark;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+
+    &:before {
+      content: ' ';
+      background-image: url('../assets/cartridge.png');
+      background-size: cover;
+      background-repeat: no-repeat;
+      background-position: center;
+      width: 75%;
+      height: 75%;
+
+      animation: cartrige-hover 4s infinite;
+    }
+  }
+
+  @keyframes cartrige-hover {
+    0% {
+      transform: translateY(-50px);
+    }
+    40% {
+      transform: translateY(0);
+    }
+    100% {
+      transform: translateY(-50px);
+    }
+  }
+}
+
+.emulation-toolbar {
+  border: 1px solid $gray-300;
+  border-radius: 5px;
+  background-color: $gray-100;
+
+  margin-top: 5px;
+  padding: 10px 15px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  .fps-counter {
+    color: $gray-600;
+    user-select: none;
+  }
+}

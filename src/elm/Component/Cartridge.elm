@@ -1,0 +1,100 @@
+module Component.Cartridge exposing (Cartridge, fromBytes, readWord8, writeWord8)
+
+import Array exposing (Array)
+import Bitwise
+import Component.RAM as RAM exposing (RAM)
+import Hex
+import RomMetadata
+import Types exposing (MemoryAddress)
+import Util
+
+
+type Cartridge
+    = NoMBC (Array Int)
+    | MBC1 { ramEnabled : Bool, bank1 : Int, bank2 : Int, mode : Int, ram : RAM } (Array Int)
+
+
+fromBytes : Array Int -> Maybe Cartridge
+fromBytes romBytes =
+    case (RomMetadata.fromBytes romBytes).cartridgeType of
+        RomMetadata.RomOnly ->
+            Just (NoMBC romBytes)
+
+        RomMetadata.MBC1 ->
+            Just (initMbc1 romBytes)
+
+        RomMetadata.MBC1Ram ->
+            Just (initMbc1 romBytes)
+
+        RomMetadata.MBC1RamBattery ->
+            Just (initMbc1 romBytes)
+
+        _ ->
+            Nothing
+
+
+readWord8 : Cartridge -> MemoryAddress -> Int
+readWord8 cartridge address =
+    case cartridge of
+        NoMBC array ->
+            Array.get address array
+                |> Maybe.withDefault 0xFF
+
+        MBC1 { ramEnabled, bank1, bank2, mode, ram } array ->
+            if address <= 0x3FFF then
+                Array.get address array |> Maybe.withDefault 0xFF
+
+            else if address >= 0x4000 && address <= 0x7FFF then
+                let
+                    romBank =
+                        Bitwise.or (Bitwise.shiftLeftBy 5 bank2) bank1
+                in
+                Array.get ((address - 0x4000) + (0x4000 * romBank)) array |> Maybe.withDefault 0xFF
+
+            else if address >= 0xA000 && address <= 0xBFFF && ramEnabled then
+                RAM.readWord8 ram (address - 0xA000)
+
+            else
+                0xFF
+
+
+writeWord8 : MemoryAddress -> Int -> Cartridge -> Cartridge
+writeWord8 address value cartridge =
+    case cartridge of
+        NoMBC _ ->
+            cartridge
+
+        MBC1 mbc1Data array ->
+            if address <= 0x1FFF then
+                MBC1 { mbc1Data | ramEnabled = Bitwise.and 0x0F value == 0x0A } array
+
+            else if address >= 0x2000 && address <= 0x3FFF then
+                let
+                    maskedValue =
+                        Bitwise.and 0x1F value
+
+                    sanitizedMaskedValue =
+                        if maskedValue == 0x00 then
+                            0x01
+
+                        else
+                            maskedValue
+                in
+                MBC1 { mbc1Data | bank1 = sanitizedMaskedValue } array
+
+            else if address >= 0x4000 && address <= 0x5FFF then
+                MBC1 { mbc1Data | bank2 = Bitwise.and 0x03 value } array
+
+            else if address >= 0x6000 && address <= 0x7FFF then
+                MBC1 { mbc1Data | mode = Bitwise.and 0x01 value } array
+
+            else if address >= 0xA000 && address <= 0xBFFF && mbc1Data.ramEnabled then
+                MBC1 { mbc1Data | ram = RAM.writeWord8 (address - 0xA000) value mbc1Data.ram } array
+
+            else
+                cartridge
+
+
+initMbc1 : Array Int -> Cartridge
+initMbc1 romBytes =
+    MBC1 { ramEnabled = False, bank1 = 0x00, bank2 = 0x00, mode = 0x00, ram = RAM.initZero 0x2000 } romBytes
