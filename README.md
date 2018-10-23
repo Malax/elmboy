@@ -1,5 +1,7 @@
 # Elmboy
-A work in progress Game Boy emulator written in pure Elm.
+A work in progress Game Boy emulator written in pure Elm. 
+
+Try it out here: [https://malax.github.io/elmboy](https://malax.github.io/elmboy)
 
 ![The Legend of Zelda: Link's Awakening Gameplay](https://raw.githubusercontent.com/Malax/elmboy/master/readme-assets/zelda.png)
 ![Kirby's Dreamland Gameplay](https://raw.githubusercontent.com/Malax/elmboy/master/readme-assets/kirby.png)
