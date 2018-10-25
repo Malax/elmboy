@@ -143,7 +143,7 @@ writeWord8 address value ({ cpu } as gameBoy) =
 
     else if address >= 0x8000 && address <= 0x9FFF then
         -- VRAM
-        { gameBoy | ppu = PPU.writeVRAM (address - 0x8000) sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeVRAM (address - 0x8000) sanitizedValue gameBoy.ppu) gameBoy
 
     else if address >= 0xA000 && address <= 0xBFFF then
         -- Cartridge RAM
@@ -151,30 +151,30 @@ writeWord8 address value ({ cpu } as gameBoy) =
 
     else if address >= 0xC000 && address <= 0xCFFF then
         -- Work RAM Bank 0
-        { gameBoy | workRamBank0 = RAM.writeWord8 (address - 0xC000) sanitizedValue gameBoy.workRamBank0 }
+        setWorkRamBank0 (RAM.writeWord8 (address - 0xC000) sanitizedValue gameBoy.workRamBank0) gameBoy
 
     else if address >= 0xD000 && address <= 0xDFFF then
         -- Work RAM Bank 1
-        { gameBoy | workRamBank1 = RAM.writeWord8 (address - 0xD000) sanitizedValue gameBoy.workRamBank1 }
+        setWorkRamBank1 (RAM.writeWord8 (address - 0xD000) sanitizedValue gameBoy.workRamBank1) gameBoy
 
     else if address >= 0xE000 && address <= 0xEFFF then
         -- Work RAM Bank 0 (Mirror)
-        { gameBoy | workRamBank0 = RAM.writeWord8 (address - 0xE000) sanitizedValue gameBoy.workRamBank0 }
+        setWorkRamBank0 (RAM.writeWord8 (address - 0xE000) sanitizedValue gameBoy.workRamBank0) gameBoy
 
     else if address >= 0xF000 && address <= 0xFDFF then
         -- Work RAM Bank 1 (Partial Mirror)
-        { gameBoy | workRamBank1 = RAM.writeWord8 (address - 0xF000) sanitizedValue gameBoy.workRamBank1 }
+        setWorkRamBank1 (RAM.writeWord8 (address - 0xF000) sanitizedValue gameBoy.workRamBank1) gameBoy
 
     else if address >= 0xFE00 && address <= 0xFE9F then
         -- OAM
-        { gameBoy | ppu = PPU.writeOAMRam (address - 0xFE00) sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeOAMRam (address - 0xFE00) sanitizedValue gameBoy.ppu) gameBoy
 
     else if address >= 0xFF80 && address <= 0xFFFE then
         -- HRAM
-        { gameBoy | hram = RAM.writeWord8 (address - 0xFF80) sanitizedValue gameBoy.hram }
+        setHRAM (RAM.writeWord8 (address - 0xFF80) sanitizedValue gameBoy.hram) gameBoy
 
     else if address == 0xFF00 then
-        { gameBoy | joypad = Joypad.writeRegister sanitizedValue gameBoy.joypad }
+        setJoypad (Joypad.writeRegister sanitizedValue gameBoy.joypad) gameBoy
 
     else if address == 0xFF04 then
         { gameBoy | timer = Timer.writeDiv sanitizedValue gameBoy.timer }
@@ -189,40 +189,40 @@ writeWord8 address value ({ cpu } as gameBoy) =
         { gameBoy | timer = Timer.writeTac sanitizedValue gameBoy.timer }
 
     else if address == 0xFF40 then
-        { gameBoy | ppu = PPU.writeLCDC sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeLCDC sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF41 then
-        { gameBoy | ppu = PPU.writeLCDStatus sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeLCDStatus sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF42 then
-        { gameBoy | ppu = PPU.writeScrollY sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeScrollY sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF43 then
-        { gameBoy | ppu = PPU.writeScrollX sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeScrollX sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF44 then
-        { gameBoy | ppu = PPU.writeLY sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeLY sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF45 then
-        { gameBoy | ppu = PPU.writeLYC sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeLYC sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF46 then
         oamDMATransfer sanitizedValue gameBoy
 
     else if address == 0xFF47 then
-        { gameBoy | ppu = PPU.writeBackgroundPalette sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeBackgroundPalette sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF48 then
-        { gameBoy | ppu = PPU.writeObjectPalette0 sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeObjectPalette0 sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF49 then
-        { gameBoy | ppu = PPU.writeObjectPalette1 sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeObjectPalette1 sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF4A then
-        { gameBoy | ppu = PPU.writeWindowY sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeWindowY sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF4B then
-        { gameBoy | ppu = PPU.writeWindowX sanitizedValue gameBoy.ppu }
+        setPPU (PPU.writeWindowX sanitizedValue gameBoy.ppu) gameBoy
 
     else if address == 0xFF50 then
         { gameBoy | bootRomDisabled = True }
@@ -295,3 +295,82 @@ oamDMATransfer byte gameBoy =
             readWord8Chunk gameBoy (Bitwise.shiftLeftBy 8 byte) (40 * 4)
     in
     { gameBoy | ppu = PPU.replaceOAMRam chunk gameBoy.ppu }
+
+
+
+-- Performance Helpers
+
+
+setPPU : PPU -> GameBoy -> GameBoy
+setPPU ppu gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setJoypad : Joypad -> GameBoy -> GameBoy
+setJoypad joypad gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setWorkRamBank0 : RAM -> GameBoy -> GameBoy
+setWorkRamBank0 ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = ram
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setWorkRamBank1 : RAM -> GameBoy -> GameBoy
+setWorkRamBank1 ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = ram
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setHRAM : RAM -> GameBoy -> GameBoy
+setHRAM ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = ram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
