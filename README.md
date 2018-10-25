@@ -1,4 +1,4 @@
-# Elmboy
+# Elmboy [![Build Status](https://travis-ci.org/Malax/elmboy.svg?branch=master)](https://travis-ci.org/Malax/elmboy)
 A work in progress Game Boy emulator written in pure Elm. 
 
 Try it out here: [https://malax.github.io/elmboy](https://malax.github.io/elmboy)
