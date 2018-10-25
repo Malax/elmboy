@@ -62,101 +62,275 @@ type Register16
 
 
 readRegister8 : Register8 -> CPU -> Int
-readRegister8 r8 { af, bc, de, hl, pc, sp } =
+readRegister8 r8 cpu =
     case r8 of
         A ->
-            shiftRightZfBy 8 af
+            shiftRightZfBy 8 cpu.af
 
         B ->
-            shiftRightZfBy 8 bc
+            shiftRightZfBy 8 cpu.bc
 
         C ->
-            and 0xFF bc
+            and 0xFF cpu.bc
 
         D ->
-            shiftRightZfBy 8 de
+            shiftRightZfBy 8 cpu.de
 
         E ->
-            and 0xFF de
+            and 0xFF cpu.de
 
         F ->
-            and 0xFF af
+            and 0xFF cpu.af
 
         H ->
-            shiftRightZfBy 8 hl
+            shiftRightZfBy 8 cpu.hl
 
         L ->
-            and 0xFF hl
+            and 0xFF cpu.hl
 
 
 readRegister16 : Register16 -> CPU -> Int
-readRegister16 r16 { af, bc, de, hl, pc, sp } =
+readRegister16 r16 cpu =
     case r16 of
         AF ->
-            af
+            cpu.af
 
         BC ->
-            bc
+            cpu.bc
 
         DE ->
-            de
+            cpu.de
 
         HL ->
-            hl
+            cpu.hl
 
         PC ->
-            pc
+            cpu.pc
 
         SP ->
-            sp
+            cpu.sp
+
+
+
+{- The following functions create new records instead of copying them. This increases performance up to 5000% in Firefox and 900% in Chrome.
+   Writing registers is a very common operation, that's why I made the tradeoff here.
+-}
 
 
 writeRegister8 : Register8 -> Int -> CPU -> CPU
-writeRegister8 r8 value ({ af, bc, de, hl, pc, sp } as cpu) =
+writeRegister8 r8 value { af, bc, de, hl, pc, sp, halted, interruptFlag, interruptEnable, interruptMasterEnable } =
     case r8 of
         A ->
-            { cpu | af = and 0xFF af |> or (shiftLeftBy 8 value) }
+            { af = and 0xFF af |> or (shiftLeftBy 8 value)
+
+            -- 1:1 Copies
+            , bc = bc
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         F ->
-            { cpu | af = and 0xFF00 af |> or value }
+            { af = and 0xFF00 af |> or value
+
+            -- 1:1 Copies
+            , bc = bc
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         B ->
-            { cpu | bc = and 0xFF bc |> or (shiftLeftBy 8 value) }
+            { bc = and 0xFF bc |> or (shiftLeftBy 8 value)
+
+            -- 1:1 Copies
+            , af = af
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         C ->
-            { cpu | bc = and 0xFF00 bc |> or value }
+            { bc = and 0xFF00 bc |> or value
+
+            -- 1:1 Copies
+            , af = af
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         D ->
-            { cpu | de = and 0xFF de |> or (shiftLeftBy 8 value) }
+            { de = and 0xFF de |> or (shiftLeftBy 8 value)
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         E ->
-            { cpu | de = and 0xFF00 de |> or value }
+            { de = and 0xFF00 de |> or value
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         H ->
-            { cpu | hl = and 0xFF hl |> or (shiftLeftBy 8 value) }
+            { hl = and 0xFF hl |> or (shiftLeftBy 8 value)
+
+            -- 1:1 Copies
+            , af = af
+            , de = de
+            , bc = bc
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         L ->
-            { cpu | hl = and 0xFF00 hl |> or value }
+            { hl = and 0xFF00 hl |> or value
+
+            -- 1:1 Copies
+            , af = af
+            , de = de
+            , bc = bc
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
 
 writeRegister16 : Register16 -> Int -> CPU -> CPU
-writeRegister16 r16 value cpu =
+writeRegister16 r16 value { af, bc, de, hl, pc, sp, halted, interruptFlag, interruptEnable, interruptMasterEnable } =
     case r16 of
         AF ->
             -- The lowest 4 bits are always discarded for the F register as per spec
-            { cpu | af = and 0xFFF0 value }
+            { af = and 0xFFF0 value
+
+            -- 1:1 Copies
+            , bc = bc
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         BC ->
-            { cpu | bc = and 0xFFFF value }
+            { bc = and 0xFFFF value
+
+            -- 1:1 Copies
+            , af = af
+            , de = de
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         DE ->
-            { cpu | de = and 0xFFFF value }
+            { de = and 0xFFFF value
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , hl = hl
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         HL ->
-            { cpu | hl = and 0xFFFF value }
+            { hl = and 0xFFFF value
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , de = de
+            , pc = pc
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         PC ->
-            { cpu | pc = and 0xFFFF value }
+            { pc = and 0xFFFF value
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , de = de
+            , hl = hl
+            , sp = sp
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
 
         SP ->
-            { cpu | sp = and 0xFFFF value }
+            { sp = and 0xFFFF value
+
+            -- 1:1 Copies
+            , af = af
+            , bc = bc
+            , de = de
+            , hl = hl
+            , pc = pc
+            , halted = halted
+            , interruptFlag = interruptFlag
+            , interruptEnable = interruptEnable
+            , interruptMasterEnable = interruptMasterEnable
+            }
