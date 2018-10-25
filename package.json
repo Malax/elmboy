@@ -8,7 +8,7 @@
   },
   "scripts": {
     "start": "parcel src/index.html",
-    "postinstall": "parcel build src/index.html",
+    "postinstall": "parcel build src/index.html --public-url=./",
     "test": "standard src/js && elm-format --validate src/elm"
   },
   "author": "",
