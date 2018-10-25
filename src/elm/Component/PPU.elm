@@ -316,12 +316,25 @@ emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame }
                 Nothing
 
         modifiedPPUData =
-            { ppu
-                | line = currentLine
-                , mode = currentMode
-                , cyclesSinceLastCompleteFrame = remainderBy cyclesPerFrame lastEmulatedCycle
-                , triggeredInterrupt = interrupt
-                , lcdStatus = lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus
+            { mode = currentMode
+            , vram = ppu.vram
+            , line = currentLine
+            , lineCompare = ppu.lineCompare
+            , scrollX = ppu.scrollX
+            , scrollY = ppu.scrollY
+            , windowX = ppu.windowX
+            , windowY = ppu.windowY
+            , objects = ppu.objects
+            , lcdc = ppu.lcdc
+            , lcdStatus = lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus
+            , backgroundPalette = ppu.backgroundPalette
+            , objectPalette0 = ppu.objectPalette0
+            , objectPalette1 = ppu.objectPalette1
+            , screen = ppu.screen
+            , lastCompleteFrame = ppu.lastCompleteFrame
+            , cyclesSinceLastCompleteFrame = remainderBy cyclesPerFrame lastEmulatedCycle
+            , triggeredInterrupt = interrupt
+            , omitFrame = ppu.omitFrame
             }
     in
     case ( mode, currentMode ) of
