@@ -1,11 +1,11 @@
-module Tests exposing (..)
+module Tests exposing (all, register16Test, register8Test, word16Fuzzer, word8Fuzzer)
 
-import Test exposing (..)
-import Fuzz exposing (Fuzzer)
-import Expect exposing (Expectation)
-import Data.Registers as Registers exposing (Registers, Register8(..), Register16(..))
-import Data.Word8 as Word8 exposing (Word8)
+import Data.Registers as Registers exposing (Register16(..), Register8(..), Registers)
 import Data.Word16 as Word16 exposing (Word16)
+import Data.Word8 as Word8 exposing (Word8)
+import Expect exposing (Expectation)
+import Fuzz exposing (Fuzzer)
+import Test exposing (..)
 
 
 all : Test
@@ -40,7 +40,7 @@ word16Fuzzer =
 
 register8Test : Register8 -> Test
 register8Test r8 =
-    fuzz word8Fuzzer ("Register " ++ (toString r8) ++ " should work") <|
+    fuzz word8Fuzzer ("Register " ++ toString r8 ++ " should work") <|
         \value ->
             Registers.init
                 |> Registers.writeRegister8 r8 value
@@ -50,7 +50,7 @@ register8Test r8 =
 
 register16Test : Register16 -> Test
 register16Test r16 =
-    fuzz word16Fuzzer ("Register " ++ (toString r16) ++ " should work") <|
+    fuzz word16Fuzzer ("Register " ++ toString r16 ++ " should work") <|
         \value ->
             Registers.init
                 |> Registers.writeRegister16 r16 value
