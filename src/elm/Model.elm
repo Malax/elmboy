@@ -21,4 +21,4 @@ type alias IdleModel =
 
 
 type alias EmulationModel =
-    { paused : Bool, lastFrameTime : Float, gameBoy : GameBoy }
+    { paused : Bool, frameTimes : List Float, gameBoy : GameBoy }

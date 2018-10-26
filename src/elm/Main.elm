@@ -32,7 +32,7 @@ update msg model =
                 FileDataReceived data ->
                     case Cartridge.fromBytes data of
                         Just cartridge ->
-                            ( Emulation { gameBoy = GameBoy.init cartridge, paused = False, lastFrameTime = 1000 / 60 }, Cmd.none )
+                            ( Emulation { gameBoy = GameBoy.init cartridge, paused = False, frameTimes = [] }, Cmd.none )
 
                         Nothing ->
                             let
@@ -61,7 +61,7 @@ update msg model =
                         gameBoy =
                             Emulator.emulateClocks (clocksPerSecond // 60) emulationModel.gameBoy
                     in
-                    ( Emulation { emulationModel | gameBoy = gameBoy, lastFrameTime = time }
+                    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes }
                     , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
                     )
 

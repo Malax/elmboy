@@ -127,8 +127,14 @@ emulationToolbar model =
             else
                 ButtonGroup.button [ Button.secondary, Button.onClick Pause ] [ i [ class "fa fa-pause" ] [] ]
 
+        frameCount =
+            toFloat (List.length model.frameTimes)
+
+        totalTime =
+            List.sum model.frameTimes
+
         fps =
-            (1000 / model.lastFrameTime) |> round |> String.fromInt |> (\value -> value ++ " FPS")
+            frameCount / (totalTime / 1000) |> round |> String.fromInt |> (\value -> value ++ " FPS")
     in
     div [ class "emulation-toolbar" ]
         [ ButtonGroup.buttonGroup []
