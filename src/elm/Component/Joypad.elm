@@ -97,68 +97,7 @@ writeRegister value joypad =
 
 
 
--- Utilities
-
-
-conditionalBitmask : Bool -> Int -> Int
-conditionalBitmask condition bitmask =
-    if condition then
-        bitmask
-
-    else
-        0x00
-
-
-
--- Direction Key Bitmasks
-
-
-joypadRightBitmask : Int
-joypadRightBitmask =
-    0x01
-
-
-joypadLeftBitmask : Int
-joypadLeftBitmask =
-    Bitwise.shiftLeftBy 1 0x01
-
-
-joypadUpBitmask : Int
-joypadUpBitmask =
-    Bitwise.shiftLeftBy 2 0x01
-
-
-joypadDownBitmask : Int
-joypadDownBitmask =
-    Bitwise.shiftLeftBy 3 0x01
-
-
-
--- Button Key Bitmasks
-
-
-joypadABitmask : Int
-joypadABitmask =
-    0x01
-
-
-joypadBBitmask : Int
-joypadBBitmask =
-    Bitwise.shiftLeftBy 1 0x01
-
-
-joypadSelectBitmask : Int
-joypadSelectBitmask =
-    Bitwise.shiftLeftBy 2 0x01
-
-
-joypadStartBitmask : Int
-joypadStartBitmask =
-    Bitwise.shiftLeftBy 3 0x01
-
-
-
--- Performance Helpers
+-- Performance Optimized Setters
 
 
 setSelectDirectionKeys : Bool -> Joypad -> Joypad
@@ -309,3 +248,64 @@ setSelectPressed value joypad =
     , startPressed = joypad.startPressed
     , selectPressed = value
     }
+
+
+
+-- Utilities
+
+
+conditionalBitmask : Bool -> Int -> Int
+conditionalBitmask condition bitmask =
+    if condition then
+        bitmask
+
+    else
+        0x00
+
+
+
+-- Direction Key Bitmasks
+
+
+joypadRightBitmask : Int
+joypadRightBitmask =
+    0x01
+
+
+joypadLeftBitmask : Int
+joypadLeftBitmask =
+    Bitwise.shiftLeftBy 1 0x01
+
+
+joypadUpBitmask : Int
+joypadUpBitmask =
+    Bitwise.shiftLeftBy 2 0x01
+
+
+joypadDownBitmask : Int
+joypadDownBitmask =
+    Bitwise.shiftLeftBy 3 0x01
+
+
+
+-- Button Key Bitmasks
+
+
+joypadABitmask : Int
+joypadABitmask =
+    0x01
+
+
+joypadBBitmask : Int
+joypadBBitmask =
+    Bitwise.shiftLeftBy 1 0x01
+
+
+joypadSelectBitmask : Int
+joypadSelectBitmask =
+    Bitwise.shiftLeftBy 2 0x01
+
+
+joypadStartBitmask : Int
+joypadStartBitmask =
+    Bitwise.shiftLeftBy 3 0x01

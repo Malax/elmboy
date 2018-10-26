@@ -2,11 +2,14 @@ module GameBoy exposing
     ( GameBoy
     , init
     , setButtonStatus
+    , setCPU
     , setCPUAndCycles
+    , setCPULastCycleClocks
     , setCartridge
     , setComponents
     , setHRAM
     , setJoypad
+    , setLastCycleClocks
     , setPPU
     , setTimer
     , setWorkRamBank0
@@ -87,7 +90,7 @@ setButtonStatus button status gameBoy =
 
 
 
--- Performance Helpers
+-- Performance Optimized Setters
 
 
 setPPU : PPU -> GameBoy -> GameBoy
@@ -222,4 +225,49 @@ setCartridge cartridge gameBoy =
     , cartridge = cartridge
     , joypad = gameBoy.joypad
     , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setCPU : CPU -> GameBoy -> GameBoy
+setCPU cpu gameBoy =
+    { cpu = cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setLastCycleClocks : Int -> GameBoy -> GameBoy
+setLastCycleClocks lastCycleClocks gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = lastCycleClocks
+    }
+
+
+setCPULastCycleClocks : CPU -> Int -> GameBoy -> GameBoy
+setCPULastCycleClocks cpu lastCycleClocks gameBoy =
+    { cpu = cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = lastCycleClocks
     }

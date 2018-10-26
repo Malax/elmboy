@@ -85,12 +85,13 @@ emulateClocks cycles ({ divAcc, tac, timaAcc, tima, tma, div } as timer) =
             else
                 updatedTima
     in
-    { timer
-        | div = updatedDiv
-        , tima = updatedFinalTima
-        , divAcc = remainderBy (cyclesPerSecond // divSpeed) updatedDivAcc
-        , timaAcc = remainderBy timaCyclesPerIncrement updatedFinalTima
-        , triggeredInterrupt = updatedTima > 0xFF
+    { div = updatedDiv
+    , divAcc = remainderBy (cyclesPerSecond // divSpeed) updatedDivAcc
+    , tima = updatedFinalTima
+    , timaAcc = remainderBy timaCyclesPerIncrement updatedFinalTima
+    , tma = timer.tma
+    , tac = timer.tac
+    , triggeredInterrupt = updatedTima > 0xFF
     }
 
 
@@ -125,23 +126,51 @@ readTac { tac } =
 writeDiv : Int -> Timer -> Timer
 writeDiv _ timer =
     -- Writing will always reset to 0x00, regadless of actual written value
-    { timer | div = 0x00 }
+    { div = 0x00
+    , divAcc = timer.divAcc
+    , tima = timer.tima
+    , timaAcc = timer.timaAcc
+    , tma = timer.tma
+    , tac = timer.tac
+    , triggeredInterrupt = timer.triggeredInterrupt
+    }
 
 
 writeTima : Int -> Timer -> Timer
 writeTima value timer =
-    { timer | tima = value }
+    { div = timer.div
+    , divAcc = timer.divAcc
+    , tima = value
+    , timaAcc = timer.timaAcc
+    , tma = timer.tma
+    , tac = timer.tac
+    , triggeredInterrupt = timer.triggeredInterrupt
+    }
 
 
 writeTma : Int -> Timer -> Timer
 writeTma value timer =
-    { timer | tma = value }
+    { div = timer.div
+    , divAcc = timer.divAcc
+    , tima = timer.tima
+    , timaAcc = timer.timaAcc
+    , tma = value
+    , tac = timer.tac
+    , triggeredInterrupt = timer.triggeredInterrupt
+    }
 
 
 writeTac : Int -> Timer -> Timer
 writeTac value timer =
     -- TODO: Do we have to reset the accumulators on changing freqs?
-    { timer | tac = value, timaAcc = 0x00 }
+    { div = timer.div
+    , divAcc = timer.divAcc
+    , tima = timer.tima
+    , timaAcc = 0x00
+    , tma = value
+    , tac = timer.tac
+    , triggeredInterrupt = timer.triggeredInterrupt
+    }
 
 
 

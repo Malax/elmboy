@@ -137,10 +137,10 @@ handleNextInterrupt ({ cpu } as gameBoy) =
 
 
 performInterrupt : Int -> Int -> Effect
-performInterrupt isrAddress modifiedInterruptFlag ({ cpu } as gameBoy) =
+performInterrupt isrAddress modifiedInterruptFlag gameBoy =
     let
         modifiedGameBoy =
-            { gameBoy | cpu = { cpu | interruptMasterEnable = False, interruptFlag = modifiedInterruptFlag, halted = False } }
+            GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu) gameBoy
     in
     modifiedGameBoy |> Opcode.push (readRegister16 PC) |> writeRegister16 PC isrAddress
 

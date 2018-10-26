@@ -5,6 +5,8 @@ module Component.CPU exposing
     , init
     , readRegister16
     , readRegister8
+    , setHalted
+    , setInterruptData
     , setInterruptEnable
     , setInterruptFlag
     , setInterruptMasterEnable
@@ -381,4 +383,34 @@ setInterruptMasterEnable value cpu =
     , interruptFlag = cpu.interruptFlag
     , interruptEnable = cpu.interruptEnable
     , interruptMasterEnable = value
+    }
+
+
+setHalted : Bool -> CPU -> CPU
+setHalted value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = value
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+setInterruptData : Bool -> Int -> Bool -> CPU -> CPU
+setInterruptData interruptMasterEnable interruptFlag halted cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = halted
+    , interruptFlag = interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = interruptMasterEnable
     }

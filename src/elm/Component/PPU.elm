@@ -38,9 +38,8 @@ import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.LineDrawing as LineDrawing
 import Component.PPU.OAM exposing (foldRIndexes, searchVisibleObjects)
-import Component.PPU.PerformanceHacks as PerformanceHacks
 import Component.PPU.Pixel as Pixel exposing (..)
-import Component.PPU.Types exposing (Mode(..), PPU, PPUInterrupt(..))
+import Component.PPU.Types as PPUTypes exposing (Mode(..), PPU, PPUInterrupt(..))
 import Component.RAM as RAM exposing (RAM)
 import Types exposing (MemoryAddress)
 import Util
@@ -155,32 +154,32 @@ readOamRam { objects } address =
 
 writeLCDC : Int -> PPU -> PPU
 writeLCDC =
-    PerformanceHacks.setLcdc
+    PPUTypes.setLcdc
 
 
 writeLCDStatus : Int -> PPU -> PPU
 writeLCDStatus =
-    PerformanceHacks.setLcdStatus
+    PPUTypes.setLcdStatus
 
 
 writeScrollX : Int -> PPU -> PPU
 writeScrollX =
-    PerformanceHacks.setScrollX
+    PPUTypes.setScrollX
 
 
 writeScrollY : Int -> PPU -> PPU
 writeScrollY =
-    PerformanceHacks.setScrollY
+    PPUTypes.setScrollY
 
 
 writeWindowX : Int -> PPU -> PPU
 writeWindowX =
-    PerformanceHacks.setWindowX
+    PPUTypes.setWindowX
 
 
 writeWindowY : Int -> PPU -> PPU
 writeWindowY =
-    PerformanceHacks.setWindowY
+    PPUTypes.setWindowY
 
 
 writeLY : Int -> PPU -> PPU
@@ -191,22 +190,22 @@ writeLY _ ppu =
 
 writeLYC : Int -> PPU -> PPU
 writeLYC =
-    PerformanceHacks.setLineCompare
+    PPUTypes.setLineCompare
 
 
 writeBackgroundPalette : Int -> PPU -> PPU
 writeBackgroundPalette =
-    PerformanceHacks.setBackgroundPalette
+    PPUTypes.setBackgroundPalette
 
 
 writeObjectPalette0 : Int -> PPU -> PPU
 writeObjectPalette0 =
-    PerformanceHacks.setObjectPalette0
+    PPUTypes.setObjectPalette0
 
 
 writeObjectPalette1 : Int -> PPU -> PPU
 writeObjectPalette1 =
-    PerformanceHacks.setObjectPalette1
+    PPUTypes.setObjectPalette1
 
 
 
@@ -215,18 +214,18 @@ writeObjectPalette1 =
 
 writeVRAM : MemoryAddress -> Int -> PPU -> PPU
 writeVRAM address value ppu =
-    PerformanceHacks.setVram (RAM.writeWord8 address value ppu.vram) ppu
+    PPUTypes.setVram (RAM.writeWord8 address value ppu.vram) ppu
 
 
 writeOAMRam : MemoryAddress -> Int -> PPU -> PPU
 writeOAMRam address value ppu =
-    PerformanceHacks.setOamRam (Array.set address value ppu.objects) ppu
+    PPUTypes.setOamRam (Array.set address value ppu.objects) ppu
 
 
 replaceOAMRam : List Int -> PPU -> PPU
 replaceOAMRam bytes ppu =
     if List.length bytes == (40 * 4) then
-        PerformanceHacks.setOamRam (Array.fromList bytes) ppu
+        PPUTypes.setOamRam (Array.fromList bytes) ppu
 
     else
         ppu
@@ -317,26 +316,13 @@ emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame }
                 Nothing
 
         modifiedPPUData =
-            { mode = currentMode
-            , vram = ppu.vram
-            , line = currentLine
-            , lineCompare = ppu.lineCompare
-            , scrollX = ppu.scrollX
-            , scrollY = ppu.scrollY
-            , windowX = ppu.windowX
-            , windowY = ppu.windowY
-            , objects = ppu.objects
-            , lcdc = ppu.lcdc
-            , lcdStatus = lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus
-            , backgroundPalette = ppu.backgroundPalette
-            , objectPalette0 = ppu.objectPalette0
-            , objectPalette1 = ppu.objectPalette1
-            , screen = ppu.screen
-            , lastCompleteFrame = ppu.lastCompleteFrame
-            , cyclesSinceLastCompleteFrame = remainderBy cyclesPerFrame lastEmulatedCycle
-            , triggeredInterrupt = interrupt
-            , omitFrame = ppu.omitFrame
-            }
+            PPUTypes.setClockData
+                currentMode
+                currentLine
+                (lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus)
+                (remainderBy cyclesPerFrame lastEmulatedCycle)
+                interrupt
+                ppu
     in
     case ( mode, currentMode ) of
         ( PixelTransfer, HBlank ) ->
@@ -348,10 +334,10 @@ emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame }
 
         ( HBlank, VBlank ) ->
             if not omitFrame then
-                PerformanceHacks.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True (Just VBlankInterrupt) modifiedPPUData
 
             else
-                PerformanceHacks.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False (Just VBlankInterrupt) modifiedPPUData
 
         _ ->
             modifiedPPUData

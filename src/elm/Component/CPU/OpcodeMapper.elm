@@ -7,6 +7,7 @@ import Component.CPU.Opcode as HighLevelOpcode
 import Component.MMU as MMU
 import CoreEffect exposing (..)
 import Effect exposing (..)
+import GameBoy
 
 
 get : Int -> Effect
@@ -1090,7 +1091,7 @@ readIndirectHLPostIncrement gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue + 1) gameBoy.cpu
     in
-    ( MMU.readWord8 gameBoy hlValue, { gameBoy | cpu = updatedCpu } )
+    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPU updatedCpu gameBoy )
 
 
 readIndirectHLPostDecrement : Reader Int
@@ -1102,7 +1103,7 @@ readIndirectHLPostDecrement gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue - 1) gameBoy.cpu
     in
-    ( MMU.readWord8 gameBoy hlValue, { gameBoy | cpu = updatedCpu } )
+    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPU updatedCpu gameBoy )
 
 
 writeIndirectHLPostIncrement : Writer Int
@@ -1117,7 +1118,7 @@ writeIndirectHLPostIncrement value gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue + 1) updatedGameBoy.cpu
     in
-    { updatedGameBoy | cpu = updatedCpu }
+    GameBoy.setCPU updatedCpu updatedGameBoy
 
 
 writeIndirectHLPostDecrement : Writer Int
@@ -1132,7 +1133,7 @@ writeIndirectHLPostDecrement value gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue - 1) updatedGameBoy.cpu
     in
-    { updatedGameBoy | cpu = updatedCpu }
+    GameBoy.setCPU updatedCpu updatedGameBoy
 
 
 
@@ -1141,4 +1142,9 @@ writeIndirectHLPostDecrement value gameBoy =
 
 asZeroPageAddress : Reader Int -> Reader Int
 asZeroPageAddress =
-    mapReader (\v -> v + 0xFF00)
+    mapReader addZeroPageOffset
+
+
+addZeroPageOffset : Int -> Int
+addZeroPageOffset value =
+    value + 0xFF00

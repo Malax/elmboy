@@ -32,7 +32,7 @@ functional code in some cases due to performance.
 - Game Boy Color support
 
 ## Performance
-In its current state, the emulator runs at about 50% speed compared to an original Game Boy. 
+In its current state, the emulator runs at about 80% speed compared to an original Game Boy. 
 This is on my MacBook Pro (Mid 2015, 2.5 GHz Intel Core i7, 16 GB RAM), running Chrome 69.0.3497.100. Performance in Firefox is even worse,
 Chrome seems to have a better performing JIT for this project.
 

@@ -55,6 +55,7 @@ import Component.CPU.FlagRegister as FlagRegister exposing (FlagDelta(..), Flags
 import Component.MMU as MMU
 import CoreEffect exposing (..)
 import Effect exposing (..)
+import GameBoy
 import Util
 
 
@@ -375,13 +376,13 @@ ccf =
 
 
 ei : Effect
-ei ({ cpu } as gameBoy) =
-    { gameBoy | cpu = { cpu | interruptMasterEnable = True } }
+ei gameBoy =
+    GameBoy.setCPU (CPU.setInterruptMasterEnable True gameBoy.cpu) gameBoy
 
 
 di : Effect
-di ({ cpu } as gameBoy) =
-    { gameBoy | cpu = { cpu | interruptMasterEnable = False } }
+di gameBoy =
+    GameBoy.setCPU (CPU.setInterruptMasterEnable False gameBoy.cpu) gameBoy
 
 
 daa : Effect
@@ -391,8 +392,8 @@ daa =
 
 
 halt : Effect
-halt ({ cpu } as gameBoy) =
-    { gameBoy | cpu = { cpu | halted = True } }
+halt gameBoy =
+    GameBoy.setCPU (CPU.setHalted True gameBoy.cpu) gameBoy
 
 
 extensionOpcode : (Int -> Effect) -> Effect
