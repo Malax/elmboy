@@ -3,10 +3,12 @@ module GameBoy exposing
     , init
     , setButtonStatus
     , setCPUAndCycles
+    , setCartridge
     , setComponents
     , setHRAM
     , setJoypad
     , setPPU
+    , setTimer
     , setWorkRamBank0
     , setWorkRamBank1
     )
@@ -190,4 +192,34 @@ setCPUAndCycles cpu cycles gameBoy =
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
     , lastCycleClocks = cycles
+    }
+
+
+setTimer : Timer -> GameBoy -> GameBoy
+setTimer timer gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setCartridge : Cartridge -> GameBoy -> GameBoy
+setCartridge cartridge gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
     }

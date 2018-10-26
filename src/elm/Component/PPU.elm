@@ -38,6 +38,7 @@ import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.LineDrawing as LineDrawing
 import Component.PPU.OAM exposing (foldRIndexes, searchVisibleObjects)
+import Component.PPU.PerformanceHacks as PerformanceHacks
 import Component.PPU.Pixel as Pixel exposing (..)
 import Component.PPU.Types exposing (Mode(..), PPU, PPUInterrupt(..))
 import Component.RAM as RAM exposing (RAM)
@@ -153,33 +154,33 @@ readOamRam { objects } address =
 
 
 writeLCDC : Int -> PPU -> PPU
-writeLCDC value ppu =
-    { ppu | lcdc = value }
+writeLCDC =
+    PerformanceHacks.setLcdc
 
 
 writeLCDStatus : Int -> PPU -> PPU
-writeLCDStatus value ppu =
-    { ppu | lcdStatus = value }
+writeLCDStatus =
+    PerformanceHacks.setLcdStatus
 
 
 writeScrollX : Int -> PPU -> PPU
-writeScrollX value ppu =
-    { ppu | scrollX = value }
+writeScrollX =
+    PerformanceHacks.setScrollX
 
 
 writeScrollY : Int -> PPU -> PPU
-writeScrollY value ppu =
-    { ppu | scrollY = value }
+writeScrollY =
+    PerformanceHacks.setScrollY
 
 
 writeWindowX : Int -> PPU -> PPU
-writeWindowX value ppu =
-    { ppu | windowX = value }
+writeWindowX =
+    PerformanceHacks.setWindowX
 
 
 writeWindowY : Int -> PPU -> PPU
-writeWindowY value ppu =
-    { ppu | windowY = value }
+writeWindowY =
+    PerformanceHacks.setWindowY
 
 
 writeLY : Int -> PPU -> PPU
@@ -189,23 +190,23 @@ writeLY _ ppu =
 
 
 writeLYC : Int -> PPU -> PPU
-writeLYC value ppu =
-    { ppu | lineCompare = value }
+writeLYC =
+    PerformanceHacks.setLineCompare
 
 
 writeBackgroundPalette : Int -> PPU -> PPU
-writeBackgroundPalette value ppu =
-    { ppu | backgroundPalette = value }
+writeBackgroundPalette =
+    PerformanceHacks.setBackgroundPalette
 
 
 writeObjectPalette0 : Int -> PPU -> PPU
-writeObjectPalette0 value ppu =
-    { ppu | objectPalette0 = value }
+writeObjectPalette0 =
+    PerformanceHacks.setObjectPalette0
 
 
 writeObjectPalette1 : Int -> PPU -> PPU
-writeObjectPalette1 value ppu =
-    { ppu | objectPalette1 = value }
+writeObjectPalette1 =
+    PerformanceHacks.setObjectPalette1
 
 
 
@@ -213,19 +214,19 @@ writeObjectPalette1 value ppu =
 
 
 writeVRAM : MemoryAddress -> Int -> PPU -> PPU
-writeVRAM address value ({ vram } as ppu) =
-    { ppu | vram = RAM.writeWord8 address value vram }
+writeVRAM address value ppu =
+    PerformanceHacks.setVram (RAM.writeWord8 address value ppu.vram) ppu
 
 
 writeOAMRam : MemoryAddress -> Int -> PPU -> PPU
-writeOAMRam address value ({ objects } as ppu) =
-    { ppu | objects = Array.set address value objects }
+writeOAMRam address value ppu =
+    PerformanceHacks.setOamRam (Array.set address value ppu.objects) ppu
 
 
 replaceOAMRam : List Int -> PPU -> PPU
 replaceOAMRam bytes ppu =
     if List.length bytes == (40 * 4) then
-        { ppu | objects = Array.fromList bytes }
+        PerformanceHacks.setOamRam (Array.fromList bytes) ppu
 
     else
         ppu
@@ -347,10 +348,10 @@ emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame }
 
         ( HBlank, VBlank ) ->
             if not omitFrame then
-                { modifiedPPUData | lastCompleteFrame = modifiedPPUData.screen, omitFrame = True, triggeredInterrupt = Just VBlankInterrupt }
+                PerformanceHacks.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True (Just VBlankInterrupt) modifiedPPUData
 
             else
-                { modifiedPPUData | screen = GameBoyScreen.empty, omitFrame = False, triggeredInterrupt = Just VBlankInterrupt }
+                PerformanceHacks.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False (Just VBlankInterrupt) modifiedPPUData
 
         _ ->
             modifiedPPUData

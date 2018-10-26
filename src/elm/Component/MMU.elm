@@ -139,7 +139,7 @@ writeWord8 address value ({ cpu } as gameBoy) =
     in
     if address <= 0x7FFF then
         -- Cartridge ROM, will be intercepted by a possible memory bank controller
-        { gameBoy | cartridge = Cartridge.writeWord8 address value gameBoy.cartridge }
+        GameBoy.setCartridge (Cartridge.writeWord8 address value gameBoy.cartridge) gameBoy
 
     else if address >= 0x8000 && address <= 0x9FFF then
         -- VRAM
@@ -147,7 +147,7 @@ writeWord8 address value ({ cpu } as gameBoy) =
 
     else if address >= 0xA000 && address <= 0xBFFF then
         -- Cartridge RAM
-        { gameBoy | cartridge = Cartridge.writeWord8 address value gameBoy.cartridge }
+        GameBoy.setCartridge (Cartridge.writeWord8 address value gameBoy.cartridge) gameBoy
 
     else if address >= 0xC000 && address <= 0xCFFF then
         -- Work RAM Bank 0
@@ -177,16 +177,16 @@ writeWord8 address value ({ cpu } as gameBoy) =
         GameBoy.setJoypad (Joypad.writeRegister sanitizedValue gameBoy.joypad) gameBoy
 
     else if address == 0xFF04 then
-        { gameBoy | timer = Timer.writeDiv sanitizedValue gameBoy.timer }
+        GameBoy.setTimer (Timer.writeDiv sanitizedValue gameBoy.timer) gameBoy
 
     else if address == 0xFF05 then
-        { gameBoy | timer = Timer.writeTima sanitizedValue gameBoy.timer }
+        GameBoy.setTimer (Timer.writeTima sanitizedValue gameBoy.timer) gameBoy
 
     else if address == 0xFF06 then
-        { gameBoy | timer = Timer.writeTma sanitizedValue gameBoy.timer }
+        GameBoy.setTimer (Timer.writeTma sanitizedValue gameBoy.timer) gameBoy
 
     else if address == 0xFF07 then
-        { gameBoy | timer = Timer.writeTac sanitizedValue gameBoy.timer }
+        GameBoy.setTimer (Timer.writeTac sanitizedValue gameBoy.timer) gameBoy
 
     else if address == 0xFF40 then
         GameBoy.setPPU (PPU.writeLCDC sanitizedValue gameBoy.ppu) gameBoy
@@ -294,4 +294,4 @@ oamDMATransfer byte gameBoy =
         chunk =
             readWord8Chunk gameBoy (Bitwise.shiftLeftBy 8 byte) (40 * 4)
     in
-    { gameBoy | ppu = PPU.replaceOAMRam chunk gameBoy.ppu }
+    GameBoy.setPPU (PPU.replaceOAMRam chunk gameBoy.ppu) gameBoy
