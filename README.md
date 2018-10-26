@@ -32,12 +32,9 @@ functional code in some cases due to performance.
 - Game Boy Color support
 
 ## Performance
-In its current state, the emulator runs at about 80% speed compared to an original Game Boy. 
-This is on my MacBook Pro (Mid 2015, 2.5 GHz Intel Core i7, 16 GB RAM), running Chrome 69.0.3497.100. Performance in Firefox is even worse,
+In its current state, the emulator runs at about 95% speed compared to an original Game Boy. 
+This is on my MacBook Pro (Mid 2015, 2.5 GHz Intel Core i7, 16 GB RAM), running Chrome 69.0.3497.100. Performance in Firefox is worse,
 Chrome seems to have a better performing JIT for this project.
-
-The main issue seems to be the very frequent state updates (100k+ times per second) which always require a record copy which tends the be quite slow. To
-mitigate the issue, the amount of state changes needs to be minimised as much as possible, probably requiring a serious overhaul of the whole codebase.
 
 I already refactored the codebase several times for performance, removing a lot of abstractions that made the code a lot nicer but performed worse than the 
 current version. I want to reintroduce some of those abstractions and conciser types down the line, without sacrificing performance too much. It's hard to 
