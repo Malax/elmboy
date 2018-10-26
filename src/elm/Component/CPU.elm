@@ -5,6 +5,9 @@ module Component.CPU exposing
     , init
     , readRegister16
     , readRegister8
+    , setInterruptEnable
+    , setInterruptFlag
+    , setInterruptMasterEnable
     , writeRegister16
     , writeRegister8
     )
@@ -334,3 +337,48 @@ writeRegister16 r16 value { af, bc, de, hl, pc, sp, halted, interruptFlag, inter
             , interruptEnable = interruptEnable
             , interruptMasterEnable = interruptMasterEnable
             }
+
+
+setInterruptFlag : Int -> CPU -> CPU
+setInterruptFlag value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = value
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+setInterruptEnable : Int -> CPU -> CPU
+setInterruptEnable value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = value
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+setInterruptMasterEnable : Bool -> CPU -> CPU
+setInterruptMasterEnable value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = value
+    }

@@ -1,8 +1,14 @@
 module GameBoy exposing
     ( GameBoy
     , init
-    , modifyCpu
     , setButtonStatus
+    , setCPUAndCycles
+    , setComponents
+    , setHRAM
+    , setJoypad
+    , setPPU
+    , setWorkRamBank0
+    , setWorkRamBank1
     )
 
 import Component.CPU as CPU exposing (CPU)
@@ -43,11 +49,6 @@ init cartridge =
     }
 
 
-modifyCpu : (CPU -> CPU) -> GameBoy -> GameBoy
-modifyCpu f gameBoy =
-    { gameBoy | cpu = f gameBoy.cpu }
-
-
 setButtonStatus : GameBoyButton -> Bool -> GameBoy -> GameBoy
 setButtonStatus button status gameBoy =
     let
@@ -57,27 +58,136 @@ setButtonStatus button status gameBoy =
         updatedJoypad =
             case button of
                 Up ->
-                    { joypad | upPressed = status }
+                    Joypad.setUpPressed status joypad
 
                 Down ->
-                    { joypad | downPressed = status }
+                    Joypad.setDownPressed status joypad
 
                 Left ->
-                    { joypad | leftPressed = status }
+                    Joypad.setLeftPressed status joypad
 
                 Right ->
-                    { joypad | rightPressed = status }
+                    Joypad.setRightPressed status joypad
 
                 A ->
-                    { joypad | aPressed = status }
+                    Joypad.setAPressed status joypad
 
                 B ->
-                    { joypad | bPressed = status }
+                    Joypad.setBPressed status joypad
 
                 Start ->
-                    { joypad | startPressed = status }
+                    Joypad.setStartPressed status joypad
 
                 Select ->
-                    { joypad | selectPressed = status }
+                    Joypad.setSelectPressed status joypad
     in
-    { gameBoy | joypad = updatedJoypad }
+    setJoypad updatedJoypad gameBoy
+
+
+
+-- Performance Helpers
+
+
+setPPU : PPU -> GameBoy -> GameBoy
+setPPU ppu gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setJoypad : Joypad -> GameBoy -> GameBoy
+setJoypad joypad gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setWorkRamBank0 : RAM -> GameBoy -> GameBoy
+setWorkRamBank0 ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = ram
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setWorkRamBank1 : RAM -> GameBoy -> GameBoy
+setWorkRamBank1 ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = ram
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setHRAM : RAM -> GameBoy -> GameBoy
+setHRAM ram gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = ram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setComponents : CPU -> PPU -> Timer -> GameBoy -> GameBoy
+setComponents cpu ppu timer gameBoy =
+    { cpu = cpu
+    , ppu = ppu
+    , timer = timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = gameBoy.lastCycleClocks
+    }
+
+
+setCPUAndCycles : CPU -> Int -> GameBoy -> GameBoy
+setCPUAndCycles cpu cycles gameBoy =
+    { cpu = cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastCycleClocks = cycles
+    }

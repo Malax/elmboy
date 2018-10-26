@@ -3,6 +3,16 @@ module Component.Joypad exposing
     , Joypad
     , init
     , readRegister
+    , setAPressed
+    , setBPressed
+    , setDownPressed
+    , setLeftPressed
+    , setRightPressed
+    , setSelectButtonKeys
+    , setSelectDirectionKeys
+    , setSelectPressed
+    , setStartPressed
+    , setUpPressed
     , writeRegister
     )
 
@@ -145,3 +155,157 @@ joypadSelectBitmask =
 joypadStartBitmask : Int
 joypadStartBitmask =
     Bitwise.shiftLeftBy 3 0x01
+
+
+
+-- Performance Helpers
+
+
+setSelectDirectionKeys : Bool -> Joypad -> Joypad
+setSelectDirectionKeys value joypad =
+    { selectDirectionKeys = value
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setSelectButtonKeys : Bool -> Joypad -> Joypad
+setSelectButtonKeys value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = value
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setUpPressed : Bool -> Joypad -> Joypad
+setUpPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = value
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setDownPressed : Bool -> Joypad -> Joypad
+setDownPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = value
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setLeftPressed : Bool -> Joypad -> Joypad
+setLeftPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = value
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setRightPressed : Bool -> Joypad -> Joypad
+setRightPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = value
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setAPressed : Bool -> Joypad -> Joypad
+setAPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = value
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setBPressed : Bool -> Joypad -> Joypad
+setBPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = value
+    , startPressed = joypad.startPressed
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setStartPressed : Bool -> Joypad -> Joypad
+setStartPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = value
+    , selectPressed = joypad.selectPressed
+    }
+
+
+setSelectPressed : Bool -> Joypad -> Joypad
+setSelectPressed value joypad =
+    { selectDirectionKeys = joypad.selectDirectionKeys
+    , selectButtonKeys = joypad.selectButtonKeys
+    , upPressed = joypad.upPressed
+    , downPressed = joypad.downPressed
+    , leftPressed = joypad.leftPressed
+    , rightPressed = joypad.rightPressed
+    , aPressed = joypad.aPressed
+    , bPressed = joypad.bPressed
+    , startPressed = joypad.startPressed
+    , selectPressed = value
+    }

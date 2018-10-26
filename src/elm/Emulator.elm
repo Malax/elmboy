@@ -45,14 +45,9 @@ emulateCycle initialGameBoy =
                 ]
 
         cpu =
-            gameBoyAfterCpuCycle.cpu
+            CPU.setInterruptFlag updatedInterruptFlag gameBoyAfterCpuCycle.cpu
     in
-    ( { gameBoyAfterCpuCycle
-        | cpu =
-            { cpu | interruptFlag = updatedInterruptFlag }
-        , ppu = ppu
-        , timer = timer
-      }
+    ( GameBoy.setComponents cpu ppu timer gameBoyAfterCpuCycle
     , emulatedClocks
     )
 
@@ -99,7 +94,7 @@ cycle initialGameBoy =
                 MMU.readWord8 gameBoyAfterInterruptHandling gameBoyAfterInterruptHandling.cpu.pc |> OpcodeMapper.get
 
             gameBoyAfterOpcodeFetching =
-                { gameBoyAfterInterruptHandling | lastCycleClocks = 4, cpu = CPU.writeRegister16 PC (gameBoyAfterInterruptHandling.cpu.pc + 1) gameBoyAfterInterruptHandling.cpu }
+                GameBoy.setCPUAndCycles (CPU.writeRegister16 PC (gameBoyAfterInterruptHandling.cpu.pc + 1) gameBoyAfterInterruptHandling.cpu) 4 gameBoyAfterInterruptHandling
         in
         opcode gameBoyAfterOpcodeFetching
 
