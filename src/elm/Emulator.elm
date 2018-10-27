@@ -32,7 +32,7 @@ emulateCycle initialGameBoy =
             PPU.emulateClocks emulatedClocks gameBoyAfterCpuCycle.ppu
 
         timer =
-            Timer.emulateClocks emulatedClocks gameBoyAfterCpuCycle.timer
+            Timer.emulate emulatedClocks gameBoyAfterCpuCycle.timer
 
         updatedInterruptFlag =
             List.foldl Bitwise.or
@@ -99,7 +99,7 @@ cycle initialGameBoy =
         opcode gameBoyAfterOpcodeFetching
 
     else
-        gameBoyAfterInterruptHandling
+        GameBoy.setLastCycleClocks 4 gameBoyAfterInterruptHandling
 
 
 handleNextInterrupt : Effect

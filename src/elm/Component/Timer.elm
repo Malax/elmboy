@@ -1,12 +1,12 @@
 module Component.Timer exposing
     ( Timer
-    , emulateClocks
+    , emulate
     , init
-    , readDiv
+    , readDivider
     , readTac
     , readTima
     , readTma
-    , writeDiv
+    , writeDivider
     , writeTac
     , writeTima
     , writeTma
@@ -16,8 +16,8 @@ import Bitwise
 
 
 type alias Timer =
-    { div : Int
-    , divAcc : Int
+    { divider : Int
+    , dividerAcc : Int
     , tima : Int
     , timaAcc : Int
     , tma : Int
@@ -28,8 +28,8 @@ type alias Timer =
 
 init : Timer
 init =
-    { div = 0x00
-    , divAcc = 0
+    { divider = 0x00
+    , dividerAcc = 0
     , tima = 0x00
     , timaAcc = 0
     , tma = 0x00
@@ -38,11 +38,11 @@ init =
     }
 
 
-emulateClocks : Int -> Timer -> Timer
-emulateClocks cycles ({ divAcc, tac, timaAcc, tima, tma, div } as timer) =
+emulate : Int -> Timer -> Timer
+emulate cycles ({ dividerAcc, tac, timaAcc, tima, tma, divider } as timer) =
     let
         updatedDivAcc =
-            divAcc + cycles
+            dividerAcc + cycles
 
         updatedTimaAcc =
             timaAcc + cycles
@@ -72,11 +72,11 @@ emulateClocks cycles ({ divAcc, tac, timaAcc, tima, tma, div } as timer) =
                 tima
 
         updatedDiv =
-            if updatedDivAcc >= (cyclesPerSecond // divSpeed) then
-                Bitwise.and 0xFF (div + 1)
+            if updatedDivAcc >= (cyclesPerSecond // dividerSpeed) then
+                Bitwise.and 0xFF (divider + 1)
 
             else
-                div
+                divider
 
         updatedFinalTima =
             if updatedTima > 0xFF then
@@ -85,10 +85,10 @@ emulateClocks cycles ({ divAcc, tac, timaAcc, tima, tma, div } as timer) =
             else
                 updatedTima
     in
-    { div = updatedDiv
-    , divAcc = remainderBy (cyclesPerSecond // divSpeed) updatedDivAcc
+    { divider = updatedDiv
+    , dividerAcc = remainderBy (cyclesPerSecond // dividerSpeed) updatedDivAcc
     , tima = updatedFinalTima
-    , timaAcc = remainderBy timaCyclesPerIncrement updatedFinalTima
+    , timaAcc = remainderBy timaCyclesPerIncrement updatedTimaAcc
     , tma = timer.tma
     , tac = timer.tac
     , triggeredInterrupt = updatedTima > 0xFF
@@ -99,9 +99,9 @@ emulateClocks cycles ({ divAcc, tac, timaAcc, tima, tma, div } as timer) =
 -- Register Reads
 
 
-readDiv : Timer -> Int
-readDiv { div } =
-    div
+readDivider : Timer -> Int
+readDivider { divider } =
+    divider
 
 
 readTima : Timer -> Int
@@ -123,13 +123,13 @@ readTac { tac } =
 -- Register Writes
 
 
-writeDiv : Int -> Timer -> Timer
-writeDiv _ timer =
+writeDivider : Int -> Timer -> Timer
+writeDivider _ timer =
     -- Writing will always reset to 0x00, regadless of actual written value
-    { div = 0x00
-    , divAcc = timer.divAcc
+    { divider = 0x00
+    , dividerAcc = 0x00
     , tima = timer.tima
-    , timaAcc = timer.timaAcc
+    , timaAcc = 0x00
     , tma = timer.tma
     , tac = timer.tac
     , triggeredInterrupt = timer.triggeredInterrupt
@@ -138,8 +138,8 @@ writeDiv _ timer =
 
 writeTima : Int -> Timer -> Timer
 writeTima value timer =
-    { div = timer.div
-    , divAcc = timer.divAcc
+    { divider = timer.divider
+    , dividerAcc = timer.dividerAcc
     , tima = value
     , timaAcc = timer.timaAcc
     , tma = timer.tma
@@ -150,8 +150,8 @@ writeTima value timer =
 
 writeTma : Int -> Timer -> Timer
 writeTma value timer =
-    { div = timer.div
-    , divAcc = timer.divAcc
+    { divider = timer.divider
+    , dividerAcc = timer.dividerAcc
     , tima = timer.tima
     , timaAcc = timer.timaAcc
     , tma = value
@@ -163,12 +163,12 @@ writeTma value timer =
 writeTac : Int -> Timer -> Timer
 writeTac value timer =
     -- TODO: Do we have to reset the accumulators on changing freqs?
-    { div = timer.div
-    , divAcc = timer.divAcc
+    { divider = timer.divider
+    , dividerAcc = timer.dividerAcc
     , tima = timer.tima
-    , timaAcc = 0x00
-    , tma = value
-    , tac = timer.tac
+    , timaAcc = timer.timaAcc
+    , tma = timer.tma
+    , tac = value
     , triggeredInterrupt = timer.triggeredInterrupt
     }
 
@@ -177,8 +177,8 @@ writeTac value timer =
 -- Internal
 
 
-divSpeed : Int
-divSpeed =
+dividerSpeed : Int
+dividerSpeed =
     16384
 
 
