@@ -17,121 +17,106 @@ import Bitwise
 
 type alias Timer =
     { divider : Int
-    , dividerAcc : Int
-    , tima : Int
-    , timaAcc : Int
-    , tma : Int
     , tac : Int
+    , tima : Int
+    , tma : Int
     , triggeredInterrupt : Bool
     }
 
 
 init : Timer
 init =
-    { divider = 0x00
-    , dividerAcc = 0
-    , tima = 0x00
-    , timaAcc = 0
-    , tma = 0x00
-    , tac = 0x00
+    { divider = 0
+    , tac = 0
+    , tima = 0
+    , tma = 0
     , triggeredInterrupt = False
     }
 
 
 emulate : Int -> Timer -> Timer
-emulate cycles ({ dividerAcc, tac, timaAcc, tima, tma, divider } as timer) =
+emulate cycles timer =
     let
-        updatedDivAcc =
-            dividerAcc + cycles
-
-        updatedTimaAcc =
-            timaAcc + cycles
-
-        timaCyclesPerIncrement =
-            case Bitwise.and 0x03 tac of
-                0 ->
-                    cyclesPerSecond // 4096
-
-                1 ->
-                    cyclesPerSecond // 262144
-
-                2 ->
-                    cyclesPerSecond // 65536
-
-                _ ->
-                    cyclesPerSecond // 16384
-
-        timaEnabled =
-            Bitwise.and 0x04 tac == 0x04
-
         updatedTima =
-            if timaEnabled && updatedTimaAcc >= timaCyclesPerIncrement then
-                tima + 1
+            if timerEnabled timer then
+                timer.tima + countOverflows timer.divider cycles (timaOverflowBitPosition timer)
 
             else
-                tima
+                timer.tima
 
-        updatedDiv =
-            if updatedDivAcc >= (cyclesPerSecond // dividerSpeed) then
-                Bitwise.and 0xFF (divider + 1)
-
-            else
-                divider
-
-        updatedFinalTima =
-            if updatedTima > 0xFF then
-                tma
-
-            else
-                updatedTima
+        timaOverflowed =
+            updatedTima > 0xFF
     in
-    { divider = updatedDiv
-    , dividerAcc = remainderBy (cyclesPerSecond // dividerSpeed) updatedDivAcc
-    , tima = updatedFinalTima
-    , timaAcc = remainderBy timaCyclesPerIncrement updatedTimaAcc
-    , tma = timer.tma
+    { divider = Bitwise.and 0xFFFF (timer.divider + cycles)
     , tac = timer.tac
-    , triggeredInterrupt = updatedTima > 0xFF
+    , tima =
+        if timaOverflowed then
+            timer.tma + Bitwise.and 0xFF updatedTima
+
+        else
+            updatedTima
+    , tma = timer.tma
+    , triggeredInterrupt = timaOverflowed
     }
 
 
-
--- Register Reads
-
-
 readDivider : Timer -> Int
-readDivider { divider } =
-    divider
-
-
-readTima : Timer -> Int
-readTima { tima } =
-    tima
-
-
-readTma : Timer -> Int
-readTma { tma } =
-    tma
+readDivider timer =
+    -- Internally, div is 16-bit wide. But only the least significant byte is exposed.
+    Bitwise.and 0xFF timer.divider
 
 
 readTac : Timer -> Int
-readTac { tac } =
-    tac
+readTac timer =
+    timer.tac
 
 
+readTima : Timer -> Int
+readTima timer =
+    timer.tima
 
--- Register Writes
+
+readTma : Timer -> Int
+readTma timer =
+    timer.tma
 
 
 writeDivider : Int -> Timer -> Timer
 writeDivider _ timer =
+    let
+        updatedTima =
+            if timerEnabled timer then
+                timer.divider
+                    |> Bitwise.shiftRightZfBy (timaOverflowBitPosition timer)
+                    |> Bitwise.and 0x01
+                    |> (+) timer.tima
+
+            else
+                timer.tima
+
+        timaOverflowed =
+            updatedTima > 0xFF
+    in
     -- Writing will always reset to 0x00, regadless of actual written value
     { divider = 0x00
-    , dividerAcc = 0x00
-    , tima = timer.tima
-    , timaAcc = 0x00
-    , tma = timer.tma
     , tac = timer.tac
+    , tima =
+        if timaOverflowed then
+            timer.tma
+
+        else
+            updatedTima
+    , tma = timer.tma
+    , triggeredInterrupt = timaOverflowed || timer.triggeredInterrupt
+    }
+
+
+writeTac : Int -> Timer -> Timer
+writeTac value timer =
+    { divider = timer.divider
+    , tac = value
+    , tima = timer.tima
+    , tma = timer.tma
     , triggeredInterrupt = timer.triggeredInterrupt
     }
 
@@ -139,11 +124,9 @@ writeDivider _ timer =
 writeTima : Int -> Timer -> Timer
 writeTima value timer =
     { divider = timer.divider
-    , dividerAcc = timer.dividerAcc
-    , tima = value
-    , timaAcc = timer.timaAcc
-    , tma = timer.tma
     , tac = timer.tac
+    , tima = value
+    , tma = timer.tma
     , triggeredInterrupt = timer.triggeredInterrupt
     }
 
@@ -151,36 +134,46 @@ writeTima value timer =
 writeTma : Int -> Timer -> Timer
 writeTma value timer =
     { divider = timer.divider
-    , dividerAcc = timer.dividerAcc
-    , tima = timer.tima
-    , timaAcc = timer.timaAcc
-    , tma = value
     , tac = timer.tac
-    , triggeredInterrupt = timer.triggeredInterrupt
-    }
-
-
-writeTac : Int -> Timer -> Timer
-writeTac value timer =
-    -- TODO: Do we have to reset the accumulators on changing freqs?
-    { divider = timer.divider
-    , dividerAcc = timer.dividerAcc
-    , tima = timer.tima
-    , timaAcc = timer.timaAcc
+    , tima = value
     , tma = timer.tma
-    , tac = value
     , triggeredInterrupt = timer.triggeredInterrupt
     }
 
 
 
--- Internal
+-- Internals
 
 
-dividerSpeed : Int
-dividerSpeed =
-    16384
+countOverflows : Int -> Int -> Int -> Int
+countOverflows a b bitPosition =
+    let
+        previousOverflows =
+            Bitwise.shiftRightZfBy (bitPosition + 1) a
+
+        overflows =
+            Bitwise.shiftRightZfBy (bitPosition + 1) (a + b)
+    in
+    overflows - previousOverflows
 
 
-cyclesPerSecond =
-    4194304
+timerEnabled : Timer -> Bool
+timerEnabled timer =
+    Bitwise.and 0x04 timer.tac == 0x04
+
+
+timaOverflowBitPosition : Timer -> Int
+timaOverflowBitPosition timer =
+    case Bitwise.and 0x03 timer.tac of
+        0x00 ->
+            9
+
+        0x01 ->
+            3
+
+        0x02 ->
+            5
+
+        -- Only 0x03 can happen, but the compiler cannot infer that. So we just match on everything.
+        _ ->
+            7
