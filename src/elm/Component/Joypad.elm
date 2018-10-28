@@ -30,6 +30,7 @@ type alias Joypad =
     , bPressed : Bool
     , startPressed : Bool
     , selectPressed : Bool
+    , triggeredInterrupt : Bool
     }
 
 
@@ -56,6 +57,7 @@ init =
     , bPressed = False
     , startPressed = False
     , selectPressed = False
+    , triggeredInterrupt = False
     }
 
 
@@ -112,6 +114,7 @@ setSelectDirectionKeys value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -127,6 +130,7 @@ setSelectButtonKeys value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -142,6 +146,7 @@ setUpPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -157,6 +162,7 @@ setDownPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -172,6 +178,7 @@ setLeftPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -187,6 +194,7 @@ setRightPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -202,6 +210,7 @@ setAPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -217,6 +226,7 @@ setBPressed value joypad =
     , bPressed = value
     , startPressed = joypad.startPressed
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -232,6 +242,7 @@ setStartPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = value
     , selectPressed = joypad.selectPressed
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 
@@ -247,6 +258,7 @@ setSelectPressed value joypad =
     , bPressed = joypad.bPressed
     , startPressed = joypad.startPressed
     , selectPressed = value
+    , triggeredInterrupt = joypad.triggeredInterrupt
     }
 
 

@@ -42,6 +42,7 @@ emulateCycle initialGameBoy =
                 , conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
                 , conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
                 , conditionalOrBitmask timer.triggeredInterrupt 0x04
+                , conditionalOrBitmask gameBoyAfterCpuCycle.joypad.triggeredInterrupt 0x10
                 ]
 
         cpu =
