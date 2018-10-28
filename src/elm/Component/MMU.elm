@@ -228,10 +228,10 @@ writeWord8 address value ({ cpu } as gameBoy) =
         { gameBoy | bootRomDisabled = True }
 
     else if address == 0xFF0F then
-        { gameBoy | cpu = { cpu | interruptFlag = sanitizedValue } }
+        GameBoy.setCPU (CPU.setInterruptFlag sanitizedValue gameBoy.cpu) gameBoy
 
     else if address == 0xFFFF then
-        { gameBoy | cpu = { cpu | interruptEnable = sanitizedValue } }
+        GameBoy.setCPU (CPU.setInterruptEnable sanitizedValue gameBoy.cpu) gameBoy
 
     else
         gameBoy
