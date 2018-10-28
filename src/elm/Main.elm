@@ -10,9 +10,12 @@ import Component.PPU as PPU
 import Component.PPU.GameBoyScreen as GameBoyScreen
 import Emulator
 import GameBoy exposing (GameBoy)
+import Gamepad exposing (Gamepad)
+import Gamepad.Simple
+import GamepadPort
 import Html exposing (Html)
 import Json.Decode as Decode
-import Model exposing (Model(..))
+import Model exposing (EmulationModel, Model(..))
 import Msg exposing (Msg(..))
 import Ports
 import UI.KeyDecoder
@@ -56,14 +59,11 @@ update msg model =
 
         Emulation emulationModel ->
             case msg of
-                AnimationFrameDelta time ->
-                    let
-                        gameBoy =
-                            Emulator.emulateClocks (clocksPerSecond // 60) emulationModel.gameBoy
-                    in
-                    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes }
-                    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
-                    )
+                AnimationFrame { gamepads, dt } ->
+                    if not emulationModel.paused then
+                        runEmulation dt (applyGamepadControls gamepads emulationModel)
+                    else
+                        ( model, Cmd.none )
 
                 ButtonDown (Just button) ->
                     ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button True emulationModel.gameBoy }
@@ -94,9 +94,66 @@ update msg model =
                     ( model, Cmd.none )
 
 
-main : Program () Model Msg
+applyGamepadControls : List Gamepad -> EmulationModel -> EmulationModel
+applyGamepadControls gamepads emulationModel =
+    case gamepads of
+        [] ->
+            emulationModel
+
+        gamepad :: gs ->
+            let
+                isPressed =
+                    Gamepad.isPressed gamepad
+
+                fold ( digital, button ) gameboy =
+                    GameBoy.setButtonStatus button (isPressed digital) gameboy
+            in
+            { emulationModel
+                | gameBoy =
+                    [ ( Gamepad.A, A )
+                    , ( Gamepad.B, B )
+                    , ( Gamepad.DpadUp, Up )
+                    , ( Gamepad.DpadDown, Down )
+                    , ( Gamepad.DpadLeft, Left )
+                    , ( Gamepad.DpadRight, Right )
+                    , ( Gamepad.Start, Start )
+                    , ( Gamepad.Back, Select )
+                    ]
+                        |> List.foldl fold emulationModel.gameBoy
+            }
+
+
+runEmulation : Float -> EmulationModel -> ( Model, Cmd msg )
+runEmulation dt emulationModel =
+    let
+        time =
+            dt
+
+        gameBoy =
+            Emulator.emulateClocks (clocksPerSecond // 60) emulationModel.gameBoy
+    in
+    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes }
+    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
+    )
+
+
+main : Gamepad.Simple.Program () Model Msg
 main =
-    Browser.element
+    Gamepad.Simple.element
+        { onAnimationFrame = AnimationFrame
+        , onBlob = GamepadPort.onBlob
+        , saveToLocalStorage = GamepadPort.saveToLocalStorage
+        , controls =
+            [ ( "Left", Gamepad.DpadLeft )
+            , ( "Right", Gamepad.DpadRight )
+            , ( "Up", Gamepad.DpadUp )
+            , ( "Down", Gamepad.DpadDown )
+            , ( "A", Gamepad.A )
+            , ( "B", Gamepad.B )
+            , ( "Start", Gamepad.Start )
+            , ( "Select", Gamepad.Back )
+            ]
+        }
         { view = View.view canvasId fileInputId
         , init = init
         , update = update
@@ -106,22 +163,8 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    let
-        animationFrameSubscription =
-            case model of
-                Emulation emulationModel ->
-                    if not emulationModel.paused then
-                        Browser.Events.onAnimationFrameDelta AnimationFrameDelta
-
-                    else
-                        Sub.none
-
-                _ ->
-                    Sub.none
-    in
     Sub.batch
-        [ animationFrameSubscription
-        , Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
+        [ Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
         , Ports.fileData FileDataReceived
         ]

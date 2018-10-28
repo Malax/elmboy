@@ -1,9 +1,12 @@
 import { Elm } from '../elm/Main.elm'
+import addGamepadPort from './gamepadPort.js'
 
 document.addEventListener('DOMContentLoaded', function (event) {
   const app = Elm.Main.init({
     node: document.getElementById('elmboy')
   })
+
+  addGamepadPort(app);
 
   app.ports.setPixelsFromBatches.subscribe(function (elmData) {
     const canvas = document.getElementById(elmData.canvasId)
