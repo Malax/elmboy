@@ -61,17 +61,17 @@ update msg model =
                         gameBoy =
                             Emulator.emulateClocks (clocksPerSecond // 60) emulationModel.gameBoy
                     in
-                    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes }
+                    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes, paused = emulationModel.paused }
                     , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
                     )
 
                 ButtonDown (Just button) ->
-                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button True emulationModel.gameBoy }
+                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button True emulationModel.gameBoy, frameTimes = emulationModel.frameTimes, paused = emulationModel.paused }
                     , Cmd.none
                     )
 
                 ButtonUp (Just button) ->
-                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button False emulationModel.gameBoy }
+                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button False emulationModel.gameBoy, frameTimes = emulationModel.frameTimes, paused = emulationModel.paused }
                     , Cmd.none
                     )
 
