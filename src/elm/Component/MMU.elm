@@ -177,7 +177,7 @@ writeWord8 address value ({ cpu } as gameBoy) =
         GameBoy.setJoypad (Joypad.writeRegister sanitizedValue gameBoy.joypad) gameBoy
 
     else if address == 0xFF04 then
-        GameBoy.setTimer (Timer.writeDivider sanitizedValue gameBoy.timer) gameBoy
+        GameBoy.setTimer (Timer.resetDivider gameBoy.timer) gameBoy
 
     else if address == 0xFF05 then
         GameBoy.setTimer (Timer.writeTima sanitizedValue gameBoy.timer) gameBoy

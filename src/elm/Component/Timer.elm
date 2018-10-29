@@ -6,7 +6,7 @@ module Component.Timer exposing
     , readTac
     , readTima
     , readTma
-    , writeDivider
+    , resetDivider
     , writeTac
     , writeTima
     , writeTma
@@ -81,8 +81,8 @@ readTma timer =
     timer.tma
 
 
-writeDivider : Int -> Timer -> Timer
-writeDivider _ timer =
+resetDivider : Timer -> Timer
+resetDivider timer =
     let
         updatedTima =
             if timerEnabled timer then
