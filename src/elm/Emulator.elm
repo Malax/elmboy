@@ -1,7 +1,7 @@
 module Emulator exposing
-    ( emulateClocks
-    , emulateConditional
-    , emulateCycle
+    ( emulateConditional
+    , emulateCycles
+    , emulateNextInstruction
     )
 
 import Bitwise
@@ -19,20 +19,20 @@ import Types exposing (MemoryAddress)
 import Util
 
 
-emulateCycle : GameBoy -> ( GameBoy, Int )
-emulateCycle initialGameBoy =
+emulateNextInstruction : GameBoy -> ( GameBoy, Int )
+emulateNextInstruction initialGameBoy =
     let
         gameBoyAfterCpuCycle =
             cycle initialGameBoy
 
-        emulatedClocks =
-            gameBoyAfterCpuCycle.lastCycleClocks
+        emulatedCycles =
+            gameBoyAfterCpuCycle.lastInstructionCycles
 
         ppu =
-            PPU.emulateClocks emulatedClocks gameBoyAfterCpuCycle.ppu
+            PPU.emulate emulatedCycles gameBoyAfterCpuCycle.ppu
 
         timer =
-            Timer.emulate emulatedClocks gameBoyAfterCpuCycle.timer
+            Timer.emulate emulatedCycles gameBoyAfterCpuCycle.timer
 
         updatedInterruptFlag =
             List.foldl Bitwise.or
@@ -49,28 +49,31 @@ emulateCycle initialGameBoy =
             CPU.setInterruptFlag updatedInterruptFlag gameBoyAfterCpuCycle.cpu
     in
     ( GameBoy.setComponents cpu ppu timer gameBoyAfterCpuCycle
-    , emulatedClocks
+    , emulatedCycles
     )
 
 
-emulateClocks : Int -> GameBoy -> GameBoy
-emulateClocks clocks gameBoy =
+emulateCycles : Int -> GameBoy -> GameBoy
+emulateCycles cycles gameBoy =
     let
-        ( emulatedGameBoy, emulatedClocks ) =
-            emulateCycle gameBoy
+        ( emulatedGameBoy, emulatedCycles ) =
+            emulateNextInstruction gameBoy
+
+        remainingCycles =
+            cycles - emulatedCycles
     in
-    if (clocks - emulatedClocks) <= 0 then
+    if remainingCycles <= 0 then
         gameBoy
 
     else
-        emulateClocks (clocks - emulatedClocks) emulatedGameBoy
+        emulateCycles remainingCycles emulatedGameBoy
 
 
 emulateConditional : (GameBoy -> Bool) -> GameBoy -> GameBoy
 emulateConditional predicate gameBoy =
     let
         ( emulatedGameBoy, _ ) =
-            emulateCycle gameBoy
+            emulateNextInstruction gameBoy
     in
     if predicate emulatedGameBoy then
         emulateConditional predicate emulatedGameBoy
@@ -100,7 +103,7 @@ cycle initialGameBoy =
         opcode gameBoyAfterOpcodeFetching
 
     else
-        GameBoy.setLastCycleClocks 4 gameBoyAfterInterruptHandling
+        GameBoy.setLastInstructionCycles 4 gameBoyAfterInterruptHandling
 
 
 handleNextInterrupt : Effect

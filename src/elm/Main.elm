@@ -59,7 +59,7 @@ update msg model =
                 AnimationFrameDelta time ->
                     let
                         gameBoy =
-                            Emulator.emulateClocks (clocksPerSecond // 60) emulationModel.gameBoy
+                            Emulator.emulateCycles (cyclesPerSecond // 60) emulationModel.gameBoy
                     in
                     ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes, paused = emulationModel.paused }
                     , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
@@ -127,8 +127,8 @@ subscriptions model =
         ]
 
 
-clocksPerSecond : Int
-clocksPerSecond =
+cyclesPerSecond : Int
+cyclesPerSecond =
     4 * 1024 * 1024
 
 

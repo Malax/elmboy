@@ -1,5 +1,5 @@
 module Component.PPU exposing
-    ( emulateClocks
+    ( emulate
     , getLastCompleteFrame
     , init
     , readBackgroundPalette
@@ -265,11 +265,11 @@ lcdStatus mode line lineCompare previousLcdStatus =
         + coincidenceBits
 
 
-emulateClocks : Int -> PPU -> PPU
-emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
+emulate : Int -> PPU -> PPU
+emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
     let
         lastEmulatedCycle =
-            cyclesSinceLastCompleteFrame + cyclesToEmulate
+            cyclesSinceLastCompleteFrame + cycles
 
         currentLine =
             lastEmulatedCycle // cyclesPerLine
@@ -316,7 +316,7 @@ emulateClocks cyclesToEmulate ({ mode, cyclesSinceLastCompleteFrame, omitFrame }
                 Nothing
 
         modifiedPPUData =
-            PPUTypes.setClockData
+            PPUTypes.setEmulateData
                 currentMode
                 currentLine
                 (lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus)

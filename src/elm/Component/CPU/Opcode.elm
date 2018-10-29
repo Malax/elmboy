@@ -259,9 +259,9 @@ jp condition reader =
         (readRegister8 F)
         (\address flags ->
             if Condition.check condition flags then
-                -- TODO: "JP (HL)" only uses 4 clocks in total, we might need a specialized opcode implementation for that.
+                -- TODO: "JP (HL)" only uses 4 cycles in total, we might need a specialized opcode implementation for that.
                 -- This is because unconditional jumps do not need 4 extra cycles!
-                extraClocks 4 >> writeRegister16 PC address
+                extraCycles 4 >> writeRegister16 PC address
 
             else
                 identity
@@ -276,7 +276,7 @@ jr condition =
         (readRegister8 F)
         (\offset currentAddress flags ->
             if Condition.check condition flags then
-                extraClocks 4 >> writeRegister16 PC (currentAddress + offset)
+                extraCycles 4 >> writeRegister16 PC (currentAddress + offset)
 
             else
                 identity
@@ -302,23 +302,23 @@ ret condition =
         (\flags ->
             if Condition.check condition flags then
                 let
-                    extraClocksAmount =
+                    extraCyclesAmount =
                         if condition == Always then
                             4
 
                         else
                             8
                 in
-                extraClocks extraClocksAmount >> pop (writeRegister16 PC)
+                extraCycles extraCyclesAmount >> pop (writeRegister16 PC)
 
             else
-                extraClocks 4
+                extraCycles 4
         )
 
 
 reti : Effect
 reti =
-    extraClocks 4 >> pop (writeRegister16 PC) >> ei
+    extraCycles 4 >> pop (writeRegister16 PC) >> ei
 
 
 rst : Int -> Effect
@@ -334,7 +334,7 @@ push : Reader Int -> Effect
 push reader =
     join2 reader (readRegister16 SP) <|
         \value sp ->
-            extraClocks 4 >> writeRegister16 SP (sp - 2) >> writeMemory16 (readRegister16 SP) value
+            extraCycles 4 >> writeRegister16 SP (sp - 2) >> writeMemory16 (readRegister16 SP) value
 
 
 pop : Writer Int -> Effect

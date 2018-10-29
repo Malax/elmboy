@@ -3,7 +3,7 @@ module Component.PPU.Types exposing
     , PPU
     , PPUInterrupt(..)
     , setBackgroundPalette
-    , setClockData
+    , setEmulateData
     , setLcdStatus
     , setLcdc
     , setLineCompare
@@ -382,8 +382,8 @@ setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     }
 
 
-setClockData : Mode -> Int -> Int -> Int -> Maybe PPUInterrupt -> PPU -> PPU
-setClockData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame interrupt ppu =
+setEmulateData : Mode -> Int -> Int -> Int -> Maybe PPUInterrupt -> PPU -> PPU
+setEmulateData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame interrupt ppu =
     { mode = currentMode
     , vram = ppu.vram
     , line = currentLine

@@ -4,12 +4,12 @@ module GameBoy exposing
     , setButtonStatus
     , setCPU
     , setCPUAndCycles
-    , setCPULastCycleClocks
+    , setCPULastInstructionCycles
     , setCartridge
     , setComponents
     , setHRAM
     , setJoypad
-    , setLastCycleClocks
+    , setLastInstructionCycles
     , setPPU
     , setTimer
     , setWorkRamBank0
@@ -35,7 +35,7 @@ type alias GameBoy =
     , bootRomDisabled : Bool
     , cartridge : Cartridge
     , joypad : Joypad
-    , lastCycleClocks : Int
+    , lastInstructionCycles : Int
     }
 
 
@@ -50,7 +50,7 @@ init cartridge =
     , bootRomDisabled = True
     , cartridge = cartridge
     , joypad = Joypad.init
-    , lastCycleClocks = 0
+    , lastInstructionCycles = 0
     }
 
 
@@ -104,7 +104,7 @@ setPPU ppu gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -119,7 +119,7 @@ setJoypad joypad gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -134,7 +134,7 @@ setWorkRamBank0 ram gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -149,7 +149,7 @@ setWorkRamBank1 ram gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -164,7 +164,7 @@ setHRAM ram gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -179,7 +179,7 @@ setComponents cpu ppu timer gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -194,7 +194,7 @@ setCPUAndCycles cpu cycles gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = cycles
+    , lastInstructionCycles = cycles
     }
 
 
@@ -209,7 +209,7 @@ setTimer timer gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -224,7 +224,7 @@ setCartridge cartridge gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
@@ -239,12 +239,12 @@ setCPU cpu gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = gameBoy.lastCycleClocks
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
     }
 
 
-setLastCycleClocks : Int -> GameBoy -> GameBoy
-setLastCycleClocks lastCycleClocks gameBoy =
+setLastInstructionCycles : Int -> GameBoy -> GameBoy
+setLastInstructionCycles lastInstructionCycles gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
@@ -254,12 +254,12 @@ setLastCycleClocks lastCycleClocks gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = lastCycleClocks
+    , lastInstructionCycles = lastInstructionCycles
     }
 
 
-setCPULastCycleClocks : CPU -> Int -> GameBoy -> GameBoy
-setCPULastCycleClocks cpu lastCycleClocks gameBoy =
+setCPULastInstructionCycles : CPU -> Int -> GameBoy -> GameBoy
+setCPULastInstructionCycles cpu lastInstructionCycles gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
@@ -269,5 +269,5 @@ setCPULastCycleClocks cpu lastCycleClocks gameBoy =
     , bootRomDisabled = gameBoy.bootRomDisabled
     , cartridge = gameBoy.cartridge
     , joypad = gameBoy.joypad
-    , lastCycleClocks = lastCycleClocks
+    , lastInstructionCycles = lastInstructionCycles
     }
