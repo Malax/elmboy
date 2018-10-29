@@ -19,48 +19,43 @@ import Types exposing (MemoryAddress)
 import Util
 
 
-emulateNextInstruction : GameBoy -> ( GameBoy, Int )
-emulateNextInstruction initialGameBoy =
+emulateNextInstruction : GameBoy -> GameBoy
+emulateNextInstruction gameBoy =
     let
-        gameBoyAfterCpuCycle =
-            cycle initialGameBoy
-
-        emulatedCycles =
-            gameBoyAfterCpuCycle.lastInstructionCycles
+        emulatedGameBoy =
+            emulateInstruction gameBoy
 
         ppu =
-            PPU.emulate emulatedCycles gameBoyAfterCpuCycle.ppu
+            PPU.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.ppu
 
         timer =
-            Timer.emulate emulatedCycles gameBoyAfterCpuCycle.timer
+            Timer.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.timer
 
         updatedInterruptFlag =
             List.foldl Bitwise.or
-                gameBoyAfterCpuCycle.cpu.interruptFlag
+                emulatedGameBoy.cpu.interruptFlag
                 [ conditionalOrBitmask (ppu.triggeredInterrupt == Just VBlankInterrupt) 0x01
                 , conditionalOrBitmask (ppu.triggeredInterrupt == Just HBlankInterrupt) 0x02
                 , conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
                 , conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
                 , conditionalOrBitmask timer.triggeredInterrupt 0x04
-                , conditionalOrBitmask gameBoyAfterCpuCycle.joypad.triggeredInterrupt 0x10
+                , conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
                 ]
 
         cpu =
-            CPU.setInterruptFlag updatedInterruptFlag gameBoyAfterCpuCycle.cpu
+            CPU.setInterruptFlag updatedInterruptFlag emulatedGameBoy.cpu
     in
-    ( GameBoy.setComponents cpu ppu timer gameBoyAfterCpuCycle
-    , emulatedCycles
-    )
+    GameBoy.setComponents cpu ppu timer emulatedGameBoy
 
 
 emulateCycles : Int -> GameBoy -> GameBoy
 emulateCycles cycles gameBoy =
     let
-        ( emulatedGameBoy, emulatedCycles ) =
+        emulatedGameBoy =
             emulateNextInstruction gameBoy
 
         remainingCycles =
-            cycles - emulatedCycles
+            cycles - emulatedGameBoy.lastInstructionCycles
     in
     if remainingCycles <= 0 then
         gameBoy
@@ -72,7 +67,7 @@ emulateCycles cycles gameBoy =
 emulateConditional : (GameBoy -> Bool) -> GameBoy -> GameBoy
 emulateConditional predicate gameBoy =
     let
-        ( emulatedGameBoy, _ ) =
+        emulatedGameBoy =
             emulateNextInstruction gameBoy
     in
     if predicate emulatedGameBoy then
@@ -86,11 +81,11 @@ emulateConditional predicate gameBoy =
 -- Internal
 
 
-cycle : Effect
-cycle initialGameBoy =
+emulateInstruction : Effect
+emulateInstruction gameBoy =
     let
         gameBoyAfterInterruptHandling =
-            handleNextInterrupt initialGameBoy
+            handleNextInterrupt gameBoy
     in
     if not gameBoyAfterInterruptHandling.cpu.halted then
         let
@@ -141,12 +136,11 @@ handleNextInterrupt ({ cpu } as gameBoy) =
 
 
 performInterrupt : Int -> Int -> Effect
-performInterrupt isrAddress modifiedInterruptFlag gameBoy =
-    let
-        modifiedGameBoy =
-            GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu) gameBoy
-    in
-    modifiedGameBoy |> Opcode.push (readRegister16 PC) |> writeRegister16 PC isrAddress
+performInterrupt interruptServiceRoutineAddress modifiedInterruptFlag gameBoy =
+    gameBoy
+        |> GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu)
+        |> Opcode.push (readRegister16 PC)
+        |> writeRegister16 PC interruptServiceRoutineAddress
 
 
 conditionalOrBitmask : Bool -> Int -> Int
