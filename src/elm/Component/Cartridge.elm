@@ -2,6 +2,7 @@ module Component.Cartridge exposing (Cartridge, fromBytes, readWord8, writeWord8
 
 import Array exposing (Array)
 import Bitwise
+import Component.Cartridge.CartridgeType as CartridgeType exposing (CartridgeType)
 import Component.RAM as RAM exposing (RAM)
 import Hex
 import RomMetadata
@@ -17,16 +18,16 @@ type Cartridge
 fromBytes : Array Int -> Maybe Cartridge
 fromBytes romBytes =
     case (RomMetadata.fromBytes romBytes).cartridgeType of
-        RomMetadata.RomOnly ->
+        CartridgeType.RomOnly ->
             Just (NoMBC romBytes)
 
-        RomMetadata.MBC1 ->
+        CartridgeType.MBC1 ->
             Just (initMbc1 romBytes)
 
-        RomMetadata.MBC1Ram ->
+        CartridgeType.MBC1Ram ->
             Just (initMbc1 romBytes)
 
-        RomMetadata.MBC1RamBattery ->
+        CartridgeType.MBC1RamBattery ->
             Just (initMbc1 romBytes)
 
         _ ->
