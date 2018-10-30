@@ -88,6 +88,7 @@ readRegister joypad =
     bitmasks
         |> List.foldr Bitwise.or 0x00
         |> Bitwise.complement
+        |> Bitwise.and 0xFF
 
 
 writeRegister : Int -> Joypad -> Joypad
