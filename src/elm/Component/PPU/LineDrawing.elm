@@ -122,11 +122,11 @@ viewportBackgroundLinePixels screenY scrollY scrollX windowX windowY lcdc vram =
                 windowScreenX
 
             else
-                160
+                screenWidth
 
         requiredWindowPixels =
             if windowInLine then
-                160 - windowScreenX
+                screenWidth - windowScreenX
 
             else
                 0
