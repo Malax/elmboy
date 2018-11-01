@@ -2,6 +2,7 @@ module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, maybePre
 
 import Array exposing (Array)
 import Bitwise
+import Constants
 import Hex
 
 
@@ -21,7 +22,7 @@ byteToSignedInt value =
         sanitizedByte =
             Bitwise.and 0xFF value
     in
-    if Bitwise.and 0x80 sanitizedByte == 0x80 then
+    if Bitwise.and Constants.bit7Mask sanitizedByte == Constants.bit7Mask then
         negate (Bitwise.and 0xFF (Bitwise.complement sanitizedByte) + 1)
 
     else

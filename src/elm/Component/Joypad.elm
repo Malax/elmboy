@@ -17,6 +17,7 @@ module Component.Joypad exposing
     )
 
 import Bitwise
+import Constants
 
 
 type alias Joypad =
@@ -67,18 +68,18 @@ readRegister joypad =
         bitmasks =
             if joypad.selectDirectionKeys then
                 [ 0xD0 -- 1101 0000
-                , conditionalBitmask joypad.downPressed joypadDownBitmask
-                , conditionalBitmask joypad.upPressed joypadUpBitmask
-                , conditionalBitmask joypad.leftPressed joypadLeftBitmask
-                , conditionalBitmask joypad.rightPressed joypadRightBitmask
+                , conditionalBitmask joypad.downPressed Constants.bit3Mask
+                , conditionalBitmask joypad.upPressed Constants.bit2Mask
+                , conditionalBitmask joypad.leftPressed Constants.bit1Mask
+                , conditionalBitmask joypad.rightPressed Constants.bit0Mask
                 ]
 
             else if joypad.selectButtonKeys then
                 [ 0xE0 -- 1110 0000
-                , conditionalBitmask joypad.startPressed joypadStartBitmask
-                , conditionalBitmask joypad.selectPressed joypadSelectBitmask
-                , conditionalBitmask joypad.aPressed joypadABitmask
-                , conditionalBitmask joypad.bPressed joypadBBitmask
+                , conditionalBitmask joypad.startPressed Constants.bit3Mask
+                , conditionalBitmask joypad.selectPressed Constants.bit2Mask
+                , conditionalBitmask joypad.bPressed Constants.bit1Mask
+                , conditionalBitmask joypad.aPressed Constants.bit0Mask
                 ]
 
             else
@@ -94,8 +95,8 @@ readRegister joypad =
 writeRegister : Int -> Joypad -> Joypad
 writeRegister value joypad =
     { joypad
-        | selectButtonKeys = Bitwise.and 0x20 value /= 0x20
-        , selectDirectionKeys = Bitwise.and 0x10 value /= 0x10
+        | selectButtonKeys = Bitwise.and Constants.bit5Mask value /= Constants.bit5Mask
+        , selectDirectionKeys = Bitwise.and Constants.bit4Mask value /= Constants.bit4Mask
     }
 
 
@@ -274,51 +275,3 @@ conditionalBitmask condition bitmask =
 
     else
         0x00
-
-
-
--- Direction Key Bitmasks
-
-
-joypadRightBitmask : Int
-joypadRightBitmask =
-    0x01
-
-
-joypadLeftBitmask : Int
-joypadLeftBitmask =
-    Bitwise.shiftLeftBy 1 0x01
-
-
-joypadUpBitmask : Int
-joypadUpBitmask =
-    Bitwise.shiftLeftBy 2 0x01
-
-
-joypadDownBitmask : Int
-joypadDownBitmask =
-    Bitwise.shiftLeftBy 3 0x01
-
-
-
--- Button Key Bitmasks
-
-
-joypadABitmask : Int
-joypadABitmask =
-    0x01
-
-
-joypadBBitmask : Int
-joypadBBitmask =
-    Bitwise.shiftLeftBy 1 0x01
-
-
-joypadSelectBitmask : Int
-joypadSelectBitmask =
-    Bitwise.shiftLeftBy 2 0x01
-
-
-joypadStartBitmask : Int
-joypadStartBitmask =
-    Bitwise.shiftLeftBy 3 0x01
