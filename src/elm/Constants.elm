@@ -1,4 +1,4 @@
-module Constants exposing (bit0Mask, bit1Mask, bit2Mask, bit3Mask, bit4Mask, bit5Mask, bit6Mask, bit7Mask, screenHeight, screenWidth)
+module Constants exposing (bit0Mask, bit1Mask, bit2Mask, bit3Mask, bit4Mask, bit5Mask, bit6Mask, bit7Mask)
 
 
 bit0Mask : Int
@@ -39,13 +39,3 @@ bit6Mask =
 bit7Mask : Int
 bit7Mask =
     0x80
-
-
-screenWidth : Int
-screenWidth =
-    160
-
-
-screenHeight : Int
-screenHeight =
-    144
