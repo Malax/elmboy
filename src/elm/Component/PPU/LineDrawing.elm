@@ -5,7 +5,7 @@ import Bitwise
 import Component.PPU.Constants exposing (..)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
-import Component.PPU.OAM as OAM exposing (foldRIndexes)
+import Component.PPU.OAM as OAM
 import Component.PPU.Pixel as Pixel exposing (PixelSource(..), RawPixel)
 import Component.PPU.Types exposing (Mode, PPU)
 import Component.RAM as RAM exposing (RAM)
@@ -56,7 +56,7 @@ backgroundPixels mapY mapX pixelAmount lcdc mapAddress vram =
             (pixelAmount // tileWidth) + 1
 
         pixels =
-            foldRIndexes tileAmount [] <|
+            Util.foldRIndexes tileAmount [] <|
                 \index acc ->
                     let
                         -- If we run out of tiles on the right, we just start at the beginning of the line again, instead of
@@ -155,7 +155,7 @@ readTileLinePixels tileAddress lineNumber vram readReversed pixelSource =
         tileLineLowByte =
             RAM.readWord8 vram tileLineAddress
     in
-    foldRIndexes 8 [] <|
+    Util.foldRIndexes 8 [] <|
         \reversedIndex acc ->
             let
                 -- TODO: The order seems correct here, but we need to reverse it so that it looks right.

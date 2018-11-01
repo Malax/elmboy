@@ -37,7 +37,7 @@ import Component.PPU.Constants exposing (..)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.LineDrawing as LineDrawing
-import Component.PPU.OAM exposing (foldRIndexes, searchVisibleObjects)
+import Component.PPU.OAM exposing (searchVisibleObjects)
 import Component.PPU.Pixel as Pixel exposing (..)
 import Component.PPU.Types as PPUTypes exposing (Mode(..), PPU, PPUInterrupt(..))
 import Component.RAM as RAM exposing (RAM)

@@ -1,4 +1,4 @@
-module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, maybePredicate, stringToBytes, word16ToString, word8ToString)
+module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, word16ToString, word8ToString)
 
 import Array exposing (Array)
 import Bitwise
@@ -74,3 +74,12 @@ conditionalOrBitmask condition mask =
 
     else
         0x00
+
+
+foldRIndexes : Int -> acc -> (Int -> acc -> acc) -> acc
+foldRIndexes remaining acc f =
+    if remaining == 0 then
+        acc
+
+    else
+        foldRIndexes (remaining - 1) (f (remaining - 1) acc) f

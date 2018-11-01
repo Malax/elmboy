@@ -1,6 +1,7 @@
-module Component.PPU.OAM exposing (foldRIndexes, searchVisibleObjects)
+module Component.PPU.OAM exposing (searchVisibleObjects)
 
 import Array exposing (Array)
+import Util
 
 
 {-| Returns a list of object indexes that are visible
@@ -14,7 +15,7 @@ searchVisibleObjects line objectHeight oamRam =
         maxY =
             line + 16
     in
-    foldRIndexes 40 [] <|
+    Util.foldRIndexes 40 [] <|
         \index acc ->
             case Array.get (index * 4) oamRam of
                 Just objectY ->
@@ -26,12 +27,3 @@ searchVisibleObjects line objectHeight oamRam =
 
                 Nothing ->
                     acc
-
-
-foldRIndexes : Int -> acc -> (Int -> acc -> acc) -> acc
-foldRIndexes remaining acc f =
-    if remaining == 0 then
-        acc
-
-    else
-        foldRIndexes (remaining - 1) (f (remaining - 1) acc) f
