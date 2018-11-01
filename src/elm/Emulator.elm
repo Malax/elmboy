@@ -34,12 +34,12 @@ emulateNextInstruction gameBoy =
         updatedInterruptFlag =
             List.foldl Bitwise.or
                 emulatedGameBoy.cpu.interruptFlag
-                [ conditionalOrBitmask (ppu.triggeredInterrupt == Just VBlankInterrupt) 0x01
-                , conditionalOrBitmask (ppu.triggeredInterrupt == Just HBlankInterrupt) 0x02
-                , conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
-                , conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
-                , conditionalOrBitmask timer.triggeredInterrupt 0x04
-                , conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
+                [ Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just VBlankInterrupt) 0x01
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just HBlankInterrupt) 0x02
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
+                , Util.conditionalOrBitmask timer.triggeredInterrupt 0x04
+                , Util.conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
                 ]
 
         cpu =
@@ -141,12 +141,3 @@ performInterrupt interruptServiceRoutineAddress modifiedInterruptFlag gameBoy =
         |> GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu)
         |> Opcode.push (readRegister16 PC)
         |> writeRegister16 PC interruptServiceRoutineAddress
-
-
-conditionalOrBitmask : Bool -> Int -> Int
-conditionalOrBitmask condition mask =
-    if condition then
-        mask
-
-    else
-        0x00

@@ -1,4 +1,4 @@
-module Util exposing (byteToSignedInt, chunkList, maybePredicate, stringToBytes, word16ToString, word8ToString)
+module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, maybePredicate, stringToBytes, word16ToString, word8ToString)
 
 import Array exposing (Array)
 import Bitwise
@@ -64,3 +64,12 @@ stringToBytes string =
                 acc
     in
     recurse string Array.empty
+
+
+conditionalOrBitmask : Bool -> Int -> Int
+conditionalOrBitmask condition mask =
+    if condition then
+        mask
+
+    else
+        0x00
