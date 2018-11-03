@@ -228,6 +228,13 @@ addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTil
         flipY =
             Bitwise.and Constants.bit6Mask objectFlags == Constants.bit6Mask
 
+        priority =
+            if Bitwise.and Constants.bit7Mask objectFlags == Constants.bit7Mask then
+                LineBuffer.BehindBackground
+
+            else
+                LineBuffer.OverBackground
+
         line =
             if flipY then
                 (objectHeight - 1) - (screenY - normalizedY)
@@ -241,7 +248,7 @@ addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTil
         rawPixels =
             readTileLinePixels tileAddress line vram flipX palette
     in
-    LineBuffer.mixPixels normalizedX rawPixels buffer
+    LineBuffer.mixPixels normalizedX rawPixels priority buffer
 
 
 

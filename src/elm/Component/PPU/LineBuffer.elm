@@ -1,5 +1,6 @@
 module Component.PPU.LineBuffer exposing
     ( LineBuffer(..)
+    , ObjectPriority(..)
     , init
     , mixPixels
     , unpack
@@ -12,11 +13,16 @@ type LineBuffer
     = LineBuffer (List RawPixel)
 
 
-mixPixels : Int -> List RawPixel -> LineBuffer -> LineBuffer
-mixPixels offset pixels ((LineBuffer bufferedPixels) as lineBuffer) =
+type ObjectPriority
+    = BehindBackground
+    | OverBackground
+
+
+mixPixels : Int -> List RawPixel -> ObjectPriority -> LineBuffer -> LineBuffer
+mixPixels offset pixels priority ((LineBuffer bufferedPixels) as lineBuffer) =
     let
         clampedOffset =
-            clamp 0 lineLength offset
+            clamp 0 (List.length bufferedPixels) offset
 
         pixelCount =
             List.length pixels
@@ -29,12 +35,12 @@ mixPixels offset pixels ((LineBuffer bufferedPixels) as lineBuffer) =
                 0
 
         takePixelCount =
-            lineLength - clampedOffset
+            List.length bufferedPixels - clampedOffset
 
         sanitizedPixels =
             pixels |> List.drop dropPixelCount |> List.take takePixelCount
     in
-    modifySliceSlice (\slice -> zip slice sanitizedPixels |> List.map mixPixel) clampedOffset (clampedOffset + List.length sanitizedPixels) bufferedPixels
+    modifySliceSlice (\slice -> zip slice sanitizedPixels |> List.map (mixPixel priority)) clampedOffset (clampedOffset + List.length sanitizedPixels) bufferedPixels
         |> LineBuffer
 
 
@@ -45,49 +51,46 @@ unpack (LineBuffer array) =
 
 init : List RawPixel -> LineBuffer
 init pixels =
-    if List.length pixels == lineLength then
-        LineBuffer pixels
-
-    else
-        pixels
-            |> List.take lineLength
-            |> List.append (List.repeat (lineLength - List.length pixels) ( 0x00, Background ))
-            |> LineBuffer
+    LineBuffer pixels
 
 
 
 -- Internal
 
 
-lineLength : Int
-lineLength =
-    160
+mixPixel : ObjectPriority -> ( RawPixel, RawPixel ) -> RawPixel
+mixPixel priority ( existingPixel, newPixel ) =
+    if isTransparentPixel newPixel then
+        existingPixel
 
-
-mixPixel : ( RawPixel, RawPixel ) -> RawPixel
-mixPixel ( pixel1, pixel2 ) =
-    if isObjectPixel pixel1 then
-        pixel1
-
-    else if isTransparentPixel pixel2 then
-        pixel1
+    else if isObjectPixel existingPixel then
+        existingPixel
 
     else
-        pixel2
+        case priority of
+            BehindBackground ->
+                if isTransparentPixel existingPixel then
+                    newPixel
+
+                else
+                    existingPixel
+
+            OverBackground ->
+                newPixel
 
 
-{-| Checks if the given pixel is coming from an object
--}
 isObjectPixel : RawPixel -> Bool
-isObjectPixel ( _, source ) =
+isObjectPixel rawPixel =
+    let
+        source =
+            Tuple.second rawPixel
+    in
     source == ObjectWithPalette0 || source == ObjectWithPalette1
 
 
-{-| Checks if the given pixel is transparent or not. Only object pixels can be possibly transparent.
--}
 isTransparentPixel : RawPixel -> Bool
-isTransparentPixel (( data, source ) as pixel) =
-    isObjectPixel pixel && data == 0x00
+isTransparentPixel rawPixel =
+    Tuple.first rawPixel == 0x00
 
 
 modifySliceSlice : (List a -> List a) -> Int -> Int -> List a -> List a
