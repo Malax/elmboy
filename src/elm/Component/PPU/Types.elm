@@ -10,6 +10,7 @@ module Component.PPU.Types exposing
     , setOamRam
     , setObjectPalette0
     , setObjectPalette1
+    , setScreen
     , setScrollX
     , setScrollY
     , setVBlankData
@@ -402,5 +403,29 @@ setEmulateData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame in
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = cyclesSinceLastCompleteFrame
     , triggeredInterrupt = interrupt
+    , omitFrame = ppu.omitFrame
+    }
+
+
+setScreen : GameBoyScreen -> PPU -> PPU
+setScreen screen ppu =
+    { mode = ppu.mode
+    , vram = ppu.vram
+    , line = ppu.line
+    , lineCompare = ppu.lineCompare
+    , scrollX = ppu.scrollX
+    , scrollY = ppu.scrollY
+    , windowX = ppu.windowX
+    , windowY = ppu.windowY
+    , objects = ppu.objects
+    , lcdc = ppu.lcdc
+    , lcdStatus = ppu.lcdStatus
+    , backgroundPalette = ppu.backgroundPalette
+    , objectPalette0 = ppu.objectPalette0
+    , objectPalette1 = ppu.objectPalette1
+    , screen = screen
+    , lastCompleteFrame = ppu.lastCompleteFrame
+    , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
+    , triggeredInterrupt = ppu.triggeredInterrupt
     , omitFrame = ppu.omitFrame
     }
