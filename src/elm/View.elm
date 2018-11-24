@@ -104,12 +104,7 @@ projectDescription =
 
 romSelector : String -> Html Msg
 romSelector fileInputId =
-    div [ class "screen-wrapper" ]
-        [ div [ class "rom-selector" ]
-            [ input [ type_ "file", accept ".gb", onInput (\_ -> FileSelected), id fileInputId, class "rom-file-input" ] []
-            , label [ for fileInputId, class "rom-file-input-label" ] []
-            ]
-        ]
+    div [ class "screen-wrapper" ] [ div [ class "rom-selector", onClick OpenFileSelect ] [] ]
 
 
 screen : String -> Html Msg

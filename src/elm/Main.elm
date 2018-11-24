@@ -4,18 +4,24 @@ import Array exposing (Array)
 import Bootstrap.Modal as Modal
 import Browser
 import Browser.Events
+import Bytes
+import Bytes.Decode
 import Component.Cartridge as Cartridge
 import Component.Joypad exposing (GameBoyButton(..))
 import Component.PPU as PPU
 import Component.PPU.GameBoyScreen as GameBoyScreen
 import Emulator
+import File
+import File.Select
 import GameBoy exposing (GameBoy)
 import Html exposing (Html)
 import Json.Decode as Decode
 import Model exposing (Model(..))
 import Msg exposing (Msg(..))
 import Ports
+import Task
 import UI.KeyDecoder
+import Util
 import View
 
 
@@ -29,8 +35,18 @@ update msg model =
     case model of
         Idle idleModel ->
             case msg of
-                FileDataReceived data ->
-                    case Cartridge.fromBytes data of
+                OpenFileSelect ->
+                    ( model, File.Select.file [] FileSelected )
+
+                FileSelected file ->
+                    file
+                        |> File.toBytes
+                        |> Task.map (\bytes -> Bytes.Decode.decode (Util.uint8ArrayDecoder (Bytes.width bytes)) bytes |> Maybe.andThen Cartridge.fromBytes)
+                        |> Task.perform CartridgeSelected
+                        |> Tuple.pair model
+
+                CartridgeSelected maybeCartridge ->
+                    case maybeCartridge of
                         Just cartridge ->
                             ( Emulation { gameBoy = GameBoy.init cartridge, paused = False, frameTimes = [] }, Cmd.none )
 
@@ -44,9 +60,6 @@ update msg model =
                                         }
                             in
                             ( Idle { idleModel | errorModal = errorModal }, Cmd.none )
-
-                FileSelected ->
-                    ( model, Ports.requestFileData fileInputId )
 
                 CloseErrorModal ->
                     ( Idle { idleModel | errorModal = Nothing }, Cmd.none )
@@ -123,7 +136,6 @@ subscriptions model =
         [ animationFrameSubscription
         , Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
-        , Ports.fileData FileDataReceived
         ]
 
 

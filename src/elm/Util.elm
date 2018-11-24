@@ -1,7 +1,9 @@
-module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, word16ToString, word8ToString)
+module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
 
 import Array exposing (Array)
 import Bitwise
+import Bytes
+import Bytes.Decode exposing (Step(..))
 import Constants
 import Hex
 
@@ -42,6 +44,18 @@ chunkList size list =
 maybePredicate : (a -> Bool) -> Maybe a -> Bool
 maybePredicate predicate =
     Maybe.map predicate >> Maybe.withDefault False
+
+
+uint8ArrayDecoder : Int -> Bytes.Decode.Decoder (Array Int)
+uint8ArrayDecoder width =
+    Bytes.Decode.loop ( Array.empty, width ) <|
+        \( acc, remainingBytes ) ->
+            if remainingBytes > 0 then
+                Bytes.Decode.unsignedInt8
+                    |> Bytes.Decode.map (\byte -> Loop ( Array.push byte acc, remainingBytes - 1 ))
+
+            else
+                Bytes.Decode.succeed (Done acc)
 
 
 stringToBytes : String -> Array Int

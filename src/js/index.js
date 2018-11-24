@@ -10,19 +10,6 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
     setPixelsFromBatches(canvas, elmData.pixelBatches)
   })
-
-  app.ports.requestFileData.subscribe(function (fileInputId) {
-    const file = document.getElementById(fileInputId).files[0]
-    const fileReader = new window.FileReader()
-
-    fileReader.addEventListener('load', function () {
-      app.ports.fileData.send(Array.from(new Uint8Array(fileReader.result)))
-    }, false)
-
-    if (file) {
-      fileReader.readAsArrayBuffer(file)
-    }
-  })
 })
 
 function setPixelsFromBatches (canvas, pixelBatches) {
