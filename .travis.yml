@@ -1,11 +1,6 @@
-language: node_js
-
-node_js:
-    "node"
-
-cache:
-  directories:
-    - "node_modules"
+language: elm
+elm:
+    - "0.19.0"
 
 deploy:
   provider: pages
