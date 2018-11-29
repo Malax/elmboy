@@ -98,7 +98,7 @@ update msg model =
 main : Program () Model Msg
 main =
     Browser.element
-        { view = View.view canvasId fileInputId
+        { view = View.view canvasId
         , init = init
         , update = update
         , subscriptions = subscriptions
@@ -131,8 +131,3 @@ cyclesPerSecond =
 canvasId : String
 canvasId =
     "screen"
-
-
-fileInputId : String
-fileInputId =
-    "romFileInput"

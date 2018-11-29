@@ -21,14 +21,14 @@ import Model exposing (EmulationMode(..), ErrorModal, Model)
 import Msg exposing (Msg(..))
 
 
-view : String -> String -> Model -> Html Msg
-view canvasId fileInputId model =
+view : String -> Model -> Html Msg
+view canvasId model =
     let
         leftContent =
             case model.gameBoy of
                 Nothing ->
                     div []
-                        [ romSelector fileInputId
+                        [ romSelector
                         , model.errorModal
                             |> Maybe.map errorModalView
                             |> Maybe.withDefault (text "")
@@ -103,8 +103,8 @@ projectDescription =
         ]
 
 
-romSelector : String -> Html Msg
-romSelector fileInputId =
+romSelector : Html Msg
+romSelector =
     div [ class "screen-wrapper" ] [ div [ class "rom-selector", onClick OpenFileSelect ] [] ]
 
 
