@@ -4,37 +4,36 @@ import Component.Joypad exposing (GameBoyButton(..))
 import Json.Decode as Decode
 
 
-decodeKey : Decode.Decoder (Maybe GameBoyButton)
+decodeKey : Decode.Decoder GameBoyButton
 decodeKey =
-    Decode.map mapKey (Decode.field "key" Decode.string)
+    Decode.field "key" Decode.string
+        |> Decode.andThen
+            (\string ->
+                case string of
+                    "ArrowLeft" ->
+                        Decode.succeed Left
 
+                    "ArrowRight" ->
+                        Decode.succeed Right
 
-mapKey : String -> Maybe GameBoyButton
-mapKey string =
-    case string of
-        "ArrowLeft" ->
-            Just Left
+                    "ArrowUp" ->
+                        Decode.succeed Up
 
-        "ArrowRight" ->
-            Just Right
+                    "ArrowDown" ->
+                        Decode.succeed Down
 
-        "ArrowUp" ->
-            Just Up
+                    "s" ->
+                        Decode.succeed A
 
-        "ArrowDown" ->
-            Just Down
+                    "a" ->
+                        Decode.succeed B
 
-        "s" ->
-            Just A
+                    "Enter" ->
+                        Decode.succeed Start
 
-        "a" ->
-            Just B
+                    "Shift" ->
+                        Decode.succeed Select
 
-        "Enter" ->
-            Just Start
-
-        "Shift" ->
-            Just Select
-
-        _ ->
-            Nothing
+                    _ ->
+                        Decode.fail "Pressed key is not a GameBoyButton"
+            )

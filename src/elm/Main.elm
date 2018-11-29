@@ -16,7 +16,7 @@ import File.Select
 import GameBoy exposing (GameBoy)
 import Html exposing (Html)
 import Json.Decode as Decode
-import Model exposing (Model(..))
+import Model exposing (EmulationMode(..), Model)
 import Msg exposing (Msg(..))
 import Ports
 import Task
@@ -27,84 +27,72 @@ import View
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( Idle { errorModal = Nothing }, Cmd.none )
+    ( { gameBoy = Nothing, emulationMode = Manual, frameTimes = [], errorModal = Nothing }, Cmd.none )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    case model of
-        Idle idleModel ->
-            case msg of
-                OpenFileSelect ->
-                    ( model, File.Select.file [] FileSelected )
-
-                FileSelected file ->
-                    file
-                        |> File.toBytes
-                        |> Task.map (\bytes -> Bytes.Decode.decode (Util.uint8ArrayDecoder (Bytes.width bytes)) bytes |> Maybe.andThen Cartridge.fromBytes)
-                        |> Task.perform CartridgeSelected
-                        |> Tuple.pair model
-
-                CartridgeSelected maybeCartridge ->
-                    case maybeCartridge of
-                        Just cartridge ->
-                            ( Emulation { gameBoy = GameBoy.init cartridge, paused = False, frameTimes = [] }, Cmd.none )
-
-                        Nothing ->
-                            let
-                                errorModal =
-                                    Just
-                                        { visibility = Modal.shown
-                                        , title = "Unsupported ROM"
-                                        , body = "Your selected ROM is not yet supported by Elmboy. This is usually the case due to an unsupported memory bank controller required by the ROM you're trying to run. Please select another game and report the issue in the GitHub issue tracker."
-                                        }
-                            in
-                            ( Idle { idleModel | errorModal = errorModal }, Cmd.none )
-
-                CloseErrorModal ->
-                    ( Idle { idleModel | errorModal = Nothing }, Cmd.none )
-
-                _ ->
-                    ( model, Cmd.none )
-
-        Emulation emulationModel ->
-            case msg of
-                AnimationFrameDelta time ->
+    case msg of
+        AnimationFrameDelta time ->
+            case model.gameBoy of
+                Just gameBoy ->
                     let
-                        gameBoy =
-                            Emulator.emulateCycles (cyclesPerSecond // 60) emulationModel.gameBoy
+                        emulatedGameBoy =
+                            Emulator.emulateCycles (cyclesPerSecond // 60) gameBoy
                     in
-                    ( Emulation { emulationModel | gameBoy = gameBoy, frameTimes = time :: List.take 120 emulationModel.frameTimes, paused = emulationModel.paused }
-                    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame gameBoy.ppu) }
+                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }
+                    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
                     )
 
-                ButtonDown (Just button) ->
-                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button True emulationModel.gameBoy, frameTimes = emulationModel.frameTimes, paused = emulationModel.paused }
-                    , Cmd.none
-                    )
-
-                ButtonUp (Just button) ->
-                    ( Emulation { emulationModel | gameBoy = GameBoy.setButtonStatus button False emulationModel.gameBoy, frameTimes = emulationModel.frameTimes, paused = emulationModel.paused }
-                    , Cmd.none
-                    )
-
-                ButtonDown Nothing ->
+                Nothing ->
                     ( model, Cmd.none )
 
-                ButtonUp Nothing ->
-                    ( model, Cmd.none )
+        ButtonDown button ->
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setButtonStatus button True) }
+            , Cmd.none
+            )
 
-                Reset ->
-                    ( Idle { errorModal = Nothing }, Cmd.none )
+        ButtonUp button ->
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setButtonStatus button False) }
+            , Cmd.none
+            )
 
-                Pause ->
-                    ( Emulation { emulationModel | paused = True }, Cmd.none )
+        Reset ->
+            init ()
 
-                Resume ->
-                    ( Emulation { emulationModel | paused = False }, Cmd.none )
+        Pause ->
+            ( { model | emulationMode = Manual }, Cmd.none )
 
-                _ ->
-                    ( model, Cmd.none )
+        Resume ->
+            ( { model | emulationMode = OnAnimationFrame }, Cmd.none )
+
+        OpenFileSelect ->
+            ( model, File.Select.file [] FileSelected )
+
+        FileSelected file ->
+            file
+                |> File.toBytes
+                |> Task.map (\bytes -> Bytes.Decode.decode (Util.uint8ArrayDecoder (Bytes.width bytes)) bytes |> Maybe.andThen Cartridge.fromBytes)
+                |> Task.perform CartridgeSelected
+                |> Tuple.pair model
+
+        CartridgeSelected maybeCartridge ->
+            case maybeCartridge of
+                Just cartridge ->
+                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulationMode = OnAnimationFrame }, Cmd.none )
+
+                Nothing ->
+                    let
+                        errorModal =
+                            { visibility = Modal.shown
+                            , title = "Unsupported ROM"
+                            , body = "Your selected ROM is not yet supported by Elmboy. This is usually the case due to an unsupported memory bank controller required by the ROM you're trying to run. Please select another game and report the issue in the GitHub issue tracker."
+                            }
+                    in
+                    ( { model | errorModal = Just errorModal }, Cmd.none )
+
+        CloseErrorModal ->
+            ( { model | errorModal = Nothing }, Cmd.none )
 
 
 main : Program () Model Msg
@@ -121,13 +109,9 @@ subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         animationFrameSubscription =
-            case model of
-                Emulation emulationModel ->
-                    if not emulationModel.paused then
-                        Browser.Events.onAnimationFrameDelta AnimationFrameDelta
-
-                    else
-                        Sub.none
+            case model.emulationMode of
+                OnAnimationFrame ->
+                    Browser.Events.onAnimationFrameDelta AnimationFrameDelta
 
                 _ ->
                     Sub.none

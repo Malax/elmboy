@@ -11,8 +11,8 @@ type Msg
     | FileSelected File
     | CartridgeSelected (Maybe Cartridge)
     | AnimationFrameDelta Float
-    | ButtonDown (Maybe GameBoyButton)
-    | ButtonUp (Maybe GameBoyButton)
+    | ButtonDown GameBoyButton
+    | ButtonUp GameBoyButton
     | Reset
     | Pause
     | Resume

@@ -13,10 +13,11 @@ import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Display as Display
 import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
+import GameBoy exposing (GameBoy)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Model exposing (EmulationModel, ErrorModal, Model(..))
+import Model exposing (EmulationMode(..), ErrorModal, Model)
 import Msg exposing (Msg(..))
 
 
@@ -24,19 +25,19 @@ view : String -> String -> Model -> Html Msg
 view canvasId fileInputId model =
     let
         leftContent =
-            case model of
-                Idle idleModel ->
+            case model.gameBoy of
+                Nothing ->
                     div []
                         [ romSelector fileInputId
-                        , idleModel.errorModal
+                        , model.errorModal
                             |> Maybe.map errorModalView
                             |> Maybe.withDefault (text "")
                         ]
 
-                Emulation emulationModel ->
+                Just gameBoy ->
                     div []
                         [ screen canvasId
-                        , emulationToolbar emulationModel
+                        , emulationToolbar gameBoy model.emulationMode model.frameTimes
                         ]
     in
     scaffolding leftContent projectDescription
@@ -112,21 +113,22 @@ screen canvasId =
     div [ class "screen-wrapper" ] [ canvas [ id canvasId, width 160, height 144, class "screen-canvas" ] [] ]
 
 
-emulationToolbar : EmulationModel -> Html Msg
-emulationToolbar model =
+emulationToolbar : GameBoy -> EmulationMode -> List Float -> Html Msg
+emulationToolbar gameBoy emulationMode frameTimes =
     let
         pauseResumeButton =
-            if model.paused then
-                ButtonGroup.button [ Button.secondary, Button.onClick Resume ] [ i [ class "fa fa-play" ] [] ]
+            case emulationMode of
+                OnAnimationFrame ->
+                    ButtonGroup.button [ Button.secondary, Button.onClick Pause ] [ i [ class "fa fa-pause" ] [] ]
 
-            else
-                ButtonGroup.button [ Button.secondary, Button.onClick Pause ] [ i [ class "fa fa-pause" ] [] ]
+                Manual ->
+                    ButtonGroup.button [ Button.secondary, Button.onClick Resume ] [ i [ class "fa fa-play" ] [] ]
 
         frameCount =
-            toFloat (List.length model.frameTimes)
+            toFloat (List.length frameTimes)
 
         totalTime =
-            List.sum model.frameTimes
+            List.sum frameTimes
 
         fps =
             frameCount / (totalTime / 1000) |> round |> String.fromInt |> (\value -> value ++ " FPS")
