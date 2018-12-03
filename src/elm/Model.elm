@@ -1,20 +1,16 @@
-module Model exposing (EmulationMode(..), ErrorModal, Model)
+module Model exposing (ErrorModal, Model)
 
 import Bootstrap.Modal as Modal
 import GameBoy exposing (GameBoy)
 
 
 type alias Model =
-    { emulationMode : EmulationMode
+    { gameBoy : Maybe GameBoy
     , frameTimes : List Float
-    , gameBoy : Maybe GameBoy
     , errorModal : Maybe ErrorModal
+    , debuggerEnabled : Bool
+    , emulateOnAnimationFrame : Bool
     }
-
-
-type EmulationMode
-    = OnAnimationFrame
-    | Manual
 
 
 type alias ErrorModal =

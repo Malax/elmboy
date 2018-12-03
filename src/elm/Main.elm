@@ -16,18 +16,45 @@ import File.Select
 import GameBoy exposing (GameBoy)
 import Html exposing (Html)
 import Json.Decode as Decode
-import Model exposing (EmulationMode(..), Model)
+import Model exposing (Model)
 import Msg exposing (Msg(..))
 import Ports
 import Task
 import UI.KeyDecoder
 import Util
-import View
+import View.Debugger
+import View.Emulator
+
+
+main : Program () Model Msg
+main =
+    Browser.element
+        { view = view
+        , init = init
+        , update = update
+        , subscriptions = subscriptions
+        }
+
+
+view : Model -> Html Msg
+view model =
+    if model.debuggerEnabled then
+        View.Debugger.view canvasId model
+
+    else
+        View.Emulator.view canvasId model
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { gameBoy = Nothing, emulationMode = Manual, frameTimes = [], errorModal = Nothing }, Cmd.none )
+    ( { gameBoy = Nothing
+      , emulateOnAnimationFrame = False
+      , frameTimes = []
+      , errorModal = Nothing
+      , debuggerEnabled = False
+      }
+    , Cmd.none
+    )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -61,10 +88,10 @@ update msg model =
             init ()
 
         Pause ->
-            ( { model | emulationMode = Manual }, Cmd.none )
+            ( { model | emulateOnAnimationFrame = False }, Cmd.none )
 
         Resume ->
-            ( { model | emulationMode = OnAnimationFrame }, Cmd.none )
+            ( { model | emulateOnAnimationFrame = True }, Cmd.none )
 
         OpenFileSelect ->
             ( model, File.Select.file [] FileSelected )
@@ -79,7 +106,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulationMode = OnAnimationFrame }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulateOnAnimationFrame = True }, Cmd.none )
 
                 Nothing ->
                     let
@@ -95,26 +122,15 @@ update msg model =
             ( { model | errorModal = Nothing }, Cmd.none )
 
 
-main : Program () Model Msg
-main =
-    Browser.element
-        { view = View.view canvasId
-        , init = init
-        , update = update
-        , subscriptions = subscriptions
-        }
-
-
 subscriptions : Model -> Sub Msg
 subscriptions model =
     let
         animationFrameSubscription =
-            case model.emulationMode of
-                OnAnimationFrame ->
-                    Browser.Events.onAnimationFrameDelta AnimationFrameDelta
+            if model.emulateOnAnimationFrame then
+                Browser.Events.onAnimationFrameDelta AnimationFrameDelta
 
-                _ ->
-                    Sub.none
+            else
+                Sub.none
     in
     Sub.batch
         [ animationFrameSubscription

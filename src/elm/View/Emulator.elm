@@ -1,4 +1,4 @@
-module View exposing (view)
+module View.Emulator exposing (view)
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
@@ -6,7 +6,6 @@ import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Modal as Modal
 import Bootstrap.Navbar as Navbar
 import Bootstrap.Progress as Progress
 import Bootstrap.Tab as Tab
@@ -17,8 +16,9 @@ import GameBoy exposing (GameBoy)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Model exposing (EmulationMode(..), ErrorModal, Model)
+import Model exposing (ErrorModal, Model)
 import Msg exposing (Msg(..))
+import View.Common exposing (errorModalView, romSelector, screen)
 
 
 view : String -> Model -> Html Msg
@@ -37,10 +37,14 @@ view canvasId model =
                 Just gameBoy ->
                     div []
                         [ screen canvasId
-                        , emulationToolbar gameBoy model.emulationMode model.frameTimes
+                        , emulationToolbar gameBoy model.emulateOnAnimationFrame model.frameTimes
                         ]
     in
     scaffolding leftContent projectDescription
+
+
+
+-- Internal
 
 
 scaffolding : Html Msg -> Html Msg -> Html Msg
@@ -103,26 +107,15 @@ projectDescription =
         ]
 
 
-romSelector : Html Msg
-romSelector =
-    div [ class "screen-wrapper" ] [ div [ class "rom-selector", onClick OpenFileSelect ] [] ]
-
-
-screen : String -> Html Msg
-screen canvasId =
-    div [ class "screen-wrapper" ] [ canvas [ id canvasId, width 160, height 144, class "screen-canvas" ] [] ]
-
-
-emulationToolbar : GameBoy -> EmulationMode -> List Float -> Html Msg
-emulationToolbar gameBoy emulationMode frameTimes =
+emulationToolbar : GameBoy -> Bool -> List Float -> Html Msg
+emulationToolbar gameBoy emulateOnAnimationFrame frameTimes =
     let
         pauseResumeButton =
-            case emulationMode of
-                OnAnimationFrame ->
-                    ButtonGroup.button [ Button.secondary, Button.onClick Pause ] [ i [ class "fa fa-pause" ] [] ]
+            if emulateOnAnimationFrame then
+                ButtonGroup.button [ Button.secondary, Button.onClick Pause ] [ i [ class "fa fa-pause" ] [] ]
 
-                Manual ->
-                    ButtonGroup.button [ Button.secondary, Button.onClick Resume ] [ i [ class "fa fa-play" ] [] ]
+            else
+                ButtonGroup.button [ Button.secondary, Button.onClick Resume ] [ i [ class "fa fa-play" ] [] ]
 
         frameCount =
             toFloat (List.length frameTimes)
@@ -140,20 +133,3 @@ emulationToolbar gameBoy emulationMode frameTimes =
             ]
         , span [ class "fps-counter" ] [ text fps ]
         ]
-
-
-errorModalView : ErrorModal -> Html Msg
-errorModalView errorModal =
-    Modal.config CloseErrorModal
-        |> Modal.large
-        |> Modal.hideOnBackdropClick True
-        |> Modal.h3 [] [ text errorModal.title ]
-        |> Modal.body [] [ p [] [ text errorModal.body ] ]
-        |> Modal.footer []
-            [ Button.button
-                [ Button.outlinePrimary
-                , Button.attrs [ onClick CloseErrorModal ]
-                ]
-                [ text "Close" ]
-            ]
-        |> Modal.view errorModal.visibility
