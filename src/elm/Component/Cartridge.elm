@@ -1,4 +1,4 @@
-module Component.Cartridge exposing (Cartridge, fromBytes, readWord8, writeWord8)
+module Component.Cartridge exposing (Cartridge, empty, fromBytes, readWord8, writeWord8)
 
 import Array exposing (Array)
 import Bitwise
@@ -13,6 +13,11 @@ import Util
 type Cartridge
     = NoMBC (Array Int)
     | MBC1 { ramEnabled : Bool, bank1 : Int, bank2 : Int, mode : Int, ram : RAM } (Array Int)
+
+
+empty : Cartridge
+empty =
+    Array.initialize 0x7FFF (\_ -> 0x00) |> NoMBC
 
 
 fromBytes : Array Int -> Maybe Cartridge

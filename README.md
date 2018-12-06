@@ -33,7 +33,6 @@ functional code in some cases due to performance issues, but I want to re-introd
 ## Non-Goals
 - Achieving a very high degree of emulation accuracy
 - Becoming a "serious" emulator that can used by Homebrew developers and/or speed runners
-- Debugging capabilities
 - Game Boy Color support
 
 ## Building

@@ -1,4 +1,4 @@
-module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
+module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder)
 
 import Array exposing (Array)
 import Bitwise
@@ -6,16 +6,6 @@ import Bytes
 import Bytes.Decode exposing (Step(..))
 import Constants
 import Hex
-
-
-word16ToString : Int -> String
-word16ToString =
-    Hex.toString >> String.toUpper >> String.padLeft 4 '0' >> (++) "0x"
-
-
-word8ToString : Int -> String
-word8ToString =
-    Hex.toString >> String.toUpper >> String.padLeft 2 '0' >> (++) "0x"
 
 
 byteToSignedInt : Int -> Int

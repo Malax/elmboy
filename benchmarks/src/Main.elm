@@ -1,7 +1,9 @@
 module Main exposing (main)
 
+import Array exposing (Array)
 import Benchmark exposing (..)
 import Benchmark.Runner exposing (BenchmarkProgram, program)
+import Component.CPU.OpcodeMapper as OpcodeMapper
 import Component.RAM as RAM
 
 
@@ -11,18 +13,838 @@ import Component.RAM as RAM
 
 suite : Benchmark
 suite =
-    describe "thing"
-        [ describe "category"
-            [ benchmark "a" <|
-                \_ -> RAM.init 0x0136
-            , benchmark "b" <|
-                \_ -> 2 * 2
-            ]
-        , Benchmark.compare "functionality"
-            "x"
-            (\_ -> 1 + 1)
-            "y"
-            (\_ -> 1 + 1)
+    describe "Elmboy"
+        [ Benchmark.compare "Opcode Lookup"
+            "Array.get"
+            (\_ -> OpcodeMapper.get 0xC2)
+            "case .. of"
+            (\_ -> lookupCaseOf 126)
+        ]
+
+
+lookupArray : Int -> Int
+lookupArray opcode =
+    Array.get opcode data |> Maybe.withDefault 0x00
+
+
+type GameBoy
+    = GameBoy Int
+
+
+lookupCaseOf : Int -> Int
+lookupCaseOf opcode =
+    case opcode of
+        0x00 ->
+            0xFE
+
+        0x01 ->
+            0x01FE
+
+        0x02 ->
+            0x02FE
+
+        0x03 ->
+            0x03FE
+
+        0x04 ->
+            0x04FE
+
+        0x05 ->
+            0x05FE
+
+        0x06 ->
+            0x06FE
+
+        0x07 ->
+            0x07FE
+
+        0x08 ->
+            0x08FE
+
+        0x09 ->
+            0x09FE
+
+        0x0A ->
+            0x0AFE
+
+        0x0B ->
+            0x0BFE
+
+        0x0C ->
+            0x0CFE
+
+        0x0D ->
+            0x0DFE
+
+        0x0E ->
+            0x0EFE
+
+        0x0F ->
+            0x0FFE
+
+        0x10 ->
+            0x10FE
+
+        0x11 ->
+            0x11FE
+
+        0x12 ->
+            0x12FE
+
+        0x13 ->
+            0x13FE
+
+        0x14 ->
+            0x14FE
+
+        0x15 ->
+            0x15FE
+
+        0x16 ->
+            0x16FE
+
+        0x17 ->
+            0x17FE
+
+        0x18 ->
+            0x18FE
+
+        0x19 ->
+            0x19FE
+
+        0x1A ->
+            0x1AFE
+
+        0x1B ->
+            0x1BFE
+
+        0x1C ->
+            0x1CFE
+
+        0x1D ->
+            0x1DFE
+
+        0x1E ->
+            0x1EFE
+
+        0x1F ->
+            0x1FFE
+
+        0x20 ->
+            0x20FE
+
+        0x21 ->
+            0x21FE
+
+        0x22 ->
+            0x22FE
+
+        0x23 ->
+            0x23FE
+
+        0x24 ->
+            0x24FE
+
+        0x25 ->
+            0x25FE
+
+        0x26 ->
+            0x26FE
+
+        0x27 ->
+            0x27FE
+
+        0x28 ->
+            0x28FE
+
+        0x29 ->
+            0x29FE
+
+        0x2A ->
+            0x2AFE
+
+        0x2B ->
+            0x2BFE
+
+        0x2C ->
+            0x2CFE
+
+        0x2D ->
+            0x2DFE
+
+        0x2E ->
+            0x2EFE
+
+        0x2F ->
+            0x2FFE
+
+        0x30 ->
+            0x30FE
+
+        0x31 ->
+            0x31FE
+
+        0x32 ->
+            0x32FE
+
+        0x33 ->
+            0x33FE
+
+        0x34 ->
+            0x34FE
+
+        0x35 ->
+            0x35FE
+
+        0x36 ->
+            0x36FE
+
+        0x37 ->
+            0x37FE
+
+        0x38 ->
+            0x38FE
+
+        0x39 ->
+            0x39FE
+
+        0x3A ->
+            0x3AFE
+
+        0x3B ->
+            0x3BFE
+
+        0x3C ->
+            0x3CFE
+
+        0x3D ->
+            0x3DFE
+
+        0x3E ->
+            0x3EFE
+
+        0x3F ->
+            0x3FFE
+
+        0x40 ->
+            0x40FE
+
+        0x41 ->
+            0x41FE
+
+        0x42 ->
+            0x42FE
+
+        0x43 ->
+            0x43FE
+
+        0x44 ->
+            0x44FE
+
+        0x45 ->
+            0x45FE
+
+        0x46 ->
+            0x46FE
+
+        0x47 ->
+            0x47FE
+
+        0x48 ->
+            0x48FE
+
+        0x49 ->
+            0x49FE
+
+        0x4A ->
+            0x4AFE
+
+        0x4B ->
+            0x4BFE
+
+        0x4C ->
+            0x4CFE
+
+        0x4D ->
+            0x4DFE
+
+        0x4E ->
+            0x4EFE
+
+        0x4F ->
+            0x4FFE
+
+        0x50 ->
+            0x50FE
+
+        0x51 ->
+            0x51FE
+
+        0x52 ->
+            0x52FE
+
+        0x53 ->
+            0x53FE
+
+        0x54 ->
+            0x54FE
+
+        0x55 ->
+            0x55FE
+
+        0x56 ->
+            0x56FE
+
+        0x57 ->
+            0x57FE
+
+        0x58 ->
+            0x58FE
+
+        0x59 ->
+            0x59FE
+
+        0x5A ->
+            0x5AFE
+
+        0x5B ->
+            0x5BFE
+
+        0x5C ->
+            0x5CFE
+
+        0x5D ->
+            0x5DFE
+
+        0x5E ->
+            0x5EFE
+
+        0x5F ->
+            0x5FFE
+
+        0x60 ->
+            0x60FE
+
+        0x61 ->
+            0x61FE
+
+        0x62 ->
+            0x62FE
+
+        0x63 ->
+            0x63FE
+
+        0x64 ->
+            0x64FE
+
+        0x65 ->
+            0x65FE
+
+        0x66 ->
+            0x66FE
+
+        0x67 ->
+            0x67FE
+
+        0x68 ->
+            0x68FE
+
+        0x69 ->
+            0x69FE
+
+        0x6A ->
+            0x6AFE
+
+        0x6B ->
+            0x6BFE
+
+        0x6C ->
+            0x6CFE
+
+        0x6D ->
+            0x6DFE
+
+        0x6E ->
+            0x6EFE
+
+        0x6F ->
+            0x6FFE
+
+        0x70 ->
+            0x70FE
+
+        0x71 ->
+            0x71FE
+
+        0x72 ->
+            0x72FE
+
+        0x73 ->
+            0x73FE
+
+        0x74 ->
+            0x74FE
+
+        0x75 ->
+            0x75FE
+
+        0x76 ->
+            0x76FE
+
+        0x77 ->
+            0x77FE
+
+        0x78 ->
+            0x78FE
+
+        0x79 ->
+            0x79FE
+
+        0x7A ->
+            0x7AFE
+
+        0x7B ->
+            0x7BFE
+
+        0x7C ->
+            0x7CFE
+
+        0x7D ->
+            0x7DFE
+
+        0x7E ->
+            0x7EFE
+
+        0x7F ->
+            0x7FFE
+
+        0x80 ->
+            0x80FE
+
+        0x81 ->
+            0x81FE
+
+        0x82 ->
+            0x82FE
+
+        0x83 ->
+            0x83FE
+
+        0x84 ->
+            0x84FE
+
+        0x85 ->
+            0x85FE
+
+        0x86 ->
+            0x86FE
+
+        0x87 ->
+            0x87FE
+
+        0x88 ->
+            0x88FE
+
+        0x89 ->
+            0x89FE
+
+        0x8A ->
+            0x8AFE
+
+        0x8B ->
+            0x8BFE
+
+        0x8C ->
+            0x8CFE
+
+        0x8D ->
+            0x8DFE
+
+        0x8E ->
+            0x8EFE
+
+        0x8F ->
+            0x8FFE
+
+        0x90 ->
+            0x90FE
+
+        0x91 ->
+            0x91FE
+
+        0x92 ->
+            0x92FE
+
+        0x93 ->
+            0x93FE
+
+        0x94 ->
+            0x94FE
+
+        0x95 ->
+            0x95FE
+
+        0x96 ->
+            0x96FE
+
+        0x97 ->
+            0x97FE
+
+        0x98 ->
+            0x98FE
+
+        0x99 ->
+            0x99FE
+
+        0x9A ->
+            0x9AFE
+
+        0x9B ->
+            0x9BFE
+
+        0x9C ->
+            0x9CFE
+
+        0x9D ->
+            0x9DFE
+
+        0x9E ->
+            0x9EFE
+
+        0x9F ->
+            0x9FFE
+
+        0xA0 ->
+            0xA0FE
+
+        0xA1 ->
+            0xA1FE
+
+        0xA2 ->
+            0xA2FE
+
+        0xA3 ->
+            0xA3FE
+
+        0xA4 ->
+            0xA4FE
+
+        0xA5 ->
+            0xA5FE
+
+        0xA6 ->
+            0xA6FE
+
+        0xA7 ->
+            0xA7FE
+
+        0xA8 ->
+            0xA8FE
+
+        0xA9 ->
+            0xA9FE
+
+        0xAA ->
+            0xAAFE
+
+        0xAB ->
+            0xABFE
+
+        0xAC ->
+            0xACFE
+
+        0xAD ->
+            0xADFE
+
+        0xAE ->
+            0xAEFE
+
+        0xAF ->
+            0xAFFE
+
+        0xB0 ->
+            0xB0FE
+
+        0xB1 ->
+            0xB1FE
+
+        0xB2 ->
+            0xB2FE
+
+        0xB3 ->
+            0xB3FE
+
+        0xB4 ->
+            0xB4FE
+
+        0xB5 ->
+            0xB5FE
+
+        0xB6 ->
+            0xB6FE
+
+        0xB7 ->
+            0xB7FE
+
+        0xB8 ->
+            0xB8FE
+
+        0xB9 ->
+            0xB9FE
+
+        0xBA ->
+            0xBAFE
+
+        0xBB ->
+            0xBBFE
+
+        0xBC ->
+            0xBCFE
+
+        0xBD ->
+            0xBDFE
+
+        0xBE ->
+            0xBEFE
+
+        0xBF ->
+            0xBFFE
+
+        0xC0 ->
+            0xC0FE
+
+        0xC1 ->
+            0xC1FE
+
+        0xC2 ->
+            0xC2FE
+
+        0xC3 ->
+            0xC3FE
+
+        0xC4 ->
+            0xC4FE
+
+        0xC5 ->
+            0xC5FE
+
+        0xC6 ->
+            0xC6FE
+
+        0xC7 ->
+            0xC7FE
+
+        0xC8 ->
+            0xC8FE
+
+        _ ->
+            0x00
+
+
+data : Array Int
+data =
+    Array.fromList
+        [ 0xFE
+        , 0x01FE
+        , 0x02FE
+        , 0x03FE
+        , 0x04FE
+        , 0x05FE
+        , 0x06FE
+        , 0x07FE
+        , 0x08FE
+        , 0x09FE
+        , 0x0AFE
+        , 0x0BFE
+        , 0x0CFE
+        , 0x0DFE
+        , 0x0EFE
+        , 0x0FFE
+        , 0x10FE
+        , 0x11FE
+        , 0x12FE
+        , 0x13FE
+        , 0x14FE
+        , 0x15FE
+        , 0x16FE
+        , 0x17FE
+        , 0x18FE
+        , 0x19FE
+        , 0x1AFE
+        , 0x1BFE
+        , 0x1CFE
+        , 0x1DFE
+        , 0x1EFE
+        , 0x1FFE
+        , 0x20FE
+        , 0x21FE
+        , 0x22FE
+        , 0x23FE
+        , 0x24FE
+        , 0x25FE
+        , 0x26FE
+        , 0x27FE
+        , 0x28FE
+        , 0x29FE
+        , 0x2AFE
+        , 0x2BFE
+        , 0x2CFE
+        , 0x2DFE
+        , 0x2EFE
+        , 0x2FFE
+        , 0x30FE
+        , 0x31FE
+        , 0x32FE
+        , 0x33FE
+        , 0x34FE
+        , 0x35FE
+        , 0x36FE
+        , 0x37FE
+        , 0x38FE
+        , 0x39FE
+        , 0x3AFE
+        , 0x3BFE
+        , 0x3CFE
+        , 0x3DFE
+        , 0x3EFE
+        , 0x3FFE
+        , 0x40FE
+        , 0x41FE
+        , 0x42FE
+        , 0x43FE
+        , 0x44FE
+        , 0x45FE
+        , 0x46FE
+        , 0x47FE
+        , 0x48FE
+        , 0x49FE
+        , 0x4AFE
+        , 0x4BFE
+        , 0x4CFE
+        , 0x4DFE
+        , 0x4EFE
+        , 0x4FFE
+        , 0x50FE
+        , 0x51FE
+        , 0x52FE
+        , 0x53FE
+        , 0x54FE
+        , 0x55FE
+        , 0x56FE
+        , 0x57FE
+        , 0x58FE
+        , 0x59FE
+        , 0x5AFE
+        , 0x5BFE
+        , 0x5CFE
+        , 0x5DFE
+        , 0x5EFE
+        , 0x5FFE
+        , 0x60FE
+        , 0x61FE
+        , 0x62FE
+        , 0x63FE
+        , 0x64FE
+        , 0x65FE
+        , 0x66FE
+        , 0x67FE
+        , 0x68FE
+        , 0x69FE
+        , 0x6AFE
+        , 0x6BFE
+        , 0x6CFE
+        , 0x6DFE
+        , 0x6EFE
+        , 0x6FFE
+        , 0x70FE
+        , 0x71FE
+        , 0x72FE
+        , 0x73FE
+        , 0x74FE
+        , 0x75FE
+        , 0x76FE
+        , 0x77FE
+        , 0x78FE
+        , 0x79FE
+        , 0x7AFE
+        , 0x7BFE
+        , 0x7CFE
+        , 0x7DFE
+        , 0x7EFE
+        , 0x7FFE
+        , 0x80FE
+        , 0x81FE
+        , 0x82FE
+        , 0x83FE
+        , 0x84FE
+        , 0x85FE
+        , 0x86FE
+        , 0x87FE
+        , 0x88FE
+        , 0x89FE
+        , 0x8AFE
+        , 0x8BFE
+        , 0x8CFE
+        , 0x8DFE
+        , 0x8EFE
+        , 0x8FFE
+        , 0x90FE
+        , 0x91FE
+        , 0x92FE
+        , 0x93FE
+        , 0x94FE
+        , 0x95FE
+        , 0x96FE
+        , 0x97FE
+        , 0x98FE
+        , 0x99FE
+        , 0x9AFE
+        , 0x9BFE
+        , 0x9CFE
+        , 0x9DFE
+        , 0x9EFE
+        , 0x9FFE
+        , 0xA0FE
+        , 0xA1FE
+        , 0xA2FE
+        , 0xA3FE
+        , 0xA4FE
+        , 0xA5FE
+        , 0xA6FE
+        , 0xA7FE
+        , 0xA8FE
+        , 0xA9FE
+        , 0xAAFE
+        , 0xABFE
+        , 0xACFE
+        , 0xADFE
+        , 0xAEFE
+        , 0xAFFE
+        , 0xB0FE
+        , 0xB1FE
+        , 0xB2FE
+        , 0xB3FE
+        , 0xB4FE
+        , 0xB5FE
+        , 0xB6FE
+        , 0xB7FE
+        , 0xB8FE
+        , 0xB9FE
+        , 0xBAFE
+        , 0xBBFE
+        , 0xBCFE
+        , 0xBDFE
+        , 0xBEFE
+        , 0xBFFE
+        , 0xC0FE
+        , 0xC1FE
+        , 0xC2FE
+        , 0xC3FE
+        , 0xC4FE
+        , 0xC5FE
+        , 0xC6FE
+        , 0xC7FE
+        , 0xC8FE
         ]
 
 

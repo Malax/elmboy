@@ -51,7 +51,7 @@ init _ =
       , emulateOnAnimationFrame = False
       , frameTimes = []
       , errorModal = Nothing
-      , debuggerEnabled = False
+      , debuggerEnabled = True
       }
     , Cmd.none
     )
