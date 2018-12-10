@@ -2,7 +2,12 @@ module View.Debugger exposing (view)
 
 import Array exposing (Array)
 import Bitwise
+import Bootstrap.Button as Button
+import Bootstrap.ButtonGroup as ButtonGroup
+import Bootstrap.Dropdown as Dropdown
 import Bootstrap.Form.Checkbox as Checkbox
+import Bootstrap.Form.Input as Input
+import Bootstrap.Form.InputGroup as InputGroup
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
@@ -17,8 +22,9 @@ import Constants
 import GameBoy exposing (GameBoy)
 import Hex
 import Html exposing (Html, h6, text)
-import Model exposing (Model)
-import Msg exposing (Msg)
+import Html.Events
+import Model exposing (MemoryArea(..), Model)
+import Msg exposing (DebuggerMsg(..), Msg(..))
 import Util
 import View.Common exposing (romSelector, screen)
 
@@ -49,14 +55,117 @@ view canvasId model =
                 , viewPPU gameBoy.ppu
                 ]
             ]
+        , Grid.row []
+            [ Grid.col [ Col.xs3 ] [ runToPCInputGroup model.debugger.runToProgramCounter ]
+            ]
         , Grid.row [ Row.attrs [ Spacing.mt3 ] ]
-            [ Grid.col [ Col.xs12 ] [ viewMemory 0xFF00 0x0100 gameBoy ]
+            [ Grid.col [ Col.xs7 ] [ viewMemoryArea model.debugger.memoryArea gameBoy ]
+            , Grid.col [ Col.xs5 ] [ buttons, droppy model ]
             ]
         ]
 
 
 
 -- Internal
+
+
+viewMemoryArea : MemoryArea -> GameBoy -> Html msg
+viewMemoryArea memoryArea =
+    case memoryArea of
+        CartridgeROMBank0 ->
+            viewMemory 0x00 0x4000
+
+        CartridgeROMBankN ->
+            viewMemory 0x4000 0x4000
+
+        VRAM ->
+            viewMemory 0x8000 0x1000
+
+        CartridgeRAM ->
+            viewMemory 0xA000 0x1000
+
+        WorkRAMBank0 ->
+            viewMemory 0xC000 0x1000
+
+        WorkRAMBank1 ->
+            viewMemory 0xD000 0x1000
+
+        OAM ->
+            viewMemory 0xFE00 0xA0
+
+        IORegisters ->
+            viewMemory 0xFF00 0x80
+
+        HRAM ->
+            viewMemory 0xFF80 0x70
+
+
+memoryAreaToString : MemoryArea -> String
+memoryAreaToString memoryArea =
+    case memoryArea of
+        CartridgeROMBank0 ->
+            "CartridgeROMBank0"
+
+        CartridgeROMBankN ->
+            "CartridgeROMBankN"
+
+        VRAM ->
+            "VRAM"
+
+        CartridgeRAM ->
+            "CartridgeRAM"
+
+        WorkRAMBank0 ->
+            "WorkRAMBank0"
+
+        WorkRAMBank1 ->
+            "WorkRAMBank1"
+
+        OAM ->
+            "OAM"
+
+        IORegisters ->
+            "IORegisters"
+
+        HRAM ->
+            "HRAM"
+
+
+droppy : Model -> Html Msg
+droppy model =
+    let
+        items =
+            [ CartridgeROMBank0, CartridgeROMBankN, VRAM, CartridgeRAM, WorkRAMBank0, WorkRAMBank1, OAM, IORegisters, HRAM ]
+                |> List.map
+                    (\memoryArea ->
+                        Dropdown.buttonItem [ Html.Events.onClick (Debugger (SelectMemoryArea memoryArea)) ] [ memoryArea |> memoryAreaToString |> text ]
+                    )
+    in
+    Dropdown.dropdown
+        model.debugger.memoryAreaDropdownState
+        { options = []
+        , toggleMsg = MemoryAreaDropdownStateChange >> Debugger
+        , toggleButton =
+            Dropdown.toggle [ Button.primary ] [ model.debugger.memoryArea |> memoryAreaToString |> text ]
+        , items = items
+        }
+
+
+buttons : Html Msg
+buttons =
+    ButtonGroup.buttonGroup []
+        [ ButtonGroup.button [ Button.secondary, Button.onClick (Debugger RunNextInstruction) ] [ text "Run Next Instruction" ]
+        ]
+
+
+runToPCInputGroup : Int -> Html Msg
+runToPCInputGroup address =
+    InputGroup.text [ Input.value (address |> Hex.toString), Input.onInput (RunToProgramCounterValueChange >> Debugger) ]
+        |> InputGroup.config
+        |> InputGroup.predecessors [ InputGroup.span [] [ text "0x" ] ]
+        |> InputGroup.successors
+            [ InputGroup.button [ Button.secondary, Button.onClick (Debugger RunToProgramCounter) ] [ text "Run" ] ]
+        |> InputGroup.view
 
 
 viewPPU : PPU -> Html msg
@@ -68,8 +177,6 @@ viewPPU ppu =
                 [ Table.th [] [ text "Line" ]
                 , Table.th [] [ text "Line Compare" ]
                 , Table.th [] [ text "Mode" ]
-                , Table.th [] [ text "LCDC" ]
-                , Table.th [] [ text "LCD Status" ]
                 ]
         , tbody =
             Table.tbody []
@@ -77,8 +184,6 @@ viewPPU ppu =
                     [ Table.td [] [ ppu.line |> String.fromInt |> text ]
                     , Table.td [] [ ppu.lineCompare |> String.fromInt |> text ]
                     , Table.td [] [ ppu.mode |> ppuModeToString |> text ]
-                    , Table.td [] [ text "a" ]
-                    , Table.td [] [ text "a" ]
                     ]
                 ]
         }
@@ -209,12 +314,31 @@ viewMemory address length gameBoy =
             MMU.readWord8Chunk gameBoy address length
                 |> List.map (\byte -> Table.td [] [ byte |> word8ToString |> text ])
                 |> Util.chunkList 16
-                |> List.indexedMap (\index list -> Table.th [] [ address + (index * 16) |> word16ToString |> text ] :: list)
+                |> List.indexedMap (\index list -> Table.th [] [ (address + (index * 16)) |> word16ToString |> text ] :: list)
                 |> List.map (Table.tr [])
     in
     Table.table
         { options = [ Table.striped, Table.small ]
-        , thead = Table.simpleThead []
+        , thead =
+            Table.simpleThead
+                [ Table.th [] [ text "" ]
+                , Table.th [] [ text "0" ]
+                , Table.th [] [ text "1" ]
+                , Table.th [] [ text "2" ]
+                , Table.th [] [ text "3" ]
+                , Table.th [] [ text "4" ]
+                , Table.th [] [ text "5" ]
+                , Table.th [] [ text "6" ]
+                , Table.th [] [ text "7" ]
+                , Table.th [] [ text "8" ]
+                , Table.th [] [ text "9" ]
+                , Table.th [] [ text "A" ]
+                , Table.th [] [ text "B" ]
+                , Table.th [] [ text "C" ]
+                , Table.th [] [ text "D" ]
+                , Table.th [] [ text "E" ]
+                , Table.th [] [ text "F" ]
+                ]
         , tbody = Table.tbody [] rows
         }
 
@@ -226,9 +350,9 @@ viewRegisterValue register cpu =
 
 word16ToString : Int -> String
 word16ToString =
-    Hex.toString >> String.toUpper >> String.padLeft 4 '0' >> (++) "0x"
+    Hex.toString >> String.toUpper >> String.padLeft 4 '0'
 
 
 word8ToString : Int -> String
 word8ToString =
-    Hex.toString >> String.toUpper >> String.padLeft 2 '0' >> (++) "0x"
+    Hex.toString >> String.toUpper >> String.padLeft 2 '0'

@@ -1,6 +1,7 @@
 module Main exposing (main)
 
 import Array exposing (Array)
+import Bootstrap.Dropdown
 import Bootstrap.Modal as Modal
 import Browser
 import Browser.Events
@@ -14,10 +15,11 @@ import Emulator
 import File
 import File.Select
 import GameBoy exposing (GameBoy)
+import Hex
 import Html exposing (Html)
 import Json.Decode as Decode
-import Model exposing (Model)
-import Msg exposing (Msg(..))
+import Model exposing (MemoryArea(..), Model)
+import Msg exposing (DebuggerMsg(..), Msg(..))
 import Ports
 import Task
 import UI.KeyDecoder
@@ -52,6 +54,7 @@ init _ =
       , frameTimes = []
       , errorModal = Nothing
       , debuggerEnabled = True
+      , debugger = { runToProgramCounter = 0x00, memoryArea = HRAM, memoryAreaDropdownState = Bootstrap.Dropdown.initialState }
       }
     , Cmd.none
     )
@@ -106,7 +109,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulateOnAnimationFrame = True }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulateOnAnimationFrame = not model.debuggerEnabled }, Cmd.none )
 
                 Nothing ->
                     let
@@ -120,6 +123,29 @@ update msg model =
 
         CloseErrorModal ->
             ( { model | errorModal = Nothing }, Cmd.none )
+
+        Debugger debuggerMsg ->
+            let
+                debuggerModel =
+                    model.debugger
+            in
+            case debuggerMsg of
+                RunToProgramCounterValueChange address ->
+                    Hex.fromString address
+                        |> Result.map (\parsedAddress -> ( { model | debugger = { debuggerModel | runToProgramCounter = parsedAddress } }, Cmd.none ))
+                        |> Result.withDefault ( model, Cmd.none )
+
+                RunToProgramCounter ->
+                    ( { model | gameBoy = Maybe.map (Emulator.emulateConditional (\gb -> gb.cpu.pc /= debuggerModel.runToProgramCounter)) model.gameBoy }, Cmd.none )
+
+                RunNextInstruction ->
+                    ( { model | gameBoy = Maybe.map Emulator.emulateNextInstruction model.gameBoy }, Cmd.none )
+
+                SelectMemoryArea memoryArea ->
+                    ( { model | debugger = { debuggerModel | memoryArea = memoryArea } }, Cmd.none )
+
+                MemoryAreaDropdownStateChange state ->
+                    ( { model | debugger = { debuggerModel | memoryAreaDropdownState = state } }, Cmd.none )
 
 
 subscriptions : Model -> Sub Msg
@@ -136,6 +162,7 @@ subscriptions model =
         [ animationFrameSubscription
         , Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
+        , Bootstrap.Dropdown.subscriptions model.debugger.memoryAreaDropdownState (MemoryAreaDropdownStateChange >> Debugger)
         ]
 
 
