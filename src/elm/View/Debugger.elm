@@ -155,6 +155,7 @@ buttons : Html Msg
 buttons =
     ButtonGroup.buttonGroup []
         [ ButtonGroup.button [ Button.secondary, Button.onClick (Debugger RunNextInstruction) ] [ text "Run Next Instruction" ]
+        , ButtonGroup.button [ Button.secondary, Button.onClick (Debugger ToggleEmulateOnAnimationFrame) ] [ text "Toggle Auto-Render" ]
         ]
 
 

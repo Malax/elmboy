@@ -147,6 +147,9 @@ update msg model =
                 MemoryAreaDropdownStateChange state ->
                     ( { model | debugger = { debuggerModel | memoryAreaDropdownState = state } }, Cmd.none )
 
+                ToggleEmulateOnAnimationFrame ->
+                    ( { model | emulateOnAnimationFrame = not model.emulateOnAnimationFrame }, Cmd.none )
+
 
 subscriptions : Model -> Sub Msg
 subscriptions model =

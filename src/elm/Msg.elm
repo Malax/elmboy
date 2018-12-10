@@ -28,3 +28,4 @@ type DebuggerMsg
     | RunNextInstruction
     | SelectMemoryArea MemoryArea
     | MemoryAreaDropdownStateChange State
+    | ToggleEmulateOnAnimationFrame
