@@ -108,29 +108,33 @@ handleNextInterrupt ({ cpu } as gameBoy) =
         filteredInterruptFlags =
             Bitwise.and cpu.interruptFlag cpu.interruptEnable
     in
-    if cpu.interruptMasterEnable && filteredInterruptFlags > 0x00 then
-        if Bitwise.and Constants.bit0Mask filteredInterruptFlags == Constants.bit0Mask then
-            -- VBlank
-            performInterrupt 0x40 (Bitwise.xor Constants.bit0Mask cpu.interruptFlag) gameBoy
+    if filteredInterruptFlags > 0x00 then
+        if cpu.interruptMasterEnable then
+            if Bitwise.and Constants.bit0Mask filteredInterruptFlags == Constants.bit0Mask then
+                -- VBlank
+                performInterrupt 0x40 (Bitwise.xor Constants.bit0Mask cpu.interruptFlag) gameBoy
 
-        else if Bitwise.and Constants.bit1Mask filteredInterruptFlags == Constants.bit1Mask then
-            -- LCD Status
-            performInterrupt 0x48 (Bitwise.xor Constants.bit1Mask cpu.interruptFlag) gameBoy
+            else if Bitwise.and Constants.bit1Mask filteredInterruptFlags == Constants.bit1Mask then
+                -- LCD Status
+                performInterrupt 0x48 (Bitwise.xor Constants.bit1Mask cpu.interruptFlag) gameBoy
 
-        else if Bitwise.and Constants.bit2Mask filteredInterruptFlags == Constants.bit2Mask then
-            -- Timer Overflow
-            performInterrupt 0x50 (Bitwise.xor Constants.bit2Mask cpu.interruptFlag) gameBoy
+            else if Bitwise.and Constants.bit2Mask filteredInterruptFlags == Constants.bit2Mask then
+                -- Timer Overflow
+                performInterrupt 0x50 (Bitwise.xor Constants.bit2Mask cpu.interruptFlag) gameBoy
 
-        else if Bitwise.and Constants.bit3Mask filteredInterruptFlags == Constants.bit3Mask then
-            -- Serial
-            performInterrupt 0x58 (Bitwise.xor Constants.bit3Mask cpu.interruptFlag) gameBoy
+            else if Bitwise.and Constants.bit3Mask filteredInterruptFlags == Constants.bit3Mask then
+                -- Serial
+                performInterrupt 0x58 (Bitwise.xor Constants.bit3Mask cpu.interruptFlag) gameBoy
 
-        else if Bitwise.and Constants.bit4Mask filteredInterruptFlags == Constants.bit4Mask then
-            -- Joypad Press
-            performInterrupt 0x60 (Bitwise.xor Constants.bit4Mask cpu.interruptFlag) gameBoy
+            else if Bitwise.and Constants.bit4Mask filteredInterruptFlags == Constants.bit4Mask then
+                -- Joypad Press
+                performInterrupt 0x60 (Bitwise.xor Constants.bit4Mask cpu.interruptFlag) gameBoy
+
+            else
+                gameBoy
 
         else
-            gameBoy
+            GameBoy.setCPU (CPU.setHalted False gameBoy.cpu) gameBoy
 
     else
         gameBoy
