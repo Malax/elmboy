@@ -289,6 +289,7 @@ viewFlags cpu =
                 , Table.th [] [ text "Half Carry" ]
                 , Table.th [] [ text "Carry" ]
                 , Table.th [] [ text "IME" ]
+                , Table.th [] [ text "Halted" ]
                 ]
         , tbody =
             Table.tbody []
@@ -298,6 +299,7 @@ viewFlags cpu =
                     , Table.td [] [ viewFlagValue HalfCarry cpu ]
                     , Table.td [] [ viewFlagValue Carry cpu ]
                     , Table.td [] [ checkbox cpu.interruptMasterEnable ]
+                    , Table.td [] [ checkbox cpu.halted ]
                     ]
                 ]
         }
