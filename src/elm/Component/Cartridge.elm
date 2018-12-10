@@ -103,4 +103,4 @@ writeWord8 address value cartridge =
 
 initMbc1 : Array Int -> Cartridge
 initMbc1 romBytes =
-    MBC1 { ramEnabled = False, bank1 = 0x00, bank2 = 0x00, mode = 0x00, ram = RAM.initZero 0x2000 } romBytes
+    MBC1 { ramEnabled = False, bank1 = 0x01, bank2 = 0x00, mode = 0x00, ram = RAM.initZero 0x2000 } romBytes
