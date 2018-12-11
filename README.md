@@ -8,6 +8,7 @@ A Nintendo™ Game Boy™ Emulator written in Elm.
 ![Kirby's Dreamland Gameplay](./readme-assets/kirby.png)
 ![Pokemon Red Title Screen](./readme-assets/pokemon.png)
 ![Super Mario Land Gameplay](./readme-assets/marioland.png)
+![Pokemon Red Fight](./readme-assets/pokemon-fight.png)
 
 [You can try it out here](https://malax.github.io/elmboy), it works best in Google Chrome. The page also provides you with links to legal homebrew ROMs you can use to test Elmboy.
 
