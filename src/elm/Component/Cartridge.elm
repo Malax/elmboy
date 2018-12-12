@@ -10,140 +10,207 @@ import Types exposing (MemoryAddress)
 import Util
 
 
-type Cartridge
-    = NoMBC (Array Int)
-    | MBC1 { ramEnabled : Bool, bank1 : Int, bank2 : Int, mode : Int, ram : RAM } (Array Int)
-    | MBC5 { ramEnabled : Bool, ramBank : Int, romBank : Int, ram : RAM } (Array Int)
+type alias Cartridge =
+    { bytes : Array Int
+    , ram : RAM
+    , selectedRomBank : Int
+    , selectedRamBank : Int
+    , ramEnabled : Bool
+    , mbc1BankingMode : MBC1BankingMode
+    , memoryBankController : MemoryBankController
+    }
+
+
+type MemoryBankController
+    = ROM
+    | MBC1
+    | MBC3
+    | MBC5
+
+
+type MBC1BankingMode
+    = ROMBanking
+    | RAMBanking
 
 
 fromBytes : Array Int -> Maybe Cartridge
 fromBytes romBytes =
-    case (RomMetadata.fromBytes romBytes).cartridgeType of
-        CartridgeType.RomOnly ->
-            Just (NoMBC romBytes)
+    let
+        memoryBankController =
+            case (RomMetadata.fromBytes romBytes).cartridgeType of
+                CartridgeType.MBC1 ->
+                    Just MBC1
 
-        CartridgeType.MBC1 ->
-            Just (initMbc1 romBytes)
+                CartridgeType.MBC1Ram ->
+                    Just MBC1
 
-        CartridgeType.MBC1Ram ->
-            Just (initMbc1 romBytes)
+                CartridgeType.MBC1RamBattery ->
+                    Just MBC1
 
-        CartridgeType.MBC1RamBattery ->
-            Just (initMbc1 romBytes)
+                CartridgeType.MBC3 ->
+                    Just MBC3
 
-        CartridgeType.MBC5RamBattery ->
-            Just (initMbc5 romBytes)
+                CartridgeType.MBC3Ram ->
+                    Just MBC3
 
-        _ ->
-            Nothing
+                CartridgeType.MBC3RamBattery ->
+                    Just MBC3
+
+                CartridgeType.MBC5 ->
+                    Just MBC5
+
+                CartridgeType.MBC5Ram ->
+                    Just MBC5
+
+                CartridgeType.MBC5RamBattery ->
+                    Just MBC5
+
+                _ ->
+                    Nothing
+    in
+    memoryBankController
+        |> Maybe.map
+            (\memoryBankController2 ->
+                { bytes = romBytes
+
+                -- Even though most cartridges have less RAM, we initialize the maximum amout to
+                -- simplify implementation.
+                , ram = RAM.initZero (128 * 1024)
+                , selectedRomBank = 0x01
+                , selectedRamBank = 0x00
+                , ramEnabled = False
+                , mbc1BankingMode = RAMBanking
+                , memoryBankController = memoryBankController2
+                }
+            )
 
 
 readWord8 : Cartridge -> MemoryAddress -> Int
 readWord8 cartridge address =
-    case cartridge of
-        NoMBC array ->
-            Array.get address array
-                |> Maybe.withDefault 0xFF
+    if address <= 0x3FFF then
+        Array.get address cartridge.bytes
+            |> Maybe.withDefault 0xFF
 
-        MBC1 { ramEnabled, bank1, bank2, mode, ram } array ->
-            if address <= 0x3FFF then
-                Array.get address array |> Maybe.withDefault 0xFF
+    else if address >= 0x4000 && address <= 0x7FFF then
+        let
+            selectedRomBank =
+                if cartridge.memoryBankController == MBC1 then
+                    case cartridge.mbc1BankingMode of
+                        ROMBanking ->
+                            cartridge.selectedRomBank + Bitwise.shiftLeftBy 5 cartridge.selectedRamBank
 
-            else if address >= 0x4000 && address <= 0x7FFF then
-                let
-                    romBank =
-                        Bitwise.or (Bitwise.shiftLeftBy 5 bank2) bank1
-                in
-                Array.get ((address - 0x4000) + (0x4000 * romBank)) array |> Maybe.withDefault 0xFF
+                        RAMBanking ->
+                            cartridge.selectedRomBank
 
-            else if address >= 0xA000 && address <= 0xBFFF && ramEnabled then
-                RAM.readWord8 ram (address - 0xA000)
+                else
+                    cartridge.selectedRomBank
 
-            else
-                0xFF
+            offset =
+                (address - 0x4000) + (selectedRomBank * romBankSize)
+        in
+        Array.get offset cartridge.bytes
+            |> Maybe.withDefault 0xFF
 
-        MBC5 { ramEnabled, ramBank, romBank, ram } array ->
-            if address <= 0x3FFF then
-                Array.get address array |> Maybe.withDefault 0xFF
+    else if address >= 0xA000 && address <= 0xBFFF then
+        let
+            selectedRamBank =
+                if cartridge.memoryBankController == MBC1 then
+                    case cartridge.mbc1BankingMode of
+                        ROMBanking ->
+                            0
 
-            else if address >= 0x4000 && address <= 0x7FFF then
-                Array.get ((address - 0x4000) + (0x4000 * romBank)) array |> Maybe.withDefault 0xFF
+                        RAMBanking ->
+                            cartridge.selectedRamBank
 
-            else if address >= 0xA000 && address <= 0xBFFF && ramEnabled then
-                RAM.readWord8 ram ((address - 0xA000) + (0x2000 * ramBank))
+                else
+                    cartridge.selectedRamBank
 
-            else
-                0xFF
+            offset =
+                (address - 0xA000) + (selectedRamBank * ramBankSize)
+        in
+        RAM.readWord8 cartridge.ram offset
+
+    else
+        0xFF
 
 
 writeWord8 : MemoryAddress -> Int -> Cartridge -> Cartridge
 writeWord8 address value cartridge =
-    case cartridge of
-        NoMBC _ ->
-            cartridge
+    if address <= 0x1FFF then
+        { cartridge | ramEnabled = value == 0x0A }
 
-        MBC1 mbc1Data array ->
-            if address <= 0x1FFF then
-                MBC1 { mbc1Data | ramEnabled = Bitwise.and 0x0F value == 0x0A } array
+    else if address >= 0x2000 && address <= 0x3FFF then
+        let
+            modifiedValue =
+                case cartridge.memoryBankController of
+                    ROM ->
+                        value
 
-            else if address >= 0x2000 && address <= 0x3FFF then
-                let
-                    maskedValue =
-                        Bitwise.and 0x1F value
+                    MBC1 ->
+                        Bitwise.and 0x1F value |> zeroToOne
 
-                    sanitizedMaskedValue =
-                        if maskedValue == 0x00 then
-                            0x01
+                    MBC3 ->
+                        Bitwise.and 0x7F value |> zeroToOne
+
+                    MBC5 ->
+                        if address >= 0x3000 then
+                            let
+                                highBit =
+                                    Bitwise.shiftLeftBy 8 (Bitwise.and 0x01 value)
+
+                                lowBits =
+                                    Bitwise.and 0xFF cartridge.selectedRomBank
+                            in
+                            highBit + lowBits
 
                         else
-                            maskedValue
-                in
-                MBC1 { mbc1Data | bank1 = sanitizedMaskedValue } array
+                            value
+        in
+        { cartridge | selectedRomBank = modifiedValue }
 
-            else if address >= 0x4000 && address <= 0x5FFF then
-                MBC1 { mbc1Data | bank2 = Bitwise.and 0x03 value } array
+    else if address >= 0x4000 && address <= 0x5FFF then
+        { cartridge | selectedRamBank = value }
 
-            else if address >= 0x6000 && address <= 0x7FFF then
-                MBC1 { mbc1Data | mode = Bitwise.and 0x01 value } array
+    else if address >= 0x6000 && address <= 0x7FFF && cartridge.memoryBankController == MBC1 then
+        let
+            mode =
+                if Bitwise.and 0x01 value == 0x01 then
+                    RAMBanking
 
-            else if address >= 0xA000 && address <= 0xBFFF && mbc1Data.ramEnabled then
-                MBC1 { mbc1Data | ram = RAM.writeWord8 (address - 0xA000) value mbc1Data.ram } array
+                else
+                    ROMBanking
+        in
+        { cartridge | mbc1BankingMode = mode }
 
-            else
-                cartridge
+    else if address >= 0xA000 && address <= 0xBFFF then
+        let
+            offset =
+                (address - 0xA000) + (cartridge.selectedRamBank * ramBankSize)
+        in
+        { cartridge | ram = RAM.writeWord8 offset value cartridge.ram }
 
-        MBC5 mbc5Data array ->
-            if address <= 0x1FFF then
-                MBC5 { mbc5Data | ramEnabled = Bitwise.and 0x0F value == 0x0A } array
-
-            else if address >= 0x2000 && address <= 0x2FFF then
-                MBC5 { mbc5Data | romBank = Bitwise.and 0x0100 mbc5Data.romBank + value } array
-
-            else if address >= 0x3000 && address <= 0x3FFF then
-                let
-                    toAdd =
-                        Bitwise.shiftLeftBy 8 (Bitwise.and 0x01 value)
-
-                    cleanX =
-                        Bitwise.and 0xFF mbc5Data.romBank
-                in
-                MBC5 { mbc5Data | romBank = cleanX + toAdd } array
-
-            else if address >= 0x4000 && address <= 0x5FFF then
-                MBC5 { mbc5Data | ramBank = Bitwise.and 0x0F value } array
-
-            else if address >= 0xA000 && address <= 0xBFFF && mbc5Data.ramEnabled then
-                MBC5 { mbc5Data | ram = RAM.writeWord8 (address - 0xA000) value mbc5Data.ram } array
-
-            else
-                cartridge
+    else
+        cartridge
 
 
-initMbc1 : Array Int -> Cartridge
-initMbc1 romBytes =
-    MBC1 { ramEnabled = False, bank1 = 0x01, bank2 = 0x00, mode = 0x00, ram = RAM.initZero 0x2000 } romBytes
+
+-- Internal
 
 
-initMbc5 : Array Int -> Cartridge
-initMbc5 romBytes =
-    MBC5 { ramEnabled = False, ramBank = 0x00, romBank = 0x01, ram = RAM.initZero (128 * 1024) } romBytes
+romBankSize : Int
+romBankSize =
+    0x4000
+
+
+ramBankSize : Int
+ramBankSize =
+    0x2000
+
+
+zeroToOne : Int -> Int
+zeroToOne value =
+    if value == 0x00 then
+        0x01
+
+    else
+        value
