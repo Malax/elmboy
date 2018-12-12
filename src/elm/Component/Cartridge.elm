@@ -137,7 +137,7 @@ readWord8 cartridge address =
 writeWord8 : MemoryAddress -> Int -> Cartridge -> Cartridge
 writeWord8 address value cartridge =
     if address <= 0x1FFF then
-        { cartridge | ramEnabled = value == 0x0A }
+        setRamEnabled (value == 0x0A) cartridge
 
     else if address >= 0x2000 && address <= 0x3FFF then
         let
@@ -166,10 +166,10 @@ writeWord8 address value cartridge =
                         else
                             value
         in
-        { cartridge | selectedRomBank = modifiedValue }
+        setSelectedRomBank value cartridge
 
     else if address >= 0x4000 && address <= 0x5FFF then
-        { cartridge | selectedRamBank = value }
+        setSelectedRamBank value cartridge
 
     else if address >= 0x6000 && address <= 0x7FFF && cartridge.memoryBankController == MBC1 then
         let
@@ -180,14 +180,14 @@ writeWord8 address value cartridge =
                 else
                     ROMBanking
         in
-        { cartridge | mbc1BankingMode = mode }
+        setMbc1BankingMode mode cartridge
 
     else if address >= 0xA000 && address <= 0xBFFF then
         let
             offset =
                 (address - 0xA000) + (cartridge.selectedRamBank * ramBankSize)
         in
-        { cartridge | ram = RAM.writeWord8 offset value cartridge.ram }
+        setRam (RAM.writeWord8 offset value cartridge.ram) cartridge
 
     else
         cartridge
@@ -214,3 +214,63 @@ zeroToOne value =
 
     else
         value
+
+
+setSelectedRomBank : Int -> Cartridge -> Cartridge
+setSelectedRomBank value cartridge =
+    { bytes = cartridge.bytes
+    , ram = cartridge.ram
+    , selectedRomBank = value
+    , selectedRamBank = cartridge.selectedRamBank
+    , ramEnabled = cartridge.ramEnabled
+    , mbc1BankingMode = cartridge.mbc1BankingMode
+    , memoryBankController = cartridge.memoryBankController
+    }
+
+
+setSelectedRamBank : Int -> Cartridge -> Cartridge
+setSelectedRamBank value cartridge =
+    { bytes = cartridge.bytes
+    , ram = cartridge.ram
+    , selectedRomBank = cartridge.selectedRomBank
+    , selectedRamBank = value
+    , ramEnabled = cartridge.ramEnabled
+    , mbc1BankingMode = cartridge.mbc1BankingMode
+    , memoryBankController = cartridge.memoryBankController
+    }
+
+
+setRam : RAM -> Cartridge -> Cartridge
+setRam value cartridge =
+    { bytes = cartridge.bytes
+    , ram = value
+    , selectedRomBank = cartridge.selectedRomBank
+    , selectedRamBank = cartridge.selectedRamBank
+    , ramEnabled = cartridge.ramEnabled
+    , mbc1BankingMode = cartridge.mbc1BankingMode
+    , memoryBankController = cartridge.memoryBankController
+    }
+
+
+setRamEnabled : Bool -> Cartridge -> Cartridge
+setRamEnabled value cartridge =
+    { bytes = cartridge.bytes
+    , ram = cartridge.ram
+    , selectedRomBank = cartridge.selectedRomBank
+    , selectedRamBank = cartridge.selectedRamBank
+    , ramEnabled = value
+    , mbc1BankingMode = cartridge.mbc1BankingMode
+    , memoryBankController = cartridge.memoryBankController
+    }
+
+
+setMbc1BankingMode : MBC1BankingMode -> Cartridge -> Cartridge
+setMbc1BankingMode value cartridge =
+    { bytes = cartridge.bytes
+    , ram = cartridge.ram
+    , selectedRomBank = cartridge.selectedRomBank
+    , selectedRamBank = cartridge.selectedRamBank
+    , ramEnabled = cartridge.ramEnabled
+    , mbc1BankingMode = value
+    , memoryBankController = cartridge.memoryBankController
+    }
