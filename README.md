@@ -4,11 +4,15 @@
 A Nintendo™ Game Boy™ Emulator written in Elm. 
 
 ![Tetris Title Screen](./readme-assets/tetris.png)
-![The Legend of Zelda: Link's Awakening Gameplay](./readme-assets/zelda.png)
-![Kirby's Dreamland Gameplay](./readme-assets/kirby.png)
+![The Legend of Zelda: Link's Awakening Title Screen](readme-assets/zelda.png)
 ![Pokemon Red Title Screen](./readme-assets/pokemon.png)
-![Super Mario Land Gameplay](./readme-assets/marioland.png)
-![Pokemon Red Fight](./readme-assets/pokemon-fight.png)
+![Kirby's Dreamland Title Screen](readme-assets/kirby.png)
+![Super Mario Land Title Screen](readme-assets/marioland.png)
+![Tetris Gameplay](readme-assets/tetris-gameplay.png)
+![The Legend of Zelda: Link's Awakening Gameplay](readme-assets/zelda-gameplay.png)
+![Pokemon Red Gameplay](readme-assets/pokemon-gameplay.png)
+![Kirby's Dreamland Gameplay](readme-assets/kirby-gameplay.png)
+![Super Mario Land Gameplay](readme-assets/marioland-gameplay.png)
 
 [You can try it out here](https://malax.github.io/elmboy), it works best in Google Chrome. The page also provides you with links to legal homebrew ROMs you can use to test Elmboy.
 
