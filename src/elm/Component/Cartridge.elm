@@ -38,6 +38,15 @@ fromBytes romBytes =
     let
         memoryBankController =
             case (RomMetadata.fromBytes romBytes).cartridgeType of
+                CartridgeType.RomOnly ->
+                    Just ROM
+
+                CartridgeType.RomRam ->
+                    Just ROM
+
+                CartridgeType.RomRamBattery ->
+                    Just ROM
+
                 CartridgeType.MBC1 ->
                     Just MBC1
 
