@@ -16,6 +16,7 @@ module GameBoy exposing
     , setWorkRamBank1
     )
 
+import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (CPU)
 import Component.Cartridge as Cartridge exposing (Cartridge)
 import Component.Joypad as Joypad exposing (GameBoyButton(..), Joypad)
@@ -29,6 +30,7 @@ type alias GameBoy =
     { cpu : CPU
     , ppu : PPU
     , timer : Timer
+    , apu : APU
     , workRamBank0 : RAM
     , workRamBank1 : RAM
     , hram : RAM
@@ -44,6 +46,7 @@ init cartridge =
     { cpu = CPU.init
     , ppu = PPU.init
     , timer = Timer.init
+    , apu = APU.init
     , workRamBank0 = RAM.initZero 0x1000
     , workRamBank1 = RAM.initZero 0x1000
     , hram = RAM.init 0x7F
@@ -98,6 +101,7 @@ setPPU ppu gameBoy =
     { cpu = gameBoy.cpu
     , ppu = ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -113,6 +117,7 @@ setJoypad joypad gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -128,6 +133,7 @@ setWorkRamBank0 ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = ram
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -143,6 +149,7 @@ setWorkRamBank1 ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = ram
     , hram = gameBoy.hram
@@ -158,6 +165,7 @@ setHRAM ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = ram
@@ -173,6 +181,7 @@ setComponents cpu ppu timer gameBoy =
     { cpu = cpu
     , ppu = ppu
     , timer = timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -188,6 +197,7 @@ setCPUAndCycles cpu cycles gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -203,6 +213,7 @@ setTimer timer gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -218,6 +229,7 @@ setCartridge cartridge gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -233,6 +245,7 @@ setCPU cpu gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -248,6 +261,7 @@ setLastInstructionCycles lastInstructionCycles gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -263,6 +277,7 @@ setCPULastInstructionCycles cpu lastInstructionCycles gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
