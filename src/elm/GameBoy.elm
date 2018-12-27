@@ -176,12 +176,12 @@ setHRAM ram gameBoy =
     }
 
 
-setComponents : CPU -> PPU -> Timer -> GameBoy -> GameBoy
-setComponents cpu ppu timer gameBoy =
+setComponents : CPU -> PPU -> Timer -> APU -> GameBoy -> GameBoy
+setComponents cpu ppu timer apu gameBoy =
     { cpu = cpu
     , ppu = ppu
     , timer = timer
-    , apu = gameBoy.apu
+    , apu = apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram

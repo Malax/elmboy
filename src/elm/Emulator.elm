@@ -5,6 +5,7 @@ module Emulator exposing
     )
 
 import Bitwise
+import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.CPU.Opcode as Opcode
 import Component.CPU.OpcodeMapper as OpcodeMapper
@@ -32,6 +33,9 @@ emulateNextInstruction gameBoy =
         timer =
             Timer.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.timer
 
+        ( apu, generatedSamples ) =
+            APU.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.apu
+
         updatedInterruptFlag =
             List.foldl Bitwise.or
                 emulatedGameBoy.cpu.interruptFlag
@@ -46,7 +50,7 @@ emulateNextInstruction gameBoy =
         cpu =
             CPU.setInterruptFlag updatedInterruptFlag emulatedGameBoy.cpu
     in
-    GameBoy.setComponents cpu ppu timer emulatedGameBoy
+    GameBoy.setComponents cpu ppu timer apu emulatedGameBoy
 
 
 emulateCycles : Int -> GameBoy -> GameBoy
