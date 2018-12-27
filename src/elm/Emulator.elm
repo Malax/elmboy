@@ -4,6 +4,7 @@ module Emulator exposing
     , emulateNextInstruction
     )
 
+import Array exposing (Array)
 import Bitwise
 import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (Register16(..), Register8(..))
@@ -33,7 +34,7 @@ emulateNextInstruction gameBoy =
         timer =
             Timer.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.timer
 
-        ( apu, generatedSamples ) =
+        apu =
             APU.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.apu
 
         updatedInterruptFlag =

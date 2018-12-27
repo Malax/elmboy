@@ -66,9 +66,15 @@ update msg model =
                     let
                         emulatedGameBoy =
                             Emulator.emulateCycles (cyclesPerSecond // 60) gameBoy
+
+                        cmds =
+                            Cmd.batch
+                                [ Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
+                                , Ports.queueAudioSamples emulatedGameBoy.apu.sampleBuffer
+                                ]
                     in
                     ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }
-                    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
+                    , cmds
                     )
 
                 Nothing ->

@@ -10,6 +10,28 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
     setPixelsFromBatches(canvas, elmData.pixelBatches)
   })
+
+  const audioContext = new AudioContext()
+
+  app.ports.queueAudioSamples.subscribe(function (elmData) {
+    if (elmData.length > 0) {
+      console.log(elmData)
+
+      const buffer = audioContext.createBuffer(1, elmData.length, sampleRate)
+      const channel = buffer.getChannelData(0)
+
+      for (let i = 0; i < elmData.length; i++) {
+        channel[i] = elmData[i]
+      }
+
+      var bufferSource = audioContext.createBufferSource()
+      bufferSource.buffer = buffer
+      bufferSource.connect(audioContext.destination)
+
+      // TODO: Proper queueing
+      bufferSource.start(0)
+    }
+  })
 })
 
 function setPixelsFromBatches (canvas, pixelBatches) {
@@ -45,3 +67,5 @@ const colorMap = [
   [48, 98, 48],
   [15, 56, 15]
 ]
+
+const sampleRate = 44100

@@ -36,6 +36,9 @@ type alias APU =
     , nr50 : Int -- ALLL BRRR Vin L enable, Left vol, Vin R enable, Right vol
     , nr51 : Int -- NW21 NW21 Left enables, Right enables
     , nr52 : Int -- P--- NW21 Power control/status, Channel length statuses
+
+    -- Elmboy
+    , sampleBuffer : Array Float
     }
 
 
@@ -60,14 +63,31 @@ init =
     , nr42 = 0xFF
     , nr43 = 0xFF
     , nr44 = 0xFF
-
-    -- Control registers
     , nr50 = 0xFF
     , nr51 = 0xFF
     , nr52 = 0xFF
+    , sampleBuffer = a4
     }
 
 
-emulate : Int -> APU -> ( APU, Array Float )
+emulate : Int -> APU -> APU
 emulate cyles apu =
-    ( apu, Array.empty )
+    apu
+
+
+
+-- Internal
+
+
+sinewave : Float -> Float -> Float -> Float
+sinewave amplitude frequency time =
+    amplitude * sin (2 * pi * frequency * time)
+
+
+a4 : Array Float
+a4 =
+    Array.initialize sampleRate (\t -> sinewave 1 440 (toFloat t / sampleRate))
+
+
+sampleRate =
+    44100
