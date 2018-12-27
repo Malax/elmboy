@@ -12,11 +12,10 @@ document.addEventListener('DOMContentLoaded', function (event) {
   })
 
   const audioContext = new AudioContext()
+  let lastBufferEnds = 0
 
   app.ports.queueAudioSamples.subscribe(function (elmData) {
     if (elmData.length > 0) {
-      console.log(elmData)
-
       const buffer = audioContext.createBuffer(1, elmData.length, sampleRate)
       const channel = buffer.getChannelData(0)
 
@@ -28,8 +27,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
       bufferSource.buffer = buffer
       bufferSource.connect(audioContext.destination)
 
-      // TODO: Proper queueing
-      bufferSource.start(0)
+      bufferSource.start(lastBufferEnds)
+      lastBufferEnds += (elmData.length / sampleRate)
     }
   })
 })
