@@ -95,10 +95,14 @@ setButtonStatus button status gameBoy =
     setJoypad updatedJoypad gameBoy
 
 
-drainAudioBuffer : GameBoy -> ( GameBoy, Array Float )
-drainAudioBuffer gameBoy =
-    APU.drainAudioBuffer gameBoy.apu
-        |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+drainAudioBuffer : Int -> GameBoy -> ( GameBoy, Array Float )
+drainAudioBuffer minSamples gameBoy =
+    if Array.length gameBoy.apu.sampleBuffer >= minSamples then
+        APU.drainAudioBuffer gameBoy.apu
+            |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+
+    else
+        ( gameBoy, Array.empty )
 
 
 

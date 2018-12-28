@@ -10,6 +10,7 @@ import Component.Cartridge as Cartridge
 import Component.Joypad exposing (GameBoyButton(..))
 import Component.PPU as PPU
 import Component.PPU.GameBoyScreen as GameBoyScreen
+import Constants
 import Emulator
 import File
 import File.Select
@@ -66,8 +67,8 @@ update msg model =
                     let
                         ( emulatedGameBoy, audioSamples ) =
                             gameBoy
-                                |> Emulator.emulateCycles (cyclesPerSecond // 60)
-                                |> GameBoy.drainAudioBuffer
+                                |> Emulator.emulateCycles (Constants.cyclesPerSecond // 60)
+                                |> GameBoy.drainAudioBuffer 44100
 
                         cmds =
                             Cmd.batch
@@ -143,11 +144,6 @@ subscriptions model =
         , Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
         ]
-
-
-cyclesPerSecond : Int
-cyclesPerSecond =
-    4 * 1024 * 1024
 
 
 canvasId : String
