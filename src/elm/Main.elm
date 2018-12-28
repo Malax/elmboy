@@ -64,18 +64,18 @@ update msg model =
             case model.gameBoy of
                 Just gameBoy ->
                     let
-                        emulatedGameBoy =
-                            Emulator.emulateCycles (cyclesPerSecond // 60) gameBoy
+                        ( emulatedGameBoy, audioSamples ) =
+                            gameBoy
+                                |> Emulator.emulateCycles (cyclesPerSecond // 60)
+                                |> GameBoy.drainAudioBuffer
 
                         cmds =
                             Cmd.batch
                                 [ Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
-                                , Ports.queueAudioSamples emulatedGameBoy.apu.sampleBuffer
+                                , Ports.queueAudioSamples audioSamples
                                 ]
                     in
-                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }
-                    , cmds
-                    )
+                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }, cmds )
 
                 Nothing ->
                     ( model, Cmd.none )

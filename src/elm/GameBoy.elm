@@ -1,6 +1,8 @@
 module GameBoy exposing
     ( GameBoy
+    , drainAudioBuffer
     , init
+    , setAPU
     , setButtonStatus
     , setCPU
     , setCPUAndCycles
@@ -16,6 +18,7 @@ module GameBoy exposing
     , setWorkRamBank1
     )
 
+import Array exposing (Array)
 import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (CPU)
 import Component.Cartridge as Cartridge exposing (Cartridge)
@@ -92,6 +95,12 @@ setButtonStatus button status gameBoy =
     setJoypad updatedJoypad gameBoy
 
 
+drainAudioBuffer : GameBoy -> ( GameBoy, Array Float )
+drainAudioBuffer gameBoy =
+    APU.drainAudioBuffer gameBoy.apu
+        |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+
+
 
 -- Performance Optimized Setters
 
@@ -102,6 +111,22 @@ setPPU ppu gameBoy =
     , ppu = ppu
     , timer = gameBoy.timer
     , apu = gameBoy.apu
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
+    }
+
+
+setAPU : APU -> GameBoy -> GameBoy
+setAPU apu gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , apu = apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram

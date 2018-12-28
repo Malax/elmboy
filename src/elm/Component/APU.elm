@@ -1,4 +1,4 @@
-module Component.APU exposing (APU, emulate, init)
+module Component.APU exposing (APU, drainAudioBuffer, emulate, init)
 
 import Array exposing (Array)
 import Component.RAM as RAM exposing (RAM)
@@ -73,6 +73,36 @@ init =
 emulate : Int -> APU -> APU
 emulate cyles apu =
     apu
+
+
+drainAudioBuffer : APU -> ( APU, Array Float )
+drainAudioBuffer apu =
+    ( { nr10 = apu.nr10
+      , nr11 = apu.nr11
+      , nr12 = apu.nr12
+      , nr13 = apu.nr13
+      , nr14 = apu.nr14
+      , nr21 = apu.nr21
+      , nr22 = apu.nr22
+      , nr23 = apu.nr23
+      , nr24 = apu.nr24
+      , nr30 = apu.nr30
+      , nr31 = apu.nr31
+      , nr32 = apu.nr32
+      , nr33 = apu.nr33
+      , nr34 = apu.nr34
+      , wavePatternRam = apu.wavePatternRam
+      , nr41 = apu.nr41
+      , nr42 = apu.nr42
+      , nr43 = apu.nr43
+      , nr44 = apu.nr44
+      , nr50 = apu.nr50
+      , nr51 = apu.nr51
+      , nr52 = apu.nr52
+      , sampleBuffer = Array.empty
+      }
+    , apu.sampleBuffer
+    )
 
 
 
