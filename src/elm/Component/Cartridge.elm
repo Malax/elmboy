@@ -2,12 +2,10 @@ module Component.Cartridge exposing (Cartridge, fromBytes, readWord8, writeWord8
 
 import Array exposing (Array)
 import Bitwise
-import Component.Cartridge.CartridgeType as CartridgeType exposing (CartridgeType)
+import Component.Cartridge.CartridgeType as CartridgeType
 import Component.RAM as RAM exposing (RAM)
-import Hex
 import RomMetadata
 import Types exposing (MemoryAddress)
-import Util
 
 
 type alias Cartridge =

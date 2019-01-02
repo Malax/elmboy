@@ -31,19 +31,16 @@ module Component.PPU exposing
     , writeWindowY
     )
 
-import Array exposing (Array)
+import Array
 import Bitwise
-import Component.PPU.Constants exposing (..)
+import Component.PPU.Constants exposing (cyclesPerFrame, cyclesPerLine, cyclesPerOamSearch, cyclesPerPixelTransfer, screenHeight, vBlankDurationInLines)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
-import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.LineDrawing as LineDrawing
-import Component.PPU.OAM exposing (searchVisibleObjects)
-import Component.PPU.Pixel as Pixel exposing (..)
+import Component.PPU.Pixel exposing (PixelSource(..))
 import Component.PPU.Types as PPUTypes exposing (Mode(..), PPU, PPUInterrupt(..))
-import Component.RAM as RAM exposing (RAM)
+import Component.RAM as RAM
 import Constants
 import Types exposing (MemoryAddress)
-import Util
 
 
 init : PPU

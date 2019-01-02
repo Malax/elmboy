@@ -2,21 +2,14 @@ module View.Emulator exposing (view)
 
 import Bootstrap.Button as Button
 import Bootstrap.ButtonGroup as ButtonGroup
-import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
-import Bootstrap.Navbar as Navbar
-import Bootstrap.Progress as Progress
-import Bootstrap.Tab as Tab
 import Bootstrap.Utilities.Display as Display
-import Bootstrap.Utilities.Flex as Flex
 import Bootstrap.Utilities.Spacing as Spacing
-import GameBoy exposing (GameBoy)
-import Html exposing (..)
-import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-import Model exposing (ErrorModal, Model)
+import Html exposing (Html, a, div, em, h1, h4, hr, i, kbd, p, small, span, strong, text)
+import Html.Attributes exposing (class, href, target)
+import Model exposing (Model)
 import Msg exposing (Msg(..))
 import View.Common exposing (errorModalView, romSelector, screen)
 
@@ -34,10 +27,10 @@ view canvasId model =
                             |> Maybe.withDefault (text "")
                         ]
 
-                Just gameBoy ->
+                Just _ ->
                     div []
                         [ screen canvasId
-                        , emulationToolbar gameBoy model.emulateOnAnimationFrame model.frameTimes
+                        , emulationToolbar model.emulateOnAnimationFrame model.frameTimes
                         ]
     in
     scaffolding leftContent projectDescription
@@ -107,8 +100,8 @@ projectDescription =
         ]
 
 
-emulationToolbar : GameBoy -> Bool -> List Float -> Html Msg
-emulationToolbar gameBoy emulateOnAnimationFrame frameTimes =
+emulationToolbar : Bool -> List Float -> Html Msg
+emulationToolbar emulateOnAnimationFrame frameTimes =
     let
         pauseResumeButton =
             if emulateOnAnimationFrame then

@@ -2,7 +2,6 @@ module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRInd
 
 import Array exposing (Array)
 import Bitwise
-import Bytes
 import Bytes.Decode exposing (Step(..))
 import Constants
 import Hex

@@ -8,13 +8,12 @@ module Component.MMU exposing
     )
 
 import Bitwise
-import Component.CPU as CPU exposing (CPU)
-import Component.Cartridge as Cartridge exposing (Cartridge)
-import Component.Joypad as Joypad exposing (Joypad)
+import Component.CPU as CPU
+import Component.Cartridge as Cartridge
+import Component.Joypad as Joypad
 import Component.PPU as PPU
-import Component.PPU.Types exposing (PPU)
-import Component.RAM as RAM exposing (RAM)
-import Component.Timer as Timer exposing (Timer)
+import Component.RAM as RAM
+import Component.Timer as Timer
 import GameBoy exposing (GameBoy)
 import Types exposing (MemoryAddress)
 
@@ -132,7 +131,7 @@ readWord8 gameBoy address =
 
 
 writeWord8 : MemoryAddress -> Int -> GameBoy -> GameBoy
-writeWord8 address value ({ cpu } as gameBoy) =
+writeWord8 address value gameBoy =
     let
         sanitizedValue =
             Bitwise.and 0xFF value

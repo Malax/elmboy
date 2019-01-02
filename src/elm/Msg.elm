@@ -1,6 +1,5 @@
 module Msg exposing (Msg(..))
 
-import Array exposing (Array)
 import Component.Cartridge exposing (Cartridge)
 import Component.Joypad exposing (GameBoyButton)
 import File exposing (File)

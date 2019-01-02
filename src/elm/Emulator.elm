@@ -13,10 +13,9 @@ import Component.PPU as PPU
 import Component.PPU.Types exposing (PPUInterrupt(..))
 import Component.Timer as Timer
 import Constants
-import CoreEffect exposing (..)
-import Effect exposing (..)
+import CoreEffect exposing (readRegister16, writeRegister16)
+import Effect exposing (Effect)
 import GameBoy exposing (GameBoy)
-import Types exposing (MemoryAddress)
 import Util
 
 

@@ -1,6 +1,5 @@
 module Main exposing (main)
 
-import Array exposing (Array)
 import Bootstrap.Modal as Modal
 import Browser
 import Browser.Events
@@ -13,7 +12,7 @@ import Component.PPU.GameBoyScreen as GameBoyScreen
 import Emulator
 import File
 import File.Select
-import GameBoy exposing (GameBoy)
+import GameBoy
 import Html exposing (Html)
 import Json.Decode as Decode
 import Model exposing (Model)

@@ -5,8 +5,8 @@ import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.CPU.Condition as Condition exposing (Condition(..))
 import Component.CPU.Opcode as HighLevelOpcode
 import Component.MMU as MMU
-import CoreEffect exposing (..)
-import Effect exposing (..)
+import CoreEffect exposing (readMemory16AdvancePC, readMemory8, readMemory8AdvancePC, readRegister16, readRegister8, writeMemory16, writeMemory8, writeRegister16, writeRegister8)
+import Effect exposing (Effect, Reader, Writer, mapReader)
 import GameBoy
 
 

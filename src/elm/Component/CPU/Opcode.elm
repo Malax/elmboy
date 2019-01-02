@@ -52,9 +52,8 @@ import Component.ALU as ALU
 import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.CPU.Condition as Condition exposing (Condition(..))
 import Component.CPU.FlagRegister as FlagRegister exposing (FlagDelta(..), FlagsRegisterDelta)
-import Component.MMU as MMU
-import CoreEffect exposing (..)
-import Effect exposing (..)
+import CoreEffect exposing (extraCycles, readMemory16, readMemory16AdvancePC, readMemory8AdvancePC, readRegister16, readRegister8, writeMemory16, writeRegister16, writeRegister8)
+import Effect exposing (Effect, Reader, Writer, join, join2, join3, mapReader, mapReader2, mapReader3)
 import GameBoy
 import Util
 

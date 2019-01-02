@@ -12,11 +12,10 @@ module CoreEffect exposing
     , writeRegister8
     )
 
-import Component.CPU as CPU exposing (CPU, Register16(..), Register8(..))
+import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.MMU as MMU
-import Effect exposing (..)
-import GameBoy exposing (GameBoy)
-import Util
+import Effect exposing (Reader, Writer)
+import GameBoy
 
 
 readRegister8 : Register8 -> Reader Int

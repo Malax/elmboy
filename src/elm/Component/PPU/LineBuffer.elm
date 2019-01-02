@@ -6,7 +6,7 @@ module Component.PPU.LineBuffer exposing
     , unpack
     )
 
-import Component.PPU.Pixel as Pixel exposing (PixelSource(..), RawPixel)
+import Component.PPU.Pixel exposing (PixelSource(..), RawPixel)
 
 
 type LineBuffer
@@ -19,13 +19,10 @@ type ObjectPriority
 
 
 mixPixels : Int -> List RawPixel -> ObjectPriority -> LineBuffer -> LineBuffer
-mixPixels offset pixels priority ((LineBuffer bufferedPixels) as lineBuffer) =
+mixPixels offset pixels priority (LineBuffer bufferedPixels) =
     let
         clampedOffset =
             clamp 0 (List.length bufferedPixels) offset
-
-        pixelCount =
-            List.length pixels
 
         dropPixelCount =
             if offset < 0 then
