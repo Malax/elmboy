@@ -1,268 +1,260 @@
-module Component.APU exposing (APU, drainAudioBuffer, emulate, init)
+module Component.APU exposing
+    ( APU
+    , drainAudioBuffer
+    , emulate
+    , init
+    , writeNR10
+    , writeNR11
+    , writeNR12
+    , writeNR13
+    , writeNR14
+    , writeNR21
+    , writeNR22
+    , writeNR23
+    , writeNR24
+    , writeNR30
+    , writeNR31
+    , writeNR32
+    , writeNR33
+    , writeNR34
+    , writeNR41
+    , writeNR42
+    , writeNR43
+    , writeNR44
+    , writeNR50
+    , writeNR51
+    , writeNR52
+    )
 
 import Array exposing (Array)
+import Component.APU.Channel1 as Channel1 exposing (Channel1)
 import Component.APU.Channel2 as Channel2 exposing (Channel2)
+import Component.APU.Channel3 as Channel3 exposing (Channel3)
+import Component.APU.Channel4 as Channel4 exposing (Channel4)
+import Component.APU.Constants as APUConstants
 import Component.RAM as RAM exposing (RAM)
 import Constants
 
 
 type alias APU =
-    { -- Square 1
-      nr10 : Int -- -PPP NSSS Sweep period, negate, shift
-    , nr11 : Int -- DDLL LLLL Duty, Length load (64-L)
-    , nr12 : Int -- VVVV APPP Starting volume, Envelope add mode, period
-    , nr13 : Int -- FFFF FFFF Frequency LSB
-    , nr14 : Int -- TL-- -FFF Trigger, Length enable, Frequency MSB
-
-    -- Square 2
-    , nr21 : Int -- DDLL LLLL Duty, Length load (64-L)
-    , nr22 : Int -- VVVV APPP Starting volume, Envelope add mode, period
-    , nr23 : Int -- FFFF FFFF Frequency LSB
-    , nr24 : Int -- TL-- -FFF Trigger, Length enable, Frequency MSB
-
-    -- Wave
-    , nr30 : Int -- E--- ---- DAC power
-    , nr31 : Int -- LLLL LLLL Length load (256-L)
-    , nr32 : Int -- -VV- ---- Volume code (00=0%, 01=100%, 10=50%, 11=25%)
-    , nr33 : Int -- FFFF FFFF Frequency LSB
-    , nr34 : Int -- TL-- -FFF Trigger, Length enable, Frequency MSB
-    , wavePatternRam : RAM
-
-    -- Noise
-    , nr41 : Int -- --LL LLLL Length load (64-L)
-    , nr42 : Int -- VVVV APPP Starting volume, Envelope add mode, period
-    , nr43 : Int -- SSSS WDDD Clock shift, Width mode of LFSR, Divisor code
-    , nr44 : Int -- TL-- ---- Trigger, Length enable
-
-    -- Control
-    , nr50 : Int -- ALLL BRRR Vin L enable, Left vol, Vin R enable, Right vol
-    , nr51 : Int -- NW21 NW21 Left enables, Right enables
-    , nr52 : Int -- P--- NW21 Power control/status, Channel length statuses
-
-    -- Elmboy
+    { channel1 : Channel1
+    , channel2 : Channel2
+    , channel3 : Channel3
+    , channel4 : Channel4
     , sampleBuffer : Array Float
     , cycleAccumulator : Int
-    , channel2 : Channel2
     }
 
 
 init : APU
 init =
-    { nr10 = 0xFF
-    , nr11 = 0xFF
-    , nr12 = 0xFF
-    , nr13 = 0xFF
-    , nr14 = 0xFF
-    , nr21 = 0xFF
-    , nr22 = 0xFF
-    , nr23 = 0xFF
-    , nr24 = 0xFF
-    , nr30 = 0xFF
-    , nr31 = 0xFF
-    , nr32 = 0xFF
-    , nr33 = 0xFF
-    , nr34 = 0xFF
-    , wavePatternRam = RAM.init 0x0F
-    , nr41 = 0xFF
-    , nr42 = 0xFF
-    , nr43 = 0xFF
-    , nr44 = 0xFF
-    , nr50 = 0xFF
-    , nr51 = 0xFF
-    , nr52 = 0xFF
-    , sampleBuffer = a4 0.5
-    , cycleAccumulator = 0
+    { channel1 = Channel1.init
     , channel2 = Channel2.init
+    , channel3 = Channel3.init
+    , channel4 = Channel4.init
+    , sampleBuffer = Array.empty
+    , cycleAccumulator = 0
     }
 
 
 emulate : Int -> APU -> APU
 emulate cycles apu =
     let
-        ( channel2, sample ) =
+        ( updatedCycleAccumulator, generateSample ) =
+            ( remainderBy APUConstants.cyclesPerSample (apu.cycleAccumulator + cycles), apu.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
+
+        updatedChannel1 =
+            Channel1.emulate cycles apu.channel1
+
+        updatedChannel2 =
             Channel2.emulate cycles apu.channel2
 
-        updatedApu =
-            setChannels channel2 apu
-    in
-    case sample of
-        Just s ->
-            appendSample s updatedApu
+        updatedChannel3 =
+            Channel3.emulate cycles apu.channel3
 
-        Nothing ->
-            updatedApu
+        updatedChannel4 =
+            Channel4.emulate cycles apu.channel4
+
+        updatedSampleBuffer =
+            if generateSample then
+                Array.push ((updatedChannel1.currentSample + updatedChannel2.currentSample + updatedChannel3.currentSample + updatedChannel4.currentSample) / 4) apu.sampleBuffer
+
+            else
+                apu.sampleBuffer
+    in
+    { sampleBuffer = updatedSampleBuffer
+    , cycleAccumulator = updatedCycleAccumulator
+    , channel1 = updatedChannel1
+    , channel2 = updatedChannel2
+    , channel3 = updatedChannel3
+    , channel4 = updatedChannel4
+    }
 
 
 drainAudioBuffer : APU -> ( APU, Array Float )
 drainAudioBuffer apu =
-    ( { nr10 = apu.nr10
-      , nr11 = apu.nr11
-      , nr12 = apu.nr12
-      , nr13 = apu.nr13
-      , nr14 = apu.nr14
-      , nr21 = apu.nr21
-      , nr22 = apu.nr22
-      , nr23 = apu.nr23
-      , nr24 = apu.nr24
-      , nr30 = apu.nr30
-      , nr31 = apu.nr31
-      , nr32 = apu.nr32
-      , nr33 = apu.nr33
-      , nr34 = apu.nr34
-      , wavePatternRam = apu.wavePatternRam
-      , nr41 = apu.nr41
-      , nr42 = apu.nr42
-      , nr43 = apu.nr43
-      , nr44 = apu.nr44
-      , nr50 = apu.nr50
-      , nr51 = apu.nr51
-      , nr52 = apu.nr52
-      , sampleBuffer = Array.empty
+    ( { sampleBuffer = Array.empty
       , cycleAccumulator = apu.cycleAccumulator
+      , channel1 = apu.channel1
       , channel2 = apu.channel2
+      , channel3 = apu.channel3
+      , channel4 = apu.channel4
       }
     , apu.sampleBuffer
     )
+
+
+writeNR10 : Int -> APU -> APU
+writeNR10 value apu =
+    setChannel1 (Channel1.writeNR10 value apu.channel1) apu
+
+
+writeNR11 : Int -> APU -> APU
+writeNR11 value apu =
+    setChannel1 (Channel1.writeNR11 value apu.channel1) apu
+
+
+writeNR12 : Int -> APU -> APU
+writeNR12 value apu =
+    setChannel1 (Channel1.writeNR12 value apu.channel1) apu
+
+
+writeNR13 : Int -> APU -> APU
+writeNR13 value apu =
+    setChannel1 (Channel1.writeNR13 value apu.channel1) apu
+
+
+writeNR14 : Int -> APU -> APU
+writeNR14 value apu =
+    setChannel1 (Channel1.writeNR14 value apu.channel1) apu
+
+
+writeNR21 : Int -> APU -> APU
+writeNR21 value apu =
+    setChannel2 (Channel2.writeNR21 value apu.channel2) apu
+
+
+writeNR22 : Int -> APU -> APU
+writeNR22 value apu =
+    setChannel2 (Channel2.writeNR22 value apu.channel2) apu
+
+
+writeNR23 : Int -> APU -> APU
+writeNR23 value apu =
+    setChannel2 (Channel2.writeNR23 value apu.channel2) apu
+
+
+writeNR24 : Int -> APU -> APU
+writeNR24 value apu =
+    setChannel2 (Channel2.writeNR24 value apu.channel2) apu
+
+
+writeNR30 : Int -> APU -> APU
+writeNR30 value apu =
+    setChannel3 (Channel3.writeNR30 value apu.channel3) apu
+
+
+writeNR31 : Int -> APU -> APU
+writeNR31 value apu =
+    setChannel3 (Channel3.writeNR31 value apu.channel3) apu
+
+
+writeNR32 : Int -> APU -> APU
+writeNR32 value apu =
+    setChannel3 (Channel3.writeNR32 value apu.channel3) apu
+
+
+writeNR33 : Int -> APU -> APU
+writeNR33 value apu =
+    setChannel3 (Channel3.writeNR33 value apu.channel3) apu
+
+
+writeNR34 : Int -> APU -> APU
+writeNR34 value apu =
+    setChannel3 (Channel3.writeNR34 value apu.channel3) apu
+
+
+writeNR41 : Int -> APU -> APU
+writeNR41 value apu =
+    setChannel4 (Channel4.writeNR41 value apu.channel4) apu
+
+
+writeNR42 : Int -> APU -> APU
+writeNR42 value apu =
+    setChannel4 (Channel4.writeNR42 value apu.channel4) apu
+
+
+writeNR43 : Int -> APU -> APU
+writeNR43 value apu =
+    setChannel4 (Channel4.writeNR43 value apu.channel4) apu
+
+
+writeNR44 : Int -> APU -> APU
+writeNR44 value apu =
+    setChannel4 (Channel4.writeNR44 value apu.channel4) apu
+
+
+writeNR50 : Int -> APU -> APU
+writeNR50 value apu =
+    -- TODO: Implement
+    apu
+
+
+writeNR51 : Int -> APU -> APU
+writeNR51 value apu =
+    -- TODO: Implement
+    apu
+
+
+writeNR52 : Int -> APU -> APU
+writeNR52 value apu =
+    -- TODO: Implement
+    apu
 
 
 
 -- Internal
 
 
-appendSample : Float -> APU -> APU
-appendSample sample apu =
-    { nr10 = apu.nr10
-    , nr11 = apu.nr11
-    , nr12 = apu.nr12
-    , nr13 = apu.nr13
-    , nr14 = apu.nr14
-    , nr21 = apu.nr21
-    , nr22 = apu.nr22
-    , nr23 = apu.nr23
-    , nr24 = apu.nr24
-    , nr30 = apu.nr30
-    , nr31 = apu.nr31
-    , nr32 = apu.nr32
-    , nr33 = apu.nr33
-    , nr34 = apu.nr34
-    , wavePatternRam = apu.wavePatternRam
-    , nr41 = apu.nr41
-    , nr42 = apu.nr42
-    , nr43 = apu.nr43
-    , nr44 = apu.nr44
-    , nr50 = apu.nr50
-    , nr51 = apu.nr51
-    , nr52 = apu.nr52
-    , sampleBuffer = Array.push sample apu.sampleBuffer
-    , cycleAccumulator = apu.cycleAccumulator
+setChannel1 : Channel1 -> APU -> APU
+setChannel1 channel apu =
+    { channel1 = channel
     , channel2 = apu.channel2
-    }
-
-
-appendSamples : Array Float -> APU -> APU
-appendSamples samples apu =
-    { nr10 = apu.nr10
-    , nr11 = apu.nr11
-    , nr12 = apu.nr12
-    , nr13 = apu.nr13
-    , nr14 = apu.nr14
-    , nr21 = apu.nr21
-    , nr22 = apu.nr22
-    , nr23 = apu.nr23
-    , nr24 = apu.nr24
-    , nr30 = apu.nr30
-    , nr31 = apu.nr31
-    , nr32 = apu.nr32
-    , nr33 = apu.nr33
-    , nr34 = apu.nr34
-    , wavePatternRam = apu.wavePatternRam
-    , nr41 = apu.nr41
-    , nr42 = apu.nr42
-    , nr43 = apu.nr43
-    , nr44 = apu.nr44
-    , nr50 = apu.nr50
-    , nr51 = apu.nr51
-    , nr52 = apu.nr52
-    , sampleBuffer = Array.append apu.sampleBuffer samples
-    , cycleAccumulator = apu.cycleAccumulator
-    , channel2 = apu.channel2
-    }
-
-
-setCycleAccumulator : Int -> APU -> APU
-setCycleAccumulator cycles apu =
-    { nr10 = apu.nr10
-    , nr11 = apu.nr11
-    , nr12 = apu.nr12
-    , nr13 = apu.nr13
-    , nr14 = apu.nr14
-    , nr21 = apu.nr21
-    , nr22 = apu.nr22
-    , nr23 = apu.nr23
-    , nr24 = apu.nr24
-    , nr30 = apu.nr30
-    , nr31 = apu.nr31
-    , nr32 = apu.nr32
-    , nr33 = apu.nr33
-    , nr34 = apu.nr34
-    , wavePatternRam = apu.wavePatternRam
-    , nr41 = apu.nr41
-    , nr42 = apu.nr42
-    , nr43 = apu.nr43
-    , nr44 = apu.nr44
-    , nr50 = apu.nr50
-    , nr51 = apu.nr51
-    , nr52 = apu.nr52
-    , sampleBuffer = apu.sampleBuffer
-    , cycleAccumulator = cycles
-    , channel2 = apu.channel2
-    }
-
-
-setChannels : Channel2 -> APU -> APU
-setChannels channel2 apu =
-    { nr10 = apu.nr10
-    , nr11 = apu.nr11
-    , nr12 = apu.nr12
-    , nr13 = apu.nr13
-    , nr14 = apu.nr14
-    , nr21 = apu.nr21
-    , nr22 = apu.nr22
-    , nr23 = apu.nr23
-    , nr24 = apu.nr24
-    , nr30 = apu.nr30
-    , nr31 = apu.nr31
-    , nr32 = apu.nr32
-    , nr33 = apu.nr33
-    , nr34 = apu.nr34
-    , wavePatternRam = apu.wavePatternRam
-    , nr41 = apu.nr41
-    , nr42 = apu.nr42
-    , nr43 = apu.nr43
-    , nr44 = apu.nr44
-    , nr50 = apu.nr50
-    , nr51 = apu.nr51
-    , nr52 = apu.nr52
+    , channel3 = apu.channel3
+    , channel4 = apu.channel4
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
-    , channel2 = channel2
     }
 
 
-sinewave : Float -> Float -> Float -> Float
-sinewave amplitude frequency time =
-    amplitude * sin (2 * pi * frequency * time)
+setChannel2 : Channel2 -> APU -> APU
+setChannel2 channel apu =
+    { channel1 = apu.channel1
+    , channel2 = channel
+    , channel3 = apu.channel3
+    , channel4 = apu.channel4
+    , sampleBuffer = apu.sampleBuffer
+    , cycleAccumulator = apu.cycleAccumulator
+    }
 
 
-a4 : Float -> Array Float
-a4 duration =
-    Array.initialize (ceiling (duration * sampleRate)) (\t -> sinewave 1 440 (toFloat t / sampleRate))
+setChannel3 : Channel3 -> APU -> APU
+setChannel3 channel apu =
+    { channel1 = apu.channel1
+    , channel2 = apu.channel2
+    , channel3 = channel
+    , channel4 = apu.channel4
+    , sampleBuffer = apu.sampleBuffer
+    , cycleAccumulator = apu.cycleAccumulator
+    }
 
 
-cyclesPerSample : Int
-cyclesPerSample =
-    Constants.cyclesPerSecond // sampleRate
-
-
-sampleRate =
-    44100
+setChannel4 : Channel4 -> APU -> APU
+setChannel4 channel apu =
+    { channel1 = apu.channel1
+    , channel2 = apu.channel2
+    , channel3 = apu.channel3
+    , channel4 = channel
+    , sampleBuffer = apu.sampleBuffer
+    , cycleAccumulator = apu.cycleAccumulator
+    }

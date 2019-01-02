@@ -1,14 +1,10 @@
-module Component.APU.Channel2 exposing (Channel2, emulate, init)
+module Component.APU.Channel2 exposing (Channel2, emulate, init, writeNR21, writeNR22, writeNR23, writeNR24)
 
 import Array exposing (Array)
+import Bitwise
+import Component.APU.Constants as APUConstants
+import Component.APU.SquareWave as SquareWave exposing (DutyCycle(..))
 import Constants
-
-
-type DutyCycle
-    = Zero
-    | One
-    | Two
-    | Three
 
 
 type alias Channel2 =
@@ -17,24 +13,30 @@ type alias Channel2 =
     , timerValue : Int
     , dutyCycleIndex : Int
     , cycleAccumulator : Int
+    , lengthCounter : Int
+    , lengthEnabled : Bool
+    , currentSample : Float
     }
 
 
 init : Channel2
 init =
     { dutyCycle = Two
-    , frequency = 440
+    , frequency = 2048 - (131072 // 440) -- 2048 - (131072 / feq)
     , timerValue = 0
     , dutyCycleIndex = 0
     , cycleAccumulator = 0
+    , lengthCounter = 0
+    , lengthEnabled = False
+    , currentSample = 0
     }
 
 
-emulate : Int -> Channel2 -> ( Channel2, Maybe Float )
+emulate : Int -> Channel2 -> Channel2
 emulate cycles channel2 =
     let
         ( updatedCycleAccumulator, generateSample ) =
-            ( remainderBy cyclesPerSample (channel2.cycleAccumulator + cycles), channel2.cycleAccumulator + cycles >= cyclesPerSample )
+            ( remainderBy APUConstants.cyclesPerSample (channel2.cycleAccumulator + cycles), channel2.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
 
         ( updatedTimerValue, timerUnderflowed ) =
             let
@@ -60,74 +62,62 @@ emulate cycles channel2 =
             else
                 channel2.dutyCycleIndex
 
-        samples =
+        sampleX =
             if generateSample then
-                sample channel2.dutyCycle updatedCycleIndex
+                SquareWave.sample channel2.dutyCycle updatedCycleIndex
 
             else
-                Nothing
+                0
     in
-    ( updateShit updatedTimerValue updatedCycleIndex updatedCycleAccumulator channel2, samples )
-
-
-updateShit : Int -> Int -> Int -> Channel2 -> Channel2
-updateShit timerValue dutyCycleIndex cycleAccumulator channel =
-    { dutyCycle = channel.dutyCycle
-    , frequency = channel.frequency
-    , timerValue = timerValue
-    , dutyCycleIndex = dutyCycleIndex
-    , cycleAccumulator = cycleAccumulator
+    { dutyCycle = channel2.dutyCycle
+    , frequency = channel2.frequency
+    , timerValue = updatedTimerValue
+    , dutyCycleIndex = updatedCycleIndex
+    , cycleAccumulator = updatedCycleAccumulator
+    , lengthCounter = channel2.lengthCounter
+    , lengthEnabled = channel2.lengthEnabled
+    , currentSample = sampleX
     }
 
 
-sample : DutyCycle -> Int -> Maybe Float
-sample duty index =
+writeNR21 : Int -> Channel2 -> Channel2
+writeNR21 value channel =
+    channel
+
+
+writeNR22 : Int -> Channel2 -> Channel2
+writeNR22 value channel =
+    channel
+
+
+writeNR23 : Int -> Channel2 -> Channel2
+writeNR23 value channel2 =
+    { dutyCycle = channel2.dutyCycle
+    , frequency = Bitwise.or (Bitwise.and 0x0700 channel2.frequency) value
+    , timerValue = channel2.timerValue
+    , dutyCycleIndex = channel2.dutyCycleIndex
+    , cycleAccumulator = channel2.cycleAccumulator
+    , lengthCounter = channel2.lengthCounter
+    , lengthEnabled = channel2.lengthEnabled
+    , currentSample = channel2.currentSample
+    }
+
+
+writeNR24 : Int -> Channel2 -> Channel2
+writeNR24 value channel2 =
     let
-        array =
-            case duty of
-                Zero ->
-                    dutyZeroCycles
-
-                One ->
-                    dutyOneCycles
-
-                Two ->
-                    dutyTwoCycles
-
-                Three ->
-                    dutyThreeCycles
+        updatedFrequency =
+            value
+                |> Bitwise.and 0x07
+                |> Bitwise.shiftLeftBy 8
+                |> Bitwise.or (Bitwise.and 0xFF channel2.frequency)
     in
-    Array.get index array |> Maybe.map ((*) 0.3)
-
-
-dutyZeroCycles : Array Float
-dutyZeroCycles =
-    Array.fromList
-        [ -1, -1, -1, -1, -1, -1, -1, 1 ]
-
-
-dutyOneCycles : Array Float
-dutyOneCycles =
-    Array.fromList
-        [ 1, -1, -1, -1, -1, -1, -1, 1 ]
-
-
-dutyTwoCycles : Array Float
-dutyTwoCycles =
-    Array.fromList
-        [ 1, -1, -1, -1, -1, 1, 1, 1 ]
-
-
-dutyThreeCycles : Array Float
-dutyThreeCycles =
-    Array.fromList
-        [ -1, 1, 1, 1, 1, 1, 1, -1 ]
-
-
-
--- Internal
-
-
-cyclesPerSample : Int
-cyclesPerSample =
-    Constants.cyclesPerSecond // 44100
+    { dutyCycle = channel2.dutyCycle
+    , frequency = updatedFrequency
+    , timerValue = channel2.timerValue
+    , dutyCycleIndex = channel2.dutyCycleIndex
+    , cycleAccumulator = channel2.cycleAccumulator
+    , lengthCounter = channel2.lengthCounter
+    , lengthEnabled = channel2.lengthEnabled
+    , currentSample = channel2.currentSample
+    }
