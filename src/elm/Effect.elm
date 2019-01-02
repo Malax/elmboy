@@ -10,11 +10,8 @@ module Effect exposing
     , mapReader3
     )
 
-import Component.ALU as ALU
-import Component.CPU as CPU exposing (Register16(..), Register8(..))
-import Component.MMU as MMU
+import Component.CPU exposing (Register16(..), Register8(..))
 import GameBoy exposing (GameBoy)
-import Util
 
 
 type alias Reader a =

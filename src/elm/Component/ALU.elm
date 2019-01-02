@@ -48,10 +48,6 @@ type alias ALUResult =
     Int
 
 
-type alias ALUResultOnlyFlags =
-    Flags
-
-
 type alias Flags =
     Int
 
@@ -320,9 +316,6 @@ add16 operand1 operand2 =
 
         maskedResult =
             and 0xFFFF result
-
-        zeroFlag =
-            maskedResult == 0x00
 
         carryFlag =
             result > 0xFFFF

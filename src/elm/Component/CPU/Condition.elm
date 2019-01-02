@@ -1,8 +1,7 @@
 module Component.CPU.Condition exposing (Condition(..), check)
 
-import Component.CPU as CPU exposing (Register16(..), Register8(..))
+import Component.CPU exposing (Register16(..), Register8(..))
 import Component.CPU.FlagRegister as FlagRegister
-import GameBoy exposing (GameBoy)
 
 
 type Condition

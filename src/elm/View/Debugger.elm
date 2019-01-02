@@ -6,5 +6,5 @@ import Msg exposing (Msg)
 
 
 view : String -> Model -> Html Msg
-view canvasId model =
+view _ _ =
     text "debugger"
