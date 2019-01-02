@@ -37,7 +37,7 @@ import Constants
 
 
 type alias APU =
-    { channel1 : Channel1
+    { channel1 : Channel2
     , channel2 : Channel2
     , channel3 : Channel3
     , channel4 : Channel4
@@ -48,7 +48,7 @@ type alias APU =
 
 init : APU
 init =
-    { channel1 = Channel1.init
+    { channel1 = Channel2.init
     , channel2 = Channel2.init
     , channel3 = Channel3.init
     , channel4 = Channel4.init
@@ -64,7 +64,7 @@ emulate cycles apu =
             ( remainderBy APUConstants.cyclesPerSample (apu.cycleAccumulator + cycles), apu.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
 
         updatedChannel1 =
-            Channel1.emulate cycles apu.channel1
+            Channel2.emulate cycles apu.channel1
 
         updatedChannel2 =
             Channel2.emulate cycles apu.channel2
@@ -106,27 +106,31 @@ drainAudioBuffer apu =
 
 writeNR10 : Int -> APU -> APU
 writeNR10 value apu =
-    setChannel1 (Channel1.writeNR10 value apu.channel1) apu
+    apu
+
+
+
+--setChannel1 (Channel1.writeNR10 value apu.channel1) apu
 
 
 writeNR11 : Int -> APU -> APU
 writeNR11 value apu =
-    setChannel1 (Channel1.writeNR11 value apu.channel1) apu
+    setChannel1 (Channel2.writeNR21 value apu.channel1) apu
 
 
 writeNR12 : Int -> APU -> APU
 writeNR12 value apu =
-    setChannel1 (Channel1.writeNR12 value apu.channel1) apu
+    setChannel1 (Channel2.writeNR22 value apu.channel1) apu
 
 
 writeNR13 : Int -> APU -> APU
 writeNR13 value apu =
-    setChannel1 (Channel1.writeNR13 value apu.channel1) apu
+    setChannel1 (Channel2.writeNR23 value apu.channel1) apu
 
 
 writeNR14 : Int -> APU -> APU
 writeNR14 value apu =
-    setChannel1 (Channel1.writeNR14 value apu.channel1) apu
+    setChannel1 (Channel2.writeNR24 value apu.channel1) apu
 
 
 writeNR21 : Int -> APU -> APU
@@ -216,7 +220,7 @@ writeNR52 value apu =
 -- Internal
 
 
-setChannel1 : Channel1 -> APU -> APU
+setChannel1 : Channel2 -> APU -> APU
 setChannel1 channel apu =
     { channel1 = channel
     , channel2 = apu.channel2
