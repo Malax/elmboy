@@ -242,6 +242,9 @@ writeWord8 address value gameBoy =
     else if address == 0xFF23 then
         GameBoy.setAPU (APU.writeNR44 sanitizedValue gameBoy.apu) gameBoy
 
+    else if address >= 0xFF30 && address <= 0xFF3F then
+        GameBoy.setAPU (APU.writeWaveRam (address - 0xFF30) sanitizedValue gameBoy.apu) gameBoy
+
     else if address == 0xFF40 then
         GameBoy.setPPU (PPU.writeLCDC sanitizedValue gameBoy.ppu) gameBoy
 

@@ -24,6 +24,7 @@ module Component.APU exposing
     , writeNR50
     , writeNR51
     , writeNR52
+    , writeWaveRam
     )
 
 import Array exposing (Array)
@@ -214,6 +215,11 @@ writeNR52 : Int -> APU -> APU
 writeNR52 value apu =
     -- TODO: Implement
     apu
+
+
+writeWaveRam : Int -> Int -> APU -> APU
+writeWaveRam address value apu =
+    setChannel3 (Channel3.writeWaveRam address value apu.channel3) apu
 
 
 
