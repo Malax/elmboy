@@ -12,6 +12,7 @@ type alias Channel3 =
     , frequency : Int
     , wavePosition : Int
     , timer : Timer
+    , dacPower : Bool
     }
 
 
@@ -22,6 +23,7 @@ init =
     , frequency = 0
     , wavePosition = 0
     , timer = Timer.init 0
+    , dacPower = False
     }
 
 
@@ -39,7 +41,10 @@ emulate cycles channel =
                 channel.wavePosition
 
         updatedCurrentSample =
-            if changeSample then
+            if not channel.dacPower then
+                0
+
+            else if changeSample then
                 sampleFromWaveRam channel.wavePosition channel.waveRam
 
             else
@@ -50,6 +55,7 @@ emulate cycles channel =
     , frequency = channel.frequency
     , wavePosition = updatedWavePosition
     , timer = updatedTimer
+    , dacPower = channel.dacPower
     }
 
 
@@ -79,12 +85,19 @@ writeWaveRam address value channel =
     , frequency = channel.frequency
     , wavePosition = channel.wavePosition
     , timer = channel.timer
+    , dacPower = channel.dacPower
     }
 
 
 writeNR30 : Int -> Channel3 -> Channel3
 writeNR30 value channel =
-    channel
+    { currentSample = channel.currentSample
+    , waveRam = channel.waveRam
+    , frequency = channel.frequency
+    , wavePosition = channel.wavePosition
+    , timer = channel.timer
+    , dacPower = Bitwise.and Constants.bit7Mask value == Constants.bit7Mask
+    }
 
 
 writeNR31 : Int -> Channel3 -> Channel3
@@ -104,6 +117,7 @@ writeNR33 value channel =
     , wavePosition = channel.wavePosition
     , timer = channel.timer
     , frequency = Bitwise.or (Bitwise.and 0x0700 channel.frequency) value
+    , dacPower = channel.dacPower
     }
 
 
@@ -124,4 +138,5 @@ writeNR34 value channel =
     , wavePosition = 0
     , timer = Timer.init ((2048 - updatedFrequency) * 2)
     , frequency = updatedFrequency
+    , dacPower = channel.dacPower
     }
