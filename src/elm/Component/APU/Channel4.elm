@@ -2,6 +2,7 @@ module Component.APU.Channel4 exposing (Channel4, emulate, init, writeNR41, writ
 
 import Bitwise
 import Component.APU.Constants as APUConstants
+import Component.APU.Timer as Timer exposing (Timer)
 import Component.APU.VolumeEnvelope as VolumeEnvelope exposing (VolumeEnvelope)
 import Constants
 
@@ -14,12 +15,11 @@ type WidthMode
 type alias Channel4 =
     { currentSample : Float
     , bits : Int
-    , clockShift : Int
     , width : WidthMode
+    , clockShift : Int
     , divisorCode : Int
     , volumeEnvelope : VolumeEnvelope
-    , timerValue : Int
-    , cycleAccumulator : Int
+    , timer : Timer
     }
 
 
@@ -31,8 +31,7 @@ init =
     , width = FifteenBit
     , divisorCode = 0x00
     , volumeEnvelope = VolumeEnvelope.init
-    , timerValue = 0
-    , cycleAccumulator = 0
+    , timer = Timer.init 0
     }
 
 
@@ -58,8 +57,8 @@ shiftRegister bits widthMode =
                 SevenBit ->
                     bits
                         |> Bitwise.shiftRightZfBy 1
-                        |> Bitwise.and 0x7F
-                        |> Bitwise.or (Bitwise.shiftLeftBy 6 newHighBit)
+                        |> Bitwise.and 0xBF
+                        |> Bitwise.or (Bitwise.shiftLeftBy 5 newHighBit)
 
         sample =
             if bit0 == 0x01 then
@@ -105,36 +104,19 @@ divisor code =
 emulate : Int -> Channel4 -> Channel4
 emulate cycles channel =
     let
-        ( updatedCycleAccumulator, generateSample ) =
-            ( remainderBy APUConstants.cyclesPerSample (channel.cycleAccumulator + cycles), channel.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
-
-        ( updatedTimerValue, timerUnderflowed ) =
-            let
-                x =
-                    channel.timerValue - cycles
-
-                underflowed =
-                    x <= 0
-
-                v =
-                    if underflowed then
-                        Bitwise.shiftLeftBy channel.clockShift (divisor channel.divisorCode)
-
-                    else
-                        x
-            in
-            ( v, underflowed )
+        ( updatedTimer, timerUnderflowed ) =
+            Timer.update cycles channel.timer
 
         updatedVolumeEnvelope =
             VolumeEnvelope.emulate cycles channel.volumeEnvelope
 
         ( updatedBits, sampleX ) =
-            if generateSample then
+            if timerUnderflowed then
                 shiftRegister channel.bits channel.width
                     |> Tuple.mapSecond (VolumeEnvelope.modifySample updatedVolumeEnvelope)
 
             else
-                ( channel.bits, 0 )
+                ( channel.bits, channel.currentSample )
     in
     { currentSample = sampleX
     , bits = updatedBits
@@ -142,8 +124,7 @@ emulate cycles channel =
     , width = channel.width
     , divisorCode = channel.divisorCode
     , volumeEnvelope = updatedVolumeEnvelope
-    , timerValue = updatedTimerValue
-    , cycleAccumulator = updatedCycleAccumulator
+    , timer = updatedTimer
     }
 
 
@@ -160,8 +141,7 @@ writeNR42 value channel =
     , width = channel.width
     , divisorCode = channel.divisorCode
     , volumeEnvelope = VolumeEnvelope.writeRegister value channel.volumeEnvelope
-    , timerValue = channel.timerValue
-    , cycleAccumulator = channel.cycleAccumulator
+    , timer = channel.timer
     }
 
 
@@ -187,8 +167,7 @@ writeNR43 value channel =
     , width = widthMode
     , divisorCode = divisorCode
     , volumeEnvelope = channel.volumeEnvelope
-    , timerValue = channel.timerValue
-    , cycleAccumulator = channel.cycleAccumulator
+    , timer = channel.timer
     }
 
 
@@ -201,7 +180,7 @@ writeNR44 value channel =
     { currentSample = channel.currentSample
     , bits =
         if isTrigger then
-            0x7F
+            0x7FFF
 
         else
             channel.bits
@@ -209,6 +188,5 @@ writeNR44 value channel =
     , width = channel.width
     , divisorCode = channel.divisorCode
     , volumeEnvelope = VolumeEnvelope.handleTrigger channel.volumeEnvelope
-    , timerValue = Bitwise.shiftLeftBy channel.clockShift (divisor channel.divisorCode)
-    , cycleAccumulator = channel.cycleAccumulator
+    , timer = Timer.init (Bitwise.shiftLeftBy channel.clockShift (divisor channel.divisorCode))
     }
