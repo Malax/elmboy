@@ -2,7 +2,6 @@ module Component.APU.NoiseChannel exposing (NoiseChannel, clockLengthCounter, cl
 
 import Bitwise
 import Component.APU.Constants as APUConstants
-import Component.RAM as RAM exposing (RAM)
 import Constants
 
 
@@ -117,7 +116,7 @@ clockVolumeEnvelope channel =
 sample : NoiseChannel -> Float
 sample channel =
     if channel.enabled then
-        (toFloat channel.volume * (1 / 15)) * channel.lastShiftRegisterOutput
+        (toFloat channel.volume * volumeConversionFactor) * channel.lastShiftRegisterOutput
 
     else
         APUConstants.silence

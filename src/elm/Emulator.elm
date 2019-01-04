@@ -4,9 +4,8 @@ module Emulator exposing
     , emulateNextInstruction
     )
 
-import Array exposing (Array)
 import Bitwise
-import Component.APU as APU exposing (APU)
+import Component.APU as APU
 import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.CPU.Opcode as Opcode
 import Component.CPU.OpcodeMapper as OpcodeMapper

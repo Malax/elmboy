@@ -32,7 +32,6 @@ import Component.APU.Constants as APUConstants
 import Component.APU.NoiseChannel as NoiseChannel exposing (NoiseChannel)
 import Component.APU.PulseChannel as PulseChannel exposing (PulseChannel)
 import Component.APU.WaveChannel as WaveChannel exposing (WaveChannel)
-import Component.RAM as RAM exposing (RAM)
 import Constants
 
 
@@ -266,19 +265,19 @@ writeNR44 value apu =
 
 
 writeNR50 : Int -> APU -> APU
-writeNR50 value apu =
+writeNR50 _ apu =
     -- TODO: Implement
     apu
 
 
 writeNR51 : Int -> APU -> APU
-writeNR51 value apu =
+writeNR51 _ apu =
     -- TODO: Implement
     apu
 
 
 writeNR52 : Int -> APU -> APU
-writeNR52 value apu =
+writeNR52 _ apu =
     -- TODO: Implement
     apu
 
