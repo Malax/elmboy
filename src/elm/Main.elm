@@ -76,7 +76,7 @@ update msg model =
                                 , Ports.queueAudioSamples audioSamples
                                 ]
                     in
-                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }, cmds )
+                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 30 model.frameTimes }, cmds )
 
                 Nothing ->
                     ( model, Cmd.none )
