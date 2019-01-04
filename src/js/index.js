@@ -18,9 +18,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
     if (elmData.length > 0) {
       const buffer = audioContext.createBuffer(1, elmData.length, sampleRate)
       const channel = buffer.getChannelData(0)
-
-      //console.log(elmData)
-
+      
       for (let i = 0; i < elmData.length; i++) {
         channel[i] = elmData[i]
       }
