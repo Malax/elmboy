@@ -44,12 +44,12 @@ type alias GameBoy =
     }
 
 
-init : Cartridge -> GameBoy
-init cartridge =
+init : Cartridge -> Bool -> GameBoy
+init cartridge apuEnabled =
     { cpu = CPU.init
     , ppu = PPU.init
     , timer = Timer.init
-    , apu = APU.init
+    , apu = APU.init apuEnabled
     , workRamBank0 = RAM.initZero 0x1000
     , workRamBank1 = RAM.initZero 0x1000
     , hram = RAM.init 0x7F

@@ -10,6 +10,7 @@ type alias Model =
     , errorModal : Maybe ErrorModal
     , debuggerEnabled : Bool
     , emulateOnAnimationFrame : Bool
+    , apuEnabled : Bool
     }
 
 

@@ -52,6 +52,7 @@ init _ =
       , frameTimes = []
       , errorModal = Nothing
       , debuggerEnabled = False
+      , apuEnabled = False
       }
     , Cmd.none
     )
@@ -67,7 +68,7 @@ update msg model =
                         ( emulatedGameBoy, audioSamples ) =
                             gameBoy
                                 |> Emulator.emulateCycles (Constants.cyclesPerSecond // 60)
-                                |> GameBoy.drainAudioBuffer (44100 * 10)
+                                |> GameBoy.drainAudioBuffer (44100 // 10)
 
                         cmds =
                             Cmd.batch
@@ -112,7 +113,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulateOnAnimationFrame = True }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge model.apuEnabled), emulateOnAnimationFrame = True }, Cmd.none )
 
                 Nothing ->
                     let

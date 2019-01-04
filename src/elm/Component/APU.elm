@@ -45,11 +45,12 @@ type alias APU =
     , cycleAccumulator : Int
     , frameSequencerCounter : Int
     , frameSequence : Int
+    , enabled : Bool
     }
 
 
-init : APU
-init =
+init : Bool -> APU
+init enabled =
     { channel1 = PulseChannel.init
     , channel2 = PulseChannel.init
     , channel3 = WaveChannel.init
@@ -58,68 +59,74 @@ init =
     , cycleAccumulator = 0
     , frameSequencerCounter = 0
     , frameSequence = 0
+    , enabled = enabled
     }
 
 
 emulate : Int -> APU -> APU
 emulate cycles apu =
-    let
-        ( updatedCycleAccumulator, generateSample ) =
-            ( remainderBy APUConstants.cyclesPerSample (apu.cycleAccumulator + cycles), apu.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
+    if apu.enabled then
+        let
+            ( updatedCycleAccumulator, generateSample ) =
+                ( remainderBy APUConstants.cyclesPerSample (apu.cycleAccumulator + cycles), apu.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
 
-        frameSequencerTriggered =
-            apu.frameSequencerCounter - cycles <= 0
+            frameSequencerTriggered =
+                apu.frameSequencerCounter - cycles <= 0
 
-        frameSequencerCounter =
-            if frameSequencerTriggered then
-                Constants.cyclesPerSecond // 512 + (apu.frameSequencerCounter - cycles)
+            frameSequencerCounter =
+                if frameSequencerTriggered then
+                    Constants.cyclesPerSecond // 512 + (apu.frameSequencerCounter - cycles)
 
-            else
-                apu.frameSequencerCounter - cycles
+                else
+                    apu.frameSequencerCounter - cycles
 
-        frameSequence =
-            if frameSequencerTriggered then
-                remainderBy 8 (apu.frameSequence + 1)
+            frameSequence =
+                if frameSequencerTriggered then
+                    remainderBy 8 (apu.frameSequence + 1)
 
-            else
-                apu.frameSequence
+                else
+                    apu.frameSequence
 
-        updatedChannel1 =
-            apu.channel1
-                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
-                |> PulseChannel.clockTimer cycles
+            updatedChannel1 =
+                apu.channel1
+                    |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
+                    |> PulseChannel.clockTimer cycles
 
-        updatedChannel2 =
-            apu.channel2
-                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
-                |> PulseChannel.clockTimer cycles
+            updatedChannel2 =
+                apu.channel2
+                    |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
+                    |> PulseChannel.clockTimer cycles
 
-        updatedChannel3 =
-            apu.channel3
-                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence WaveChannel.clockLengthCounter identity identity
-                |> WaveChannel.clockTimer cycles
+            updatedChannel3 =
+                apu.channel3
+                    |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence WaveChannel.clockLengthCounter identity identity
+                    |> WaveChannel.clockTimer cycles
 
-        updatedChannel4 =
-            apu.channel4
-                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence NoiseChannel.clockLengthCounter NoiseChannel.clockVolumeEnvelope identity
-                |> NoiseChannel.clockTimer cycles
+            updatedChannel4 =
+                apu.channel4
+                    |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence NoiseChannel.clockLengthCounter NoiseChannel.clockVolumeEnvelope identity
+                    |> NoiseChannel.clockTimer cycles
 
-        updatedSampleBuffer =
-            if generateSample then
-                Array.push ((PulseChannel.sample updatedChannel1 + PulseChannel.sample updatedChannel2 + WaveChannel.sample updatedChannel3 + NoiseChannel.sample updatedChannel4) / 4) apu.sampleBuffer
+            updatedSampleBuffer =
+                if generateSample then
+                    Array.push ((PulseChannel.sample updatedChannel1 + PulseChannel.sample updatedChannel2 + WaveChannel.sample updatedChannel3 + NoiseChannel.sample updatedChannel4) / 4) apu.sampleBuffer
 
-            else
-                apu.sampleBuffer
-    in
-    { sampleBuffer = updatedSampleBuffer
-    , cycleAccumulator = updatedCycleAccumulator
-    , channel1 = updatedChannel1
-    , channel2 = updatedChannel2
-    , channel3 = updatedChannel3
-    , channel4 = updatedChannel4
-    , frameSequencerCounter = frameSequencerCounter
-    , frameSequence = frameSequence
-    }
+                else
+                    apu.sampleBuffer
+        in
+        { sampleBuffer = updatedSampleBuffer
+        , cycleAccumulator = updatedCycleAccumulator
+        , channel1 = updatedChannel1
+        , channel2 = updatedChannel2
+        , channel3 = updatedChannel3
+        , channel4 = updatedChannel4
+        , frameSequencerCounter = frameSequencerCounter
+        , frameSequence = frameSequence
+        , enabled = apu.enabled
+        }
+
+    else
+        apu
 
 
 updateChannelAfterFrameSequencer : Bool -> Int -> (a -> a) -> (a -> a) -> (a -> a) -> a -> a
@@ -150,17 +157,22 @@ updateChannelAfterFrameSequencer triggered seq clockLength clockVolEnv clockSwee
 
 drainAudioBuffer : APU -> ( APU, Array Float )
 drainAudioBuffer apu =
-    ( { sampleBuffer = Array.empty
-      , cycleAccumulator = apu.cycleAccumulator
-      , channel1 = apu.channel1
-      , channel2 = apu.channel2
-      , channel3 = apu.channel3
-      , channel4 = apu.channel4
-      , frameSequencerCounter = apu.frameSequencerCounter
-      , frameSequence = apu.frameSequence
-      }
-    , apu.sampleBuffer
-    )
+    if apu.enabled then
+        ( { sampleBuffer = Array.empty
+          , cycleAccumulator = apu.cycleAccumulator
+          , channel1 = apu.channel1
+          , channel2 = apu.channel2
+          , channel3 = apu.channel3
+          , channel4 = apu.channel4
+          , frameSequencerCounter = apu.frameSequencerCounter
+          , frameSequence = apu.frameSequence
+          , enabled = apu.enabled
+          }
+        , apu.sampleBuffer
+        )
+
+    else
+        ( apu, Array.empty )
 
 
 writeNR10 : Int -> APU -> APU
@@ -290,6 +302,7 @@ setChannel1 channel apu =
     , cycleAccumulator = apu.cycleAccumulator
     , frameSequencerCounter = apu.frameSequencerCounter
     , frameSequence = apu.frameSequence
+    , enabled = apu.enabled
     }
 
 
@@ -303,6 +316,7 @@ setChannel2 channel apu =
     , cycleAccumulator = apu.cycleAccumulator
     , frameSequencerCounter = apu.frameSequencerCounter
     , frameSequence = apu.frameSequence
+    , enabled = apu.enabled
     }
 
 
@@ -316,6 +330,7 @@ setChannel3 channel apu =
     , cycleAccumulator = apu.cycleAccumulator
     , frameSequencerCounter = apu.frameSequencerCounter
     , frameSequence = apu.frameSequence
+    , enabled = apu.enabled
     }
 
 
@@ -329,4 +344,5 @@ setChannel4 channel apu =
     , cycleAccumulator = apu.cycleAccumulator
     , frameSequencerCounter = apu.frameSequencerCounter
     , frameSequence = apu.frameSequence
+    , enabled = apu.enabled
     }
