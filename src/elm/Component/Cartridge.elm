@@ -1,4 +1,4 @@
-module Component.Cartridge exposing (Cartridge, fromBytes, readWord8, writeWord8)
+module Component.Cartridge exposing (Cartridge, empty, fromBytes, readWord8, writeWord8)
 
 import Array exposing (Array)
 import Bitwise
@@ -198,6 +198,18 @@ writeWord8 address value cartridge =
 
     else
         cartridge
+
+
+empty : Cartridge
+empty =
+    { bytes = Array.empty
+    , ram = RAM.init 0
+    , selectedRomBank = 0
+    , selectedRamBank = 0
+    , ramEnabled = False
+    , mbc1BankingMode = ROMBanking
+    , memoryBankController = ROM
+    }
 
 
 
