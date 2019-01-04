@@ -1,4 +1,4 @@
-module Component.APU.Constants exposing (cyclesPerSample)
+module Component.APU.Constants exposing (cyclesPerSample, silence)
 
 import Constants
 
@@ -6,3 +6,8 @@ import Constants
 cyclesPerSample : Int
 cyclesPerSample =
     Constants.cyclesPerSecond // Constants.outputSampleRate
+
+
+silence : Float
+silence =
+    0

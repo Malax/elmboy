@@ -28,33 +28,36 @@ module Component.APU exposing
     )
 
 import Array exposing (Array)
-import Component.APU.Channel1 as Channel1 exposing (Channel1)
-import Component.APU.Channel2 as Channel2 exposing (Channel2)
-import Component.APU.Channel3 as Channel3 exposing (Channel3)
-import Component.APU.Channel4 as Channel4 exposing (Channel4)
 import Component.APU.Constants as APUConstants
+import Component.APU.NoiseChannel as NoiseChannel exposing (NoiseChannel)
+import Component.APU.PulseChannel as PulseChannel exposing (PulseChannel)
+import Component.APU.WaveChannel as WaveChannel exposing (WaveChannel)
 import Component.RAM as RAM exposing (RAM)
 import Constants
 
 
 type alias APU =
-    { channel1 : Channel2
-    , channel2 : Channel2
-    , channel3 : Channel3
-    , channel4 : Channel4
+    { channel1 : PulseChannel
+    , channel2 : PulseChannel
+    , channel3 : WaveChannel
+    , channel4 : NoiseChannel
     , sampleBuffer : Array Float
     , cycleAccumulator : Int
+    , frameSequencerCounter : Int
+    , frameSequence : Int
     }
 
 
 init : APU
 init =
-    { channel1 = Channel2.init
-    , channel2 = Channel2.init
-    , channel3 = Channel3.init
-    , channel4 = Channel4.init
+    { channel1 = PulseChannel.init
+    , channel2 = PulseChannel.init
+    , channel3 = WaveChannel.init
+    , channel4 = NoiseChannel.init
     , sampleBuffer = Array.empty
     , cycleAccumulator = 0
+    , frameSequencerCounter = 0
+    , frameSequence = 0
     }
 
 
@@ -64,21 +67,46 @@ emulate cycles apu =
         ( updatedCycleAccumulator, generateSample ) =
             ( remainderBy APUConstants.cyclesPerSample (apu.cycleAccumulator + cycles), apu.cycleAccumulator + cycles >= APUConstants.cyclesPerSample )
 
+        frameSequencerTriggered =
+            apu.frameSequencerCounter - cycles <= 0
+
+        frameSequencerCounter =
+            if frameSequencerTriggered then
+                Constants.cyclesPerSecond // 512 + (apu.frameSequencerCounter - cycles)
+
+            else
+                apu.frameSequencerCounter - cycles
+
+        frameSequence =
+            if frameSequencerTriggered then
+                remainderBy 8 (apu.frameSequence + 1)
+
+            else
+                apu.frameSequence
+
         updatedChannel1 =
-            Channel2.emulate cycles apu.channel1
+            apu.channel1
+                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
+                |> PulseChannel.clockTimer cycles
 
         updatedChannel2 =
-            Channel2.emulate cycles apu.channel2
+            apu.channel2
+                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence PulseChannel.clockLengthCounter PulseChannel.clockVolumeEnvelope PulseChannel.clockSweepUnit
+                |> PulseChannel.clockTimer cycles
 
         updatedChannel3 =
-            Channel3.emulate cycles apu.channel3
+            apu.channel3
+                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence WaveChannel.clockLengthCounter identity identity
+                |> WaveChannel.clockTimer cycles
 
         updatedChannel4 =
-            Channel4.emulate cycles apu.channel4
+            apu.channel4
+                |> updateChannelAfterFrameSequencer frameSequencerTriggered frameSequence NoiseChannel.clockLengthCounter NoiseChannel.clockVolumeEnvelope identity
+                |> NoiseChannel.clockTimer cycles
 
         updatedSampleBuffer =
             if generateSample then
-                Array.push ((updatedChannel1.currentSample + updatedChannel2.currentSample + updatedChannel3.currentSample + updatedChannel4.currentSample) / 4) apu.sampleBuffer
+                Array.push ((PulseChannel.sample updatedChannel1 + PulseChannel.sample updatedChannel2 + WaveChannel.sample updatedChannel3 + NoiseChannel.sample updatedChannel4) / 4) apu.sampleBuffer
 
             else
                 apu.sampleBuffer
@@ -89,7 +117,35 @@ emulate cycles apu =
     , channel2 = updatedChannel2
     , channel3 = updatedChannel3
     , channel4 = updatedChannel4
+    , frameSequencerCounter = frameSequencerCounter
+    , frameSequence = frameSequence
     }
+
+
+updateChannelAfterFrameSequencer : Bool -> Int -> (a -> a) -> (a -> a) -> (a -> a) -> a -> a
+updateChannelAfterFrameSequencer triggered seq clockLength clockVolEnv clockSweep channel =
+    if triggered then
+        case seq of
+            0 ->
+                clockLength channel
+
+            2 ->
+                channel |> clockLength |> clockSweep
+
+            4 ->
+                clockLength channel
+
+            6 ->
+                channel |> clockLength |> clockSweep
+
+            7 ->
+                clockVolEnv channel
+
+            _ ->
+                channel
+
+    else
+        channel
 
 
 drainAudioBuffer : APU -> ( APU, Array Float )
@@ -100,6 +156,8 @@ drainAudioBuffer apu =
       , channel2 = apu.channel2
       , channel3 = apu.channel3
       , channel4 = apu.channel4
+      , frameSequencerCounter = apu.frameSequencerCounter
+      , frameSequence = apu.frameSequence
       }
     , apu.sampleBuffer
     )
@@ -107,96 +165,92 @@ drainAudioBuffer apu =
 
 writeNR10 : Int -> APU -> APU
 writeNR10 value apu =
-    apu
-
-
-
---setChannel1 (Channel1.writeNR10 value apu.channel1) apu
+    setChannel1 (PulseChannel.writeNRx0 value apu.channel1) apu
 
 
 writeNR11 : Int -> APU -> APU
 writeNR11 value apu =
-    setChannel1 (Channel2.writeNR21 value apu.channel1) apu
+    setChannel1 (PulseChannel.writeNRx1 value apu.channel1) apu
 
 
 writeNR12 : Int -> APU -> APU
 writeNR12 value apu =
-    setChannel1 (Channel2.writeNR22 value apu.channel1) apu
+    setChannel1 (PulseChannel.writeNRx2 value apu.channel1) apu
 
 
 writeNR13 : Int -> APU -> APU
 writeNR13 value apu =
-    setChannel1 (Channel2.writeNR23 value apu.channel1) apu
+    setChannel1 (PulseChannel.writeNRx3 value apu.channel1) apu
 
 
 writeNR14 : Int -> APU -> APU
 writeNR14 value apu =
-    setChannel1 (Channel2.writeNR24 value apu.channel1) apu
+    setChannel1 (PulseChannel.writeNRx4 value apu.channel1) apu
 
 
 writeNR21 : Int -> APU -> APU
 writeNR21 value apu =
-    setChannel2 (Channel2.writeNR21 value apu.channel2) apu
+    setChannel2 (PulseChannel.writeNRx1 value apu.channel2) apu
 
 
 writeNR22 : Int -> APU -> APU
 writeNR22 value apu =
-    setChannel2 (Channel2.writeNR22 value apu.channel2) apu
+    setChannel2 (PulseChannel.writeNRx2 value apu.channel2) apu
 
 
 writeNR23 : Int -> APU -> APU
 writeNR23 value apu =
-    setChannel2 (Channel2.writeNR23 value apu.channel2) apu
+    setChannel2 (PulseChannel.writeNRx3 value apu.channel2) apu
 
 
 writeNR24 : Int -> APU -> APU
 writeNR24 value apu =
-    setChannel2 (Channel2.writeNR24 value apu.channel2) apu
+    setChannel2 (PulseChannel.writeNRx4 value apu.channel2) apu
 
 
 writeNR30 : Int -> APU -> APU
 writeNR30 value apu =
-    setChannel3 (Channel3.writeNR30 value apu.channel3) apu
+    setChannel3 (WaveChannel.writeNRx0 value apu.channel3) apu
 
 
 writeNR31 : Int -> APU -> APU
 writeNR31 value apu =
-    setChannel3 (Channel3.writeNR31 value apu.channel3) apu
+    setChannel3 (WaveChannel.writeNRx1 value apu.channel3) apu
 
 
 writeNR32 : Int -> APU -> APU
 writeNR32 value apu =
-    setChannel3 (Channel3.writeNR32 value apu.channel3) apu
+    setChannel3 (WaveChannel.writeNRx2 value apu.channel3) apu
 
 
 writeNR33 : Int -> APU -> APU
 writeNR33 value apu =
-    setChannel3 (Channel3.writeNR33 value apu.channel3) apu
+    setChannel3 (WaveChannel.writeNRx3 value apu.channel3) apu
 
 
 writeNR34 : Int -> APU -> APU
 writeNR34 value apu =
-    setChannel3 (Channel3.writeNR34 value apu.channel3) apu
+    setChannel3 (WaveChannel.writeNRx4 value apu.channel3) apu
 
 
 writeNR41 : Int -> APU -> APU
 writeNR41 value apu =
-    setChannel4 (Channel4.writeNR41 value apu.channel4) apu
+    setChannel4 (NoiseChannel.writeNRx1 value apu.channel4) apu
 
 
 writeNR42 : Int -> APU -> APU
 writeNR42 value apu =
-    setChannel4 (Channel4.writeNR42 value apu.channel4) apu
+    setChannel4 (NoiseChannel.writeNRx2 value apu.channel4) apu
 
 
 writeNR43 : Int -> APU -> APU
 writeNR43 value apu =
-    setChannel4 (Channel4.writeNR43 value apu.channel4) apu
+    setChannel4 (NoiseChannel.writeNRx3 value apu.channel4) apu
 
 
 writeNR44 : Int -> APU -> APU
 writeNR44 value apu =
-    setChannel4 (Channel4.writeNR44 value apu.channel4) apu
+    setChannel4 (NoiseChannel.writeNRx4 value apu.channel4) apu
 
 
 writeNR50 : Int -> APU -> APU
@@ -219,14 +273,14 @@ writeNR52 value apu =
 
 writeWaveRam : Int -> Int -> APU -> APU
 writeWaveRam address value apu =
-    setChannel3 (Channel3.writeWaveRam address value apu.channel3) apu
+    setChannel3 (WaveChannel.writeWaveRam address value apu.channel3) apu
 
 
 
 -- Internal
 
 
-setChannel1 : Channel2 -> APU -> APU
+setChannel1 : PulseChannel -> APU -> APU
 setChannel1 channel apu =
     { channel1 = channel
     , channel2 = apu.channel2
@@ -234,10 +288,12 @@ setChannel1 channel apu =
     , channel4 = apu.channel4
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
+    , frameSequencerCounter = apu.frameSequencerCounter
+    , frameSequence = apu.frameSequence
     }
 
 
-setChannel2 : Channel2 -> APU -> APU
+setChannel2 : PulseChannel -> APU -> APU
 setChannel2 channel apu =
     { channel1 = apu.channel1
     , channel2 = channel
@@ -245,10 +301,12 @@ setChannel2 channel apu =
     , channel4 = apu.channel4
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
+    , frameSequencerCounter = apu.frameSequencerCounter
+    , frameSequence = apu.frameSequence
     }
 
 
-setChannel3 : Channel3 -> APU -> APU
+setChannel3 : WaveChannel -> APU -> APU
 setChannel3 channel apu =
     { channel1 = apu.channel1
     , channel2 = apu.channel2
@@ -256,10 +314,12 @@ setChannel3 channel apu =
     , channel4 = apu.channel4
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
+    , frameSequencerCounter = apu.frameSequencerCounter
+    , frameSequence = apu.frameSequence
     }
 
 
-setChannel4 : Channel4 -> APU -> APU
+setChannel4 : NoiseChannel -> APU -> APU
 setChannel4 channel apu =
     { channel1 = apu.channel1
     , channel2 = apu.channel2
@@ -267,4 +327,6 @@ setChannel4 channel apu =
     , channel4 = channel
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
+    , frameSequencerCounter = apu.frameSequencerCounter
+    , frameSequence = apu.frameSequence
     }

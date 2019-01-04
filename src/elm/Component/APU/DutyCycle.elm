@@ -1,6 +1,7 @@
-module Component.APU.SquareWave exposing (DutyCycle(..), sample)
+module Component.APU.DutyCycle exposing (DutyCycle(..), sample)
 
 import Array exposing (Array)
+import Component.APU.Constants as APUConstants
 
 
 type DutyCycle
@@ -29,7 +30,7 @@ sample duty index =
     in
     array
         |> Array.get (remainderBy 8 index)
-        |> Maybe.withDefault 0
+        |> Maybe.withDefault APUConstants.silence
 
 
 dutyZeroCycles : Array Float
