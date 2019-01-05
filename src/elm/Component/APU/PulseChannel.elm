@@ -1,4 +1,17 @@
-module Component.APU.PulseChannel exposing (PulseChannel, clockLengthCounter, clockSweepUnit, clockTimer, clockVolumeEnvelope, init, sample, writeNRx0, writeNRx1, writeNRx2, writeNRx3, writeNRx4)
+module Component.APU.PulseChannel exposing
+    ( PulseChannel
+    , clockLengthCounter
+    , clockSweepUnit
+    , clockTimer
+    , clockVolumeEnvelope
+    , init
+    , sample
+    , writeNRx0
+    , writeNRx1
+    , writeNRx2
+    , writeNRx3
+    , writeNRx4
+    )
 
 import Bitwise
 import Component.APU.Constants as APUConstants

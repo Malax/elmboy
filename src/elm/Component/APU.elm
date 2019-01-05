@@ -159,32 +159,6 @@ emulate cycles apu =
         apu
 
 
-updateChannelAfterFrameSequencer : Bool -> Int -> (a -> a) -> (a -> a) -> (a -> a) -> a -> a
-updateChannelAfterFrameSequencer triggered seq clockLength clockVolEnv clockSweep channel =
-    if triggered then
-        case seq of
-            0 ->
-                clockLength channel
-
-            2 ->
-                channel |> clockLength |> clockSweep
-
-            4 ->
-                clockLength channel
-
-            6 ->
-                channel |> clockLength |> clockSweep
-
-            7 ->
-                clockVolEnv channel
-
-            _ ->
-                channel
-
-    else
-        channel
-
-
 drainAudioBuffer : APU -> ( APU, Array ( Float, Float ) )
 drainAudioBuffer apu =
     if apu.enabled then
@@ -472,6 +446,32 @@ mixSamples channel1 channel2 channel3 channel4 { leftVolume, rightVolume, enable
             ((rightChannel1 + rightChannel2 + rightChannel3 + rightChannel4) / 4) * (toFloat rightVolume * (1 / 7))
     in
     ( left, right )
+
+
+updateChannelAfterFrameSequencer : Bool -> Int -> (a -> a) -> (a -> a) -> (a -> a) -> a -> a
+updateChannelAfterFrameSequencer triggered sequence clockLength clockVolEnv clockSweep channel =
+    if triggered then
+        case sequence of
+            0 ->
+                clockLength channel
+
+            2 ->
+                channel |> clockLength |> clockSweep
+
+            4 ->
+                clockLength channel
+
+            6 ->
+                channel |> clockLength |> clockSweep
+
+            7 ->
+                clockVolEnv channel
+
+            _ ->
+                channel
+
+    else
+        channel
 
 
 setChannel1 : PulseChannel -> APU -> APU
