@@ -173,7 +173,7 @@ writeWord8 address value cartridge =
                         else
                             value
         in
-        setSelectedRomBank value cartridge
+        setSelectedRomBank modifiedValue cartridge
 
     else if address >= 0x4000 && address <= 0x5FFF then
         setSelectedRamBank value cartridge
