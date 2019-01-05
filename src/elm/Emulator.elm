@@ -17,7 +17,6 @@ import Constants
 import CoreEffect exposing (readRegister16, writeRegister16)
 import Effect exposing (Effect)
 import GameBoy exposing (GameBoy)
-import Util
 
 
 emulateNextInstruction : GameBoy -> GameBoy
