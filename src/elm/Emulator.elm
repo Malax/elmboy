@@ -36,15 +36,42 @@ emulateNextInstruction gameBoy =
             APU.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.apu
 
         updatedInterruptFlag =
-            List.foldl Bitwise.or
-                emulatedGameBoy.cpu.interruptFlag
-                [ Util.conditionalOrBitmask (ppu.triggeredInterrupt == VBlankInterrupt) 0x01
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == HBlankInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == LineCompareInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == OamInterrupt) 0x02
-                , Util.conditionalOrBitmask timer.triggeredInterrupt 0x04
-                , Util.conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
-                ]
+            let
+                ppuInterruptMask =
+                    case ppu.triggeredInterrupt of
+                        VBlankInterrupt ->
+                            0x01
+
+                        HBlankInterrupt ->
+                            0x02
+
+                        LineCompareInterrupt ->
+                            0x02
+
+                        OamInterrupt ->
+                            0x02
+
+                        None ->
+                            0x00
+
+                timerInterruptMask =
+                    if timer.triggeredInterrupt then
+                        0x04
+
+                    else
+                        0x00
+
+                joypadInterruptMask =
+                    if emulatedGameBoy.joypad.triggeredInterrupt then
+                        0x10
+
+                    else
+                        0x00
+            in
+            emulatedGameBoy.cpu.interruptFlag
+                |> Bitwise.or ppuInterruptMask
+                |> Bitwise.or timerInterruptMask
+                |> Bitwise.or joypadInterruptMask
 
         cpu =
             CPU.setInterruptFlag updatedInterruptFlag emulatedGameBoy.cpu

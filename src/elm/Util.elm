@@ -1,4 +1,4 @@
-module Util exposing (byteToSignedInt, chunkList, conditionalOrBitmask, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
+module Util exposing (byteToSignedInt, chunkList, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
 
 import Array exposing (Array)
 import Bitwise
@@ -78,15 +78,6 @@ stringToBytes string =
                 acc
     in
     recurse string Array.empty
-
-
-conditionalOrBitmask : Bool -> Int -> Int
-conditionalOrBitmask condition mask =
-    if condition then
-        mask
-
-    else
-        0x00
 
 
 foldRIndexes : Int -> acc -> (Int -> acc -> acc) -> acc
