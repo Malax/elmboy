@@ -41,7 +41,7 @@ type alias PPU =
     , backgroundPalette : Int
     , objectPalette0 : Int
     , objectPalette1 : Int
-    , triggeredInterrupt : Maybe PPUInterrupt
+    , triggeredInterrupt : PPUInterrupt
     , lcdStatus : Int
 
     {-
@@ -65,6 +65,7 @@ type PPUInterrupt
     | HBlankInterrupt
     | LineCompareInterrupt
     | OamInterrupt
+    | None
 
 
 
@@ -359,7 +360,7 @@ setObjectPalette1 value ppu =
     }
 
 
-setVBlankData : GameBoyScreen -> GameBoyScreen -> Bool -> Maybe PPUInterrupt -> PPU -> PPU
+setVBlankData : GameBoyScreen -> GameBoyScreen -> Bool -> PPUInterrupt -> PPU -> PPU
 setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     { mode = ppu.mode
     , vram = ppu.vram
@@ -383,7 +384,7 @@ setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     }
 
 
-setEmulateData : Mode -> Int -> Int -> Int -> Maybe PPUInterrupt -> PPU -> PPU
+setEmulateData : Mode -> Int -> Int -> Int -> PPUInterrupt -> PPU -> PPU
 setEmulateData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame interrupt ppu =
     { mode = currentMode
     , vram = ppu.vram

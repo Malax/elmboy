@@ -38,10 +38,10 @@ emulateNextInstruction gameBoy =
         updatedInterruptFlag =
             List.foldl Bitwise.or
                 emulatedGameBoy.cpu.interruptFlag
-                [ Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just VBlankInterrupt) 0x01
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just HBlankInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
+                [ Util.conditionalOrBitmask (ppu.triggeredInterrupt == VBlankInterrupt) 0x01
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == HBlankInterrupt) 0x02
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == LineCompareInterrupt) 0x02
+                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == OamInterrupt) 0x02
                 , Util.conditionalOrBitmask timer.triggeredInterrupt 0x04
                 , Util.conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
                 ]

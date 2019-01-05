@@ -62,7 +62,7 @@ init =
     , screen = GameBoyScreen.empty
     , lastCompleteFrame = GameBoyScreen.empty
     , cyclesSinceLastCompleteFrame = 0
-    , triggeredInterrupt = Nothing
+    , triggeredInterrupt = None
     , omitFrame = False
     }
 
@@ -302,16 +302,16 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
 
         interrupt =
             if hBlankInterruptEnabled && currentMode == HBlank && mode /= currentMode then
-                Just HBlankInterrupt
+                HBlankInterrupt
 
             else if lineCompareInterruptEnabled && currentLine == ppu.lineCompare && ppu.line /= currentLine then
-                Just LineCompareInterrupt
+                LineCompareInterrupt
 
             else if oamInterruptEnabled && currentMode == OamSearch && mode /= currentMode then
-                Just OamInterrupt
+                OamInterrupt
 
             else
-                Nothing
+                None
 
         modifiedPPUData =
             PPUTypes.setEmulateData
@@ -332,10 +332,10 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
 
         ( HBlank, VBlank ) ->
             if not omitFrame then
-                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True VBlankInterrupt modifiedPPUData
 
             else
-                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False VBlankInterrupt modifiedPPUData
 
         _ ->
             modifiedPPUData
