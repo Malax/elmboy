@@ -69,7 +69,7 @@ clockLengthCounter channel =
 
 sample : WaveChannel -> Float
 sample channel =
-    if channel.enabled then
+    if channel.enabled && channel.dacPower then
         (toFloat channel.volume * (1 / 15)) * sampleFromWaveRam channel.wavePosition channel.waveRam
 
     else
