@@ -95,7 +95,7 @@ setButtonStatus button status gameBoy =
     setJoypad updatedJoypad gameBoy
 
 
-drainAudioBuffer : Int -> GameBoy -> ( GameBoy, Array Float )
+drainAudioBuffer : Int -> GameBoy -> ( GameBoy, Array ( Float, Float ) )
 drainAudioBuffer minSamples gameBoy =
     if Array.length gameBoy.apu.sampleBuffer >= minSamples then
         APU.drainAudioBuffer gameBoy.apu

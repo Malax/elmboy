@@ -16,11 +16,13 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
   app.ports.queueAudioSamples.subscribe(function (elmData) {
     if (elmData.length > 0) {
-      const buffer = audioContext.createBuffer(1, elmData.length, sampleRate)
-      const channel = buffer.getChannelData(0)
+      const buffer = audioContext.createBuffer(2, elmData.length, sampleRate)
+      const leftChannel = buffer.getChannelData(0)
+      const rightChannel = buffer.getChannelData(1)
       
       for (let i = 0; i < elmData.length; i++) {
-        channel[i] = elmData[i]
+        leftChannel[i] = elmData[i][0]
+        rightChannel[i] = elmData[i][1]
       }
 
       var bufferSource = audioContext.createBufferSource()
