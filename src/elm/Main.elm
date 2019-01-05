@@ -68,7 +68,7 @@ update msg model =
                         ( emulatedGameBoy, audioSamples ) =
                             gameBoy
                                 |> Emulator.emulateCycles (Constants.cyclesPerSecond // 60)
-                                |> GameBoy.drainAudioBuffer (44100 // 10)
+                                |> GameBoy.drainAudioBuffer (44100 // 6)
 
                         cmds =
                             Cmd.batch
