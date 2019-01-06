@@ -496,9 +496,9 @@ opcodes =
         , -- 0xE7
           HighLevelOpcode.rst 0x20
         , -- 0xE8
-          HighLevelOpcode.addSPSignedImmediate (writeRegister16 SP)
+          HighLevelOpcode.addSPSignedImmediate
         , -- 0xE9
-          HighLevelOpcode.jp Always (readRegister16 HL)
+          HighLevelOpcode.jpIndirectHL
         , -- 0xEA
           HighLevelOpcode.ld (writeMemory8 readMemory16AdvancePC) (readRegister8 A)
         , -- 0xEB
@@ -528,9 +528,10 @@ opcodes =
         , -- 0xF7
           HighLevelOpcode.rst 0x30
         , -- 0xF8
-          HighLevelOpcode.addSPSignedImmediate (writeRegister16 HL)
+          HighLevelOpcode.ldHLSPPlusSignedImmediate
         , -- 0xF9
-          HighLevelOpcode.ld (writeRegister16 SP) (readRegister16 HL)
+          -- Special case: Requires 4 extra cycles as this is a 16bit load.
+          HighLevelOpcode.ld (writeRegister16 SP) (CoreEffect.extraCycles 4 >> readRegister16 HL)
         , -- 0xFA
           HighLevelOpcode.ld (writeRegister8 A) (readMemory8 readMemory16AdvancePC)
         , -- 0xFB
@@ -1091,7 +1092,7 @@ readIndirectHLPostIncrement gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue + 1) gameBoy.cpu
     in
-    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPU updatedCpu gameBoy )
+    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPUAndCycles updatedCpu (gameBoy.lastInstructionCycles + 4) gameBoy )
 
 
 readIndirectHLPostDecrement : Reader Int
@@ -1103,7 +1104,7 @@ readIndirectHLPostDecrement gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue - 1) gameBoy.cpu
     in
-    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPU updatedCpu gameBoy )
+    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPUAndCycles updatedCpu (gameBoy.lastInstructionCycles + 4) gameBoy )
 
 
 writeIndirectHLPostIncrement : Writer Int
@@ -1118,7 +1119,7 @@ writeIndirectHLPostIncrement value gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue + 1) updatedGameBoy.cpu
     in
-    GameBoy.setCPU updatedCpu updatedGameBoy
+    GameBoy.setCPUAndCycles updatedCpu (updatedGameBoy.lastInstructionCycles + 4) updatedGameBoy
 
 
 writeIndirectHLPostDecrement : Writer Int
@@ -1133,7 +1134,7 @@ writeIndirectHLPostDecrement value gameBoy =
         updatedCpu =
             CPU.writeRegister16 HL (hlValue - 1) updatedGameBoy.cpu
     in
-    GameBoy.setCPU updatedCpu updatedGameBoy
+    GameBoy.setCPUAndCycles updatedCpu (updatedGameBoy.lastInstructionCycles + 4) updatedGameBoy
 
 
 

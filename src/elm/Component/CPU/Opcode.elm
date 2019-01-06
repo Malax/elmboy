@@ -19,8 +19,10 @@ module Component.CPU.Opcode exposing
     , inc
     , inc16
     , jp
+    , jpIndirectHL
     , jr
     , ld
+    , ldHLSPPlusSignedImmediate
     , nop
     , or
     , pop
@@ -128,18 +130,18 @@ xor reader =
 
 add16 : Reader Int -> Effect
 add16 reader =
-    mapReader2 ALU.add16 (readRegister16 HL) reader
+    mapReader2 ALU.add16 (extraCycles 4 >> readRegister16 HL) reader
         |> flagModifyingOpcode (writeRegister16 HL)
 
 
 dec16 : Reader Int -> Writer Int -> Effect
 dec16 reader writer =
-    join (mapReader ALU.dec16 reader) writer
+    extraCycles 4 >> join (mapReader ALU.dec16 reader) writer
 
 
 inc16 : Reader Int -> Writer Int -> Effect
 inc16 reader writer =
-    join (mapReader ALU.inc16 reader) writer
+    extraCycles 4 >> join (mapReader ALU.inc16 reader) writer
 
 
 
@@ -251,6 +253,12 @@ ld writer reader =
 -- Jumps and Subroutines
 
 
+jpIndirectHL : Effect
+jpIndirectHL =
+    -- JP (HL) is a special case as it only uses 4 cycles in total
+    join (readRegister16 HL) (writeRegister16 PC)
+
+
 jp : Condition -> Reader Int -> Effect
 jp condition reader =
     join2
@@ -258,8 +266,6 @@ jp condition reader =
         (readRegister8 F)
         (\address flags ->
             if Condition.check condition flags then
-                -- TODO: "JP (HL)" only uses 4 cycles in total, we might need a specialized opcode implementation for that.
-                -- This is because unconditional jumps do not need 4 extra cycles!
                 extraCycles 4 >> writeRegister16 PC address
 
             else
@@ -343,10 +349,16 @@ pop writer =
             writeRegister16 SP (sp + 2) >> writer value
 
 
-addSPSignedImmediate : Writer Int -> Effect
-addSPSignedImmediate writer =
-    mapReader2 ALU.add16Signed8 (readRegister16 SP) readMemory8AdvancePC
-        |> flagSettingOpcode writer
+addSPSignedImmediate : Effect
+addSPSignedImmediate =
+    mapReader2 ALU.add16Signed8 (extraCycles 8 >> readRegister16 SP) readMemory8AdvancePC
+        |> flagSettingOpcode (writeRegister16 SP)
+
+
+ldHLSPPlusSignedImmediate : Effect
+ldHLSPPlusSignedImmediate =
+    mapReader2 ALU.add16Signed8 (extraCycles 4 >> readRegister16 SP) readMemory8AdvancePC
+        |> flagSettingOpcode (writeRegister16 HL)
 
 
 
