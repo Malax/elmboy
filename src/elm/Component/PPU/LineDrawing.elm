@@ -2,12 +2,12 @@ module Component.PPU.LineDrawing exposing (drawLine)
 
 import Array exposing (Array)
 import Bitwise
-import Component.PPU.Constants exposing (..)
-import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
+import Component.PPU.Constants exposing (backgroundMapHeight, backgroundMapWidth, screenWidth, tileHeight, tileWidth)
+import Component.PPU.GameBoyScreen as GameBoyScreen
 import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.OAM as OAM
 import Component.PPU.Pixel as Pixel exposing (PixelSource(..), RawPixel)
-import Component.PPU.Types as PPUTypes exposing (Mode, PPU)
+import Component.PPU.Types as PPUTypes exposing (PPU)
 import Component.RAM as RAM exposing (RAM)
 import Constants
 import Types exposing (MemoryAddress)

@@ -6,7 +6,6 @@ module Component.PPU.GameBoyScreen exposing
     , serializePixelBatches
     )
 
-import Array exposing (Array)
 import Bitwise
 import Component.PPU.Pixel exposing (Pixel)
 

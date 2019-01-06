@@ -35,7 +35,7 @@ view canvasId model =
         -- We need a GameBoy to display most of the UI.
         -- To simplify things, we fall back to a GameBoy with an empty Cartridge here if necessary.
         gameBoy =
-            model.gameBoy |> Maybe.withDefault (GameBoy.init Cartridge.empty)
+            model.gameBoy |> Maybe.withDefault (GameBoy.init Cartridge.empty False)
 
         screenOrRomSelector =
             case model.gameBoy of

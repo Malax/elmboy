@@ -31,19 +31,16 @@ module Component.PPU exposing
     , writeWindowY
     )
 
-import Array exposing (Array)
+import Array
 import Bitwise
-import Component.PPU.Constants exposing (..)
+import Component.PPU.Constants exposing (cyclesPerFrame, cyclesPerLine, cyclesPerOamSearch, cyclesPerPixelTransfer, screenHeight, vBlankDurationInLines)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
-import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
 import Component.PPU.LineDrawing as LineDrawing
-import Component.PPU.OAM exposing (searchVisibleObjects)
-import Component.PPU.Pixel as Pixel exposing (..)
+import Component.PPU.Pixel exposing (PixelSource(..))
 import Component.PPU.Types as PPUTypes exposing (Mode(..), PPU, PPUInterrupt(..))
-import Component.RAM as RAM exposing (RAM)
+import Component.RAM as RAM
 import Constants
 import Types exposing (MemoryAddress)
-import Util
 
 
 init : PPU
@@ -65,7 +62,7 @@ init =
     , screen = GameBoyScreen.empty
     , lastCompleteFrame = GameBoyScreen.empty
     , cyclesSinceLastCompleteFrame = 0
-    , triggeredInterrupt = Nothing
+    , triggeredInterrupt = None
     , omitFrame = False
     }
 
@@ -305,16 +302,16 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
 
         interrupt =
             if hBlankInterruptEnabled && currentMode == HBlank && mode /= currentMode then
-                Just HBlankInterrupt
+                HBlankInterrupt
 
             else if lineCompareInterruptEnabled && currentLine == ppu.lineCompare && ppu.line /= currentLine then
-                Just LineCompareInterrupt
+                LineCompareInterrupt
 
             else if oamInterruptEnabled && currentMode == OamSearch && mode /= currentMode then
-                Just OamInterrupt
+                OamInterrupt
 
             else
-                Nothing
+                None
 
         modifiedPPUData =
             PPUTypes.setEmulateData
@@ -335,10 +332,10 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
 
         ( HBlank, VBlank ) ->
             if not omitFrame then
-                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True VBlankInterrupt modifiedPPUData
 
             else
-                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False (Just VBlankInterrupt) modifiedPPUData
+                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False VBlankInterrupt modifiedPPUData
 
         _ ->
             modifiedPPUData

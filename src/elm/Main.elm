@@ -11,6 +11,7 @@ import Component.Cartridge as Cartridge
 import Component.Joypad exposing (GameBoyButton(..))
 import Component.PPU as PPU
 import Component.PPU.GameBoyScreen as GameBoyScreen
+import Constants
 import Emulator
 import File
 import File.Select
@@ -55,6 +56,7 @@ init _ =
       , errorModal = Nothing
       , debuggerEnabled = True
       , debugger = { runToProgramCounter = 0x00, memoryArea = HRAM, memoryAreaDropdownState = Bootstrap.Dropdown.initialState }
+      , apuEnabled = False
       }
     , Cmd.none
     )
@@ -67,12 +69,18 @@ update msg model =
             case model.gameBoy of
                 Just gameBoy ->
                     let
-                        emulatedGameBoy =
-                            Emulator.emulateCycles (cyclesPerSecond // 60) gameBoy
+                        ( emulatedGameBoy, audioSamples ) =
+                            gameBoy
+                                |> Emulator.emulateCycles (Constants.cyclesPerSecond // 60)
+                                |> GameBoy.drainAudioBuffer (44100 // 6)
+
+                        cmds =
+                            Cmd.batch
+                                [ Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
+                                , Ports.queueAudioSamples audioSamples
+                                ]
                     in
-                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 120 model.frameTimes }
-                    , Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
-                    )
+                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 30 model.frameTimes }, cmds )
 
                 Nothing ->
                     ( model, Cmd.none )
@@ -109,7 +117,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge), emulateOnAnimationFrame = not model.debuggerEnabled }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge model.apuEnabled), emulateOnAnimationFrame = not model.debuggerEnabled }, Cmd.none )
 
                 Nothing ->
                     let
@@ -167,11 +175,6 @@ subscriptions model =
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
         , Bootstrap.Dropdown.subscriptions model.debugger.memoryAreaDropdownState (MemoryAreaDropdownStateChange >> Debugger)
         ]
-
-
-cyclesPerSecond : Int
-cyclesPerSecond =
-    4 * 1024 * 1024
 
 
 canvasId : String

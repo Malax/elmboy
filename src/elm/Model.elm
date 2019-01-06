@@ -16,6 +16,7 @@ type alias Model =
         , memoryAreaDropdownState : State
         }
     , emulateOnAnimationFrame : Bool
+    , apuEnabled : Bool
     }
 
 

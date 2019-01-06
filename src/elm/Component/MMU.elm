@@ -8,13 +8,13 @@ module Component.MMU exposing
     )
 
 import Bitwise
-import Component.CPU as CPU exposing (CPU)
-import Component.Cartridge as Cartridge exposing (Cartridge)
-import Component.Joypad as Joypad exposing (Joypad)
+import Component.APU as APU
+import Component.CPU as CPU
+import Component.Cartridge as Cartridge
+import Component.Joypad as Joypad
 import Component.PPU as PPU
-import Component.PPU.Types exposing (PPU)
-import Component.RAM as RAM exposing (RAM)
-import Component.Timer as Timer exposing (Timer)
+import Component.RAM as RAM
+import Component.Timer as Timer
 import GameBoy exposing (GameBoy)
 import Types exposing (MemoryAddress)
 
@@ -132,7 +132,7 @@ readWord8 gameBoy address =
 
 
 writeWord8 : MemoryAddress -> Int -> GameBoy -> GameBoy
-writeWord8 address value ({ cpu } as gameBoy) =
+writeWord8 address value gameBoy =
     let
         sanitizedValue =
             Bitwise.and 0xFF value
@@ -187,6 +187,72 @@ writeWord8 address value ({ cpu } as gameBoy) =
 
     else if address == 0xFF07 then
         GameBoy.setTimer (Timer.writeTac sanitizedValue gameBoy.timer) gameBoy
+
+    else if address == 0xFF10 then
+        GameBoy.setAPU (APU.writeNR10 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF11 then
+        GameBoy.setAPU (APU.writeNR11 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF12 then
+        GameBoy.setAPU (APU.writeNR12 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF13 then
+        GameBoy.setAPU (APU.writeNR13 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF14 then
+        GameBoy.setAPU (APU.writeNR14 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF16 then
+        GameBoy.setAPU (APU.writeNR21 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF17 then
+        GameBoy.setAPU (APU.writeNR22 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF18 then
+        GameBoy.setAPU (APU.writeNR23 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF19 then
+        GameBoy.setAPU (APU.writeNR24 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF1A then
+        GameBoy.setAPU (APU.writeNR30 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF1B then
+        GameBoy.setAPU (APU.writeNR31 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF1C then
+        GameBoy.setAPU (APU.writeNR32 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF1D then
+        GameBoy.setAPU (APU.writeNR33 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF1E then
+        GameBoy.setAPU (APU.writeNR34 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF20 then
+        GameBoy.setAPU (APU.writeNR41 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF21 then
+        GameBoy.setAPU (APU.writeNR42 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF22 then
+        GameBoy.setAPU (APU.writeNR43 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF23 then
+        GameBoy.setAPU (APU.writeNR44 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF24 then
+        GameBoy.setAPU (APU.writeNR50 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF25 then
+        GameBoy.setAPU (APU.writeNR51 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address == 0xFF26 then
+        GameBoy.setAPU (APU.writeNR52 sanitizedValue gameBoy.apu) gameBoy
+
+    else if address >= 0xFF30 && address <= 0xFF3F then
+        GameBoy.setAPU (APU.writeWaveRam (address - 0xFF30) sanitizedValue gameBoy.apu) gameBoy
 
     else if address == 0xFF40 then
         GameBoy.setPPU (PPU.writeLCDC sanitizedValue gameBoy.ppu) gameBoy

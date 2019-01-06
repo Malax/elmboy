@@ -1,4 +1,4 @@
-module Constants exposing (bit0Mask, bit1Mask, bit2Mask, bit3Mask, bit4Mask, bit5Mask, bit6Mask, bit7Mask)
+module Constants exposing (bit0Mask, bit1Mask, bit2Mask, bit3Mask, bit4Mask, bit5Mask, bit6Mask, bit7Mask, cyclesPerSecond, outputSampleRate)
 
 
 bit0Mask : Int
@@ -39,3 +39,13 @@ bit6Mask =
 bit7Mask : Int
 bit7Mask =
     0x80
+
+
+cyclesPerSecond : Int
+cyclesPerSecond =
+    4 * 1024 * 1024
+
+
+outputSampleRate : Int
+outputSampleRate =
+    44100

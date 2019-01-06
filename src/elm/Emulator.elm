@@ -5,6 +5,7 @@ module Emulator exposing
     )
 
 import Bitwise
+import Component.APU as APU
 import Component.CPU as CPU exposing (Register16(..), Register8(..))
 import Component.CPU.Opcode as Opcode
 import Component.CPU.OpcodeMapper as OpcodeMapper
@@ -13,11 +14,9 @@ import Component.PPU as PPU
 import Component.PPU.Types exposing (PPUInterrupt(..))
 import Component.Timer as Timer
 import Constants
-import CoreEffect exposing (..)
-import Effect exposing (..)
+import CoreEffect exposing (readRegister16, writeRegister16)
+import Effect exposing (Effect)
 import GameBoy exposing (GameBoy)
-import Types exposing (MemoryAddress)
-import Util
 
 
 emulateNextInstruction : GameBoy -> GameBoy
@@ -32,21 +31,51 @@ emulateNextInstruction gameBoy =
         timer =
             Timer.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.timer
 
+        apu =
+            APU.emulate emulatedGameBoy.lastInstructionCycles emulatedGameBoy.apu
+
         updatedInterruptFlag =
-            List.foldl Bitwise.or
-                emulatedGameBoy.cpu.interruptFlag
-                [ Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just VBlankInterrupt) 0x01
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just HBlankInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just LineCompareInterrupt) 0x02
-                , Util.conditionalOrBitmask (ppu.triggeredInterrupt == Just OamInterrupt) 0x02
-                , Util.conditionalOrBitmask timer.triggeredInterrupt 0x04
-                , Util.conditionalOrBitmask emulatedGameBoy.joypad.triggeredInterrupt 0x10
-                ]
+            let
+                ppuInterruptMask =
+                    case ppu.triggeredInterrupt of
+                        VBlankInterrupt ->
+                            0x01
+
+                        HBlankInterrupt ->
+                            0x02
+
+                        LineCompareInterrupt ->
+                            0x02
+
+                        OamInterrupt ->
+                            0x02
+
+                        None ->
+                            0x00
+
+                timerInterruptMask =
+                    if timer.triggeredInterrupt then
+                        0x04
+
+                    else
+                        0x00
+
+                joypadInterruptMask =
+                    if emulatedGameBoy.joypad.triggeredInterrupt then
+                        0x10
+
+                    else
+                        0x00
+            in
+            emulatedGameBoy.cpu.interruptFlag
+                |> Bitwise.or ppuInterruptMask
+                |> Bitwise.or timerInterruptMask
+                |> Bitwise.or joypadInterruptMask
 
         cpu =
             CPU.setInterruptFlag updatedInterruptFlag emulatedGameBoy.cpu
     in
-    GameBoy.setComponents cpu ppu timer emulatedGameBoy
+    GameBoy.setComponents cpu ppu timer apu emulatedGameBoy
 
 
 emulateCycles : Int -> GameBoy -> GameBoy

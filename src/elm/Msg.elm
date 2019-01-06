@@ -1,6 +1,5 @@
 module Msg exposing (DebuggerMsg(..), Msg(..))
 
-import Array exposing (Array)
 import Bootstrap.Dropdown exposing (State)
 import Component.Cartridge exposing (Cartridge)
 import Component.Joypad exposing (GameBoyButton)

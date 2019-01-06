@@ -1,6 +1,8 @@
 module GameBoy exposing
     ( GameBoy
+    , drainAudioBuffer
     , init
+    , setAPU
     , setButtonStatus
     , setCPU
     , setCPUAndCycles
@@ -16,8 +18,10 @@ module GameBoy exposing
     , setWorkRamBank1
     )
 
+import Array exposing (Array)
+import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (CPU)
-import Component.Cartridge as Cartridge exposing (Cartridge)
+import Component.Cartridge exposing (Cartridge)
 import Component.Joypad as Joypad exposing (GameBoyButton(..), Joypad)
 import Component.PPU as PPU
 import Component.PPU.Types exposing (PPU)
@@ -29,6 +33,7 @@ type alias GameBoy =
     { cpu : CPU
     , ppu : PPU
     , timer : Timer
+    , apu : APU
     , workRamBank0 : RAM
     , workRamBank1 : RAM
     , hram : RAM
@@ -39,11 +44,12 @@ type alias GameBoy =
     }
 
 
-init : Cartridge -> GameBoy
-init cartridge =
+init : Cartridge -> Bool -> GameBoy
+init cartridge apuEnabled =
     { cpu = CPU.init
     , ppu = PPU.init
     , timer = Timer.init
+    , apu = APU.init apuEnabled
     , workRamBank0 = RAM.initZero 0x1000
     , workRamBank1 = RAM.initZero 0x1000
     , hram = RAM.init 0x7F
@@ -89,6 +95,16 @@ setButtonStatus button status gameBoy =
     setJoypad updatedJoypad gameBoy
 
 
+drainAudioBuffer : Int -> GameBoy -> ( GameBoy, Array ( Float, Float ) )
+drainAudioBuffer minSamples gameBoy =
+    if Array.length gameBoy.apu.sampleBuffer >= minSamples then
+        APU.drainAudioBuffer gameBoy.apu
+            |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+
+    else
+        ( gameBoy, Array.empty )
+
+
 
 -- Performance Optimized Setters
 
@@ -98,6 +114,23 @@ setPPU ppu gameBoy =
     { cpu = gameBoy.cpu
     , ppu = ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
+    , workRamBank0 = gameBoy.workRamBank0
+    , workRamBank1 = gameBoy.workRamBank1
+    , hram = gameBoy.hram
+    , bootRomDisabled = gameBoy.bootRomDisabled
+    , cartridge = gameBoy.cartridge
+    , joypad = gameBoy.joypad
+    , lastInstructionCycles = gameBoy.lastInstructionCycles
+    }
+
+
+setAPU : APU -> GameBoy -> GameBoy
+setAPU apu gameBoy =
+    { cpu = gameBoy.cpu
+    , ppu = gameBoy.ppu
+    , timer = gameBoy.timer
+    , apu = apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -113,6 +146,7 @@ setJoypad joypad gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -128,6 +162,7 @@ setWorkRamBank0 ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = ram
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -143,6 +178,7 @@ setWorkRamBank1 ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = ram
     , hram = gameBoy.hram
@@ -158,6 +194,7 @@ setHRAM ram gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = ram
@@ -168,11 +205,12 @@ setHRAM ram gameBoy =
     }
 
 
-setComponents : CPU -> PPU -> Timer -> GameBoy -> GameBoy
-setComponents cpu ppu timer gameBoy =
+setComponents : CPU -> PPU -> Timer -> APU -> GameBoy -> GameBoy
+setComponents cpu ppu timer apu gameBoy =
     { cpu = cpu
     , ppu = ppu
     , timer = timer
+    , apu = apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -188,6 +226,7 @@ setCPUAndCycles cpu cycles gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -203,6 +242,7 @@ setTimer timer gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -218,6 +258,7 @@ setCartridge cartridge gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -233,6 +274,7 @@ setCPU cpu gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -248,6 +290,7 @@ setLastInstructionCycles lastInstructionCycles gameBoy =
     { cpu = gameBoy.cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
@@ -263,6 +306,7 @@ setCPULastInstructionCycles cpu lastInstructionCycles gameBoy =
     { cpu = cpu
     , ppu = gameBoy.ppu
     , timer = gameBoy.timer
+    , apu = gameBoy.apu
     , workRamBank0 = gameBoy.workRamBank0
     , workRamBank1 = gameBoy.workRamBank1
     , hram = gameBoy.hram
