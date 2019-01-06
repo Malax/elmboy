@@ -3,6 +3,9 @@ module Component.APU exposing
     , drainAudioBuffer
     , emulate
     , init
+    , readNR50
+    , readNR51
+    , readNR52
     , writeNR10
     , writeNR11
     , writeNR12
@@ -34,6 +37,7 @@ import Component.APU.NoiseChannel as NoiseChannel exposing (NoiseChannel)
 import Component.APU.PulseChannel as PulseChannel exposing (PulseChannel)
 import Component.APU.WaveChannel as WaveChannel exposing (WaveChannel)
 import Constants
+import Util
 
 
 type alias APU =
@@ -360,6 +364,47 @@ writeNR52 value apu =
 writeWaveRam : Int -> Int -> APU -> APU
 writeWaveRam address value apu =
     setChannel3 (WaveChannel.writeWaveRam address value apu.channel3) apu
+
+
+readNR50 : APU -> Int
+readNR50 apu =
+    apu.leftVolume
+        |> Bitwise.shiftLeftBy 4
+        |> Bitwise.or apu.rightVolume
+
+
+readNR51 : APU -> Int
+readNR51 apu =
+    0x00
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel4Left)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel3Left)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel2Left)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel1Left)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel4Right)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel3Right)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel2Right)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.enabledChannels.channel1Right)
+
+
+readNR52 : APU -> Int
+readNR52 apu =
+    0x00
+        |> Bitwise.or (Util.boolToBit apu.powerOn)
+        |> Bitwise.shiftLeftBy 4
+        |> Bitwise.or (Util.boolToBit apu.channel4.enabled)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.channel3.enabled)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.channel2.enabled)
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.channel1.enabled)
 
 
 

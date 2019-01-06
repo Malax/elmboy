@@ -1,4 +1,4 @@
-module Util exposing (byteToSignedInt, chunkList, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
+module Util exposing (boolToBit, byteToSignedInt, chunkList, foldRIndexes, maybePredicate, stringToBytes, uint8ArrayDecoder, word16ToString, word8ToString)
 
 import Array exposing (Array)
 import Bitwise
@@ -87,3 +87,12 @@ foldRIndexes remaining acc f =
 
     else
         foldRIndexes (remaining - 1) (f (remaining - 1) acc) f
+
+
+boolToBit : Bool -> Int
+boolToBit value =
+    if value then
+        0x01
+
+    else
+        0x00

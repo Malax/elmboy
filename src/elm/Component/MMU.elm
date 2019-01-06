@@ -81,6 +81,15 @@ readWord8 gameBoy address =
     else if address == 0xFF07 then
         Timer.readTac gameBoy.timer
 
+    else if address == 0xFF24 then
+        APU.readNR50 gameBoy.apu
+
+    else if address == 0xFF25 then
+        APU.readNR51 gameBoy.apu
+
+    else if address == 0xFF26 then
+        APU.readNR52 gameBoy.apu
+
     else if address == 0xFF40 then
         PPU.readLCDC gameBoy.ppu
 
