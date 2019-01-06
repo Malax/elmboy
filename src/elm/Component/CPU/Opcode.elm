@@ -134,12 +134,12 @@ add16 reader =
 
 dec16 : Reader Int -> Writer Int -> Effect
 dec16 reader writer =
-    join (mapReader ALU.dec16 reader) writer
+    extraCycles 4 >> join (mapReader ALU.dec16 reader) writer
 
 
 inc16 : Reader Int -> Writer Int -> Effect
 inc16 reader writer =
-    join (mapReader ALU.inc16 reader) writer
+    extraCycles 4 >> join (mapReader ALU.inc16 reader) writer
 
 
 
