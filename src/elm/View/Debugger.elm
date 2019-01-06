@@ -18,6 +18,7 @@ import Component.CPU.FlagRegister as FlagRegister exposing (Flag(..))
 import Component.Cartridge as Cartridge
 import Component.MMU as MMU
 import Component.PPU.Types exposing (Mode(..), PPU)
+import Component.Timer as Timer exposing (Timer)
 import Constants
 import GameBoy exposing (GameBoy)
 import Hex
@@ -53,6 +54,7 @@ view canvasId model =
                 , viewFlags gameBoy.cpu
                 , viewInterruptData gameBoy.cpu
                 , viewPPU gameBoy.ppu
+                , viewTimer gameBoy.timer
                 ]
             ]
         , Grid.row []
@@ -308,6 +310,29 @@ viewFlags cpu =
 viewFlagValue : Flag -> CPU -> Html msg
 viewFlagValue flag cpu =
     CPU.readRegister8 F cpu |> FlagRegister.getFlag flag |> checkbox
+
+
+viewTimer : Timer -> Html msg
+viewTimer timer =
+    Table.table
+        { options = [ Table.striped, Table.small ]
+        , thead =
+            Table.simpleThead
+                [ Table.th [] [ text "TMA" ]
+                , Table.th [] [ text "DIV" ]
+                , Table.th [] [ text "TAC" ]
+                , Table.th [] [ text "TIMA" ]
+                ]
+        , tbody =
+            Table.tbody []
+                [ Table.tr []
+                    [ Table.td [] [ timer.tma |> word8ToString |> text ]
+                    , Table.td [] [ timer.divider |> word16ToString |> text ]
+                    , Table.td [] [ timer.tac |> word8ToString |> text ]
+                    , Table.td [] [ timer.tima |> word8ToString |> text ]
+                    ]
+                ]
+        }
 
 
 viewMemory : Int -> Int -> GameBoy -> Html msg
