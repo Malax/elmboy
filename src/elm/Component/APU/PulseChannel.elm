@@ -5,6 +5,12 @@ module Component.APU.PulseChannel exposing
     , clockTimer
     , clockVolumeEnvelope
     , init
+    , readNRx0
+    , readNRx1
+    , readNRx2
+    , readNRx3
+    , readNRx4
+    , reset
     , sample
     , writeNRx0
     , writeNRx1
@@ -17,6 +23,7 @@ import Bitwise
 import Component.APU.Constants as APUConstants
 import Component.APU.DutyCycle as DutyCycle exposing (DutyCycle(..))
 import Constants
+import Util
 
 
 type alias PulseChannel =
@@ -49,7 +56,7 @@ type alias PulseChannel =
 
 init : PulseChannel
 init =
-    { dutyCycle = One
+    { dutyCycle = Zero
     , wavePosition = 0
     , volume = 0
     , enabled = False
@@ -187,6 +194,11 @@ sample { enabled, dutyCycle, wavePosition, volume } =
         APUConstants.silence
 
 
+reset : PulseChannel -> PulseChannel
+reset _ =
+    init
+
+
 writeNRx0 : Int -> PulseChannel -> PulseChannel
 writeNRx0 value channel =
     let
@@ -297,6 +309,61 @@ writeNRx4 value channel =
 
     else
         setFrequencyLengthEnabled frequency lengthEnabled channel
+
+
+readNRx0 : PulseChannel -> Int
+readNRx0 channel =
+    0x01
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or channel.sweepPeriod
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit channel.sweepNegate)
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or channel.sweepShift
+
+
+readNRx1 : PulseChannel -> Int
+readNRx1 channel =
+    let
+        dutyBits =
+            case channel.dutyCycle of
+                Zero ->
+                    0x00
+
+                One ->
+                    0x01
+
+                Two ->
+                    0x02
+
+                Three ->
+                    0x03
+    in
+    dutyBits
+        |> Bitwise.shiftLeftBy 6
+        |> Bitwise.or 0x3F
+
+
+readNRx2 : PulseChannel -> Int
+readNRx2 channel =
+    channel.envelopeStartingVolume
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit channel.envelopeAdd)
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or channel.envelopePeriod
+
+
+readNRx3 : PulseChannel -> Int
+readNRx3 channel =
+    -- This is intentional, register always reads as 0xFF!
+    0xFF
+
+
+readNRx4 : PulseChannel -> Int
+readNRx4 channel =
+    Util.boolToBit channel.lengthEnabled
+        |> Bitwise.shiftLeftBy 6
+        |> Bitwise.or 0xBF
 
 
 

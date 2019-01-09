@@ -3,9 +3,28 @@ module Component.APU exposing
     , drainAudioBuffer
     , emulate
     , init
+    , readNR10
+    , readNR11
+    , readNR12
+    , readNR13
+    , readNR14
+    , readNR21
+    , readNR22
+    , readNR23
+    , readNR24
+    , readNR30
+    , readNR31
+    , readNR32
+    , readNR33
+    , readNR34
+    , readNR41
+    , readNR42
+    , readNR43
+    , readNR44
     , readNR50
     , readNR51
     , readNR52
+    , readWaveRam
     , writeNR10
     , writeNR11
     , writeNR12
@@ -53,6 +72,8 @@ type alias APU =
     , powerOn : Bool
     , leftVolume : Int
     , rightVolume : Int
+    , vinLeftEnable : Bool
+    , vinRightEnable : Bool
     , enabledChannels :
         { channel1Left : Bool
         , channel2Left : Bool
@@ -80,6 +101,8 @@ init enabled =
     , powerOn = True
     , leftVolume = 0
     , rightVolume = 0
+    , vinLeftEnable = False
+    , vinRightEnable = False
     , enabledChannels =
         { channel1Left = False
         , channel2Left = False
@@ -156,6 +179,8 @@ emulate cycles apu =
         , powerOn = apu.powerOn
         , leftVolume = apu.leftVolume
         , rightVolume = apu.rightVolume
+        , vinLeftEnable = apu.vinLeftEnable
+        , vinRightEnable = apu.vinRightEnable
         , enabledChannels = apu.enabledChannels
         }
 
@@ -178,6 +203,8 @@ drainAudioBuffer apu =
           , powerOn = apu.powerOn
           , leftVolume = apu.leftVolume
           , rightVolume = apu.rightVolume
+          , vinLeftEnable = apu.vinLeftEnable
+          , vinRightEnable = apu.vinRightEnable
           , enabledChannels = apu.enabledChannels
           }
         , apu.sampleBuffer
@@ -280,6 +307,12 @@ writeNR44 value apu =
 writeNR50 : Int -> APU -> APU
 writeNR50 value apu =
     let
+        vinLeftEnable =
+            Bitwise.and Constants.bit7Mask value == Constants.bit7Mask
+
+        vinRightEnable =
+            Bitwise.and Constants.bit3Mask value == Constants.bit3Mask
+
         leftVolume =
             value
                 |> Bitwise.and 0x70
@@ -300,6 +333,8 @@ writeNR50 value apu =
     , powerOn = apu.powerOn
     , leftVolume = leftVolume
     , rightVolume = rightVolume
+    , vinLeftEnable = vinLeftEnable
+    , vinRightEnable = vinRightEnable
     , enabledChannels = apu.enabledChannels
     }
 
@@ -318,6 +353,8 @@ writeNR51 value apu =
     , powerOn = apu.powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels =
         { channel4Left =
             Bitwise.and Constants.bit7Mask value == Constants.bit7Mask
@@ -345,10 +382,10 @@ writeNR52 value apu =
         powerOn =
             Bitwise.and Constants.bit7Mask value == Constants.bit7Mask
     in
-    { channel1 = apu.channel1
-    , channel2 = apu.channel2
-    , channel3 = apu.channel3
-    , channel4 = apu.channel4
+    { channel1 = PulseChannel.reset apu.channel1
+    , channel2 = PulseChannel.reset apu.channel2
+    , channel3 = WaveChannel.reset apu.channel3
+    , channel4 = NoiseChannel.reset apu.channel4
     , sampleBuffer = apu.sampleBuffer
     , cycleAccumulator = apu.cycleAccumulator
     , frameSequencerCounter = apu.frameSequencerCounter
@@ -357,6 +394,8 @@ writeNR52 value apu =
     , powerOn = powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels = apu.enabledChannels
     }
 
@@ -366,10 +405,104 @@ writeWaveRam address value apu =
     setChannel3 (WaveChannel.writeWaveRam address value apu.channel3) apu
 
 
+readNR10 : APU -> Int
+readNR10 apu =
+    PulseChannel.readNRx0 apu.channel1
+
+
+readNR11 : APU -> Int
+readNR11 apu =
+    PulseChannel.readNRx1 apu.channel1
+
+
+readNR12 : APU -> Int
+readNR12 apu =
+    PulseChannel.readNRx2 apu.channel1
+
+
+readNR13 : APU -> Int
+readNR13 apu =
+    PulseChannel.readNRx3 apu.channel1
+
+
+readNR14 : APU -> Int
+readNR14 apu =
+    PulseChannel.readNRx4 apu.channel1
+
+
+readNR21 : APU -> Int
+readNR21 apu =
+    PulseChannel.readNRx1 apu.channel2
+
+
+readNR22 : APU -> Int
+readNR22 apu =
+    PulseChannel.readNRx2 apu.channel2
+
+
+readNR23 : APU -> Int
+readNR23 apu =
+    PulseChannel.readNRx3 apu.channel2
+
+
+readNR24 : APU -> Int
+readNR24 apu =
+    PulseChannel.readNRx4 apu.channel2
+
+
+readNR30 : APU -> Int
+readNR30 apu =
+    WaveChannel.readNRx0 apu.channel3
+
+
+readNR31 : APU -> Int
+readNR31 apu =
+    WaveChannel.readNRx1 apu.channel3
+
+
+readNR32 : APU -> Int
+readNR32 apu =
+    WaveChannel.readNRx2 apu.channel3
+
+
+readNR33 : APU -> Int
+readNR33 apu =
+    WaveChannel.readNRx3 apu.channel3
+
+
+readNR34 : APU -> Int
+readNR34 apu =
+    WaveChannel.readNRx4 apu.channel3
+
+
+readNR41 : APU -> Int
+readNR41 apu =
+    NoiseChannel.readNRx1 apu.channel4
+
+
+readNR42 : APU -> Int
+readNR42 apu =
+    NoiseChannel.readNRx2 apu.channel4
+
+
+readNR43 : APU -> Int
+readNR43 apu =
+    NoiseChannel.readNRx3 apu.channel4
+
+
+readNR44 : APU -> Int
+readNR44 apu =
+    NoiseChannel.readNRx4 apu.channel4
+
+
 readNR50 : APU -> Int
 readNR50 apu =
-    apu.leftVolume
-        |> Bitwise.shiftLeftBy 4
+    Util.boolToBit apu.vinLeftEnable
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or apu.leftVolume
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit apu.vinRightEnable)
+        |> Bitwise.shiftLeftBy 3
         |> Bitwise.or apu.rightVolume
 
 
@@ -405,6 +538,12 @@ readNR52 apu =
         |> Bitwise.or (Util.boolToBit apu.channel2.enabled)
         |> Bitwise.shiftLeftBy 1
         |> Bitwise.or (Util.boolToBit apu.channel1.enabled)
+        |> Bitwise.or 0x70
+
+
+readWaveRam : Int -> APU -> Int
+readWaveRam address apu =
+    WaveChannel.readWaveRam address apu.channel3
 
 
 
@@ -533,6 +672,8 @@ setChannel1 channel apu =
     , powerOn = apu.powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels = apu.enabledChannels
     }
 
@@ -551,6 +692,8 @@ setChannel2 channel apu =
     , powerOn = apu.powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels = apu.enabledChannels
     }
 
@@ -569,6 +712,8 @@ setChannel3 channel apu =
     , powerOn = apu.powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels = apu.enabledChannels
     }
 
@@ -587,5 +732,7 @@ setChannel4 channel apu =
     , powerOn = apu.powerOn
     , leftVolume = apu.leftVolume
     , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
     , enabledChannels = apu.enabledChannels
     }

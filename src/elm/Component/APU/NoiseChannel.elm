@@ -1,8 +1,26 @@
-module Component.APU.NoiseChannel exposing (NoiseChannel, clockLengthCounter, clockTimer, clockVolumeEnvelope, init, sample, setEnabledLengthCounter, writeNRx1, writeNRx2, writeNRx3, writeNRx4)
+module Component.APU.NoiseChannel exposing
+    ( NoiseChannel
+    , clockLengthCounter
+    , clockTimer
+    , clockVolumeEnvelope
+    , init
+    , readNRx1
+    , readNRx2
+    , readNRx3
+    , readNRx4
+    , reset
+    , sample
+    , setEnabledLengthCounter
+    , writeNRx1
+    , writeNRx2
+    , writeNRx3
+    , writeNRx4
+    )
 
 import Bitwise
 import Component.APU.Constants as APUConstants
 import Constants
+import Util
 
 
 type WidthMode
@@ -37,7 +55,7 @@ init =
     { bits = 0xFFFF
     , width = FifteenBit
     , clockShift = 0
-    , divisor = 0
+    , divisor = 8
     , timerCounter = 0
     , enabled = False
     , volume = 0
@@ -120,6 +138,11 @@ sample channel =
 
     else
         APUConstants.silence
+
+
+reset : NoiseChannel -> NoiseChannel
+reset _ =
+    init
 
 
 writeNRx1 : Int -> NoiseChannel -> NoiseChannel
@@ -221,6 +244,72 @@ writeNRx4 value channel =
 
     else
         setLengthEnabled lengthEnabled channel
+
+
+readNRx1 : NoiseChannel -> Int
+readNRx1 channel =
+    -- This is intentional, register always reads as 0xFF!
+    0xFF
+
+
+readNRx2 : NoiseChannel -> Int
+readNRx2 channel =
+    channel.envelopeStartingVolume
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or (Util.boolToBit channel.envelopeAdd)
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or channel.envelopePeriod
+
+
+readNRx3 : NoiseChannel -> Int
+readNRx3 channel =
+    let
+        widthModeBit =
+            case channel.width of
+                FifteenBit ->
+                    0
+
+                SevenBit ->
+                    1
+
+        divisorCode =
+            case channel.divisor of
+                8 ->
+                    0
+
+                16 ->
+                    1
+
+                32 ->
+                    2
+
+                48 ->
+                    3
+
+                64 ->
+                    4
+
+                80 ->
+                    5
+
+                96 ->
+                    6
+
+                _ ->
+                    7
+    in
+    channel.clockShift
+        |> Bitwise.shiftLeftBy 1
+        |> Bitwise.or widthModeBit
+        |> Bitwise.shiftLeftBy 3
+        |> Bitwise.or divisorCode
+
+
+readNRx4 : NoiseChannel -> Int
+readNRx4 channel =
+    Util.boolToBit channel.lengthEnabled
+        |> Bitwise.shiftLeftBy 6
+        |> Bitwise.or 0xBF
 
 
 

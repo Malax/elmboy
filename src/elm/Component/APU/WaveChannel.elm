@@ -1,9 +1,29 @@
-module Component.APU.WaveChannel exposing (WaveChannel, clockLengthCounter, clockTimer, init, sample, writeNRx0, writeNRx1, writeNRx2, writeNRx3, writeNRx4, writeWaveRam)
+module Component.APU.WaveChannel exposing
+    ( WaveChannel
+    , clockLengthCounter
+    , clockTimer
+    , init
+    , readNRx0
+    , readNRx1
+    , readNRx2
+    , readNRx3
+    , readNRx4
+    , readWaveRam
+    , reset
+    , sample
+    , writeNRx0
+    , writeNRx1
+    , writeNRx2
+    , writeNRx3
+    , writeNRx4
+    , writeWaveRam
+    )
 
 import Bitwise
 import Component.APU.Constants as APUConstants
 import Component.RAM as RAM exposing (RAM)
 import Constants
+import Util
 
 
 type alias WaveChannel =
@@ -76,6 +96,11 @@ sample channel =
         APUConstants.silence
 
 
+reset : WaveChannel -> WaveChannel
+reset channel =
+    setWaveRam channel.waveRam init
+
+
 writeNRx0 : Int -> WaveChannel -> WaveChannel
 writeNRx0 value channel =
     let
@@ -103,7 +128,7 @@ writeNRx2 : Int -> WaveChannel -> WaveChannel
 writeNRx2 value channel =
     let
         volume =
-            case Bitwise.shiftRightZfBy 5 value of
+            case value |> Bitwise.shiftRightZfBy 5 |> Bitwise.and 0x03 of
                 0x00 ->
                     0
 
@@ -166,16 +191,60 @@ writeNRx4 value channel =
 
 writeWaveRam : Int -> Int -> WaveChannel -> WaveChannel
 writeWaveRam address value channel =
-    { waveRam = RAM.writeWord8 address value channel.waveRam
-    , frequency = channel.frequency
-    , wavePosition = channel.wavePosition
-    , timerValue = channel.timerValue
-    , dacPower = channel.dacPower
-    , enabled = channel.enabled
-    , volume = channel.volume
-    , lengthCounter = channel.lengthCounter
-    , lengthEnabled = channel.lengthEnabled
-    }
+    setWaveRam (RAM.writeWord8 address value channel.waveRam) channel
+
+
+readNRx0 : WaveChannel -> Int
+readNRx0 channel =
+    channel.dacPower
+        |> Util.boolToBit
+        |> Bitwise.shiftLeftBy 7
+        |> Bitwise.or 0x7F
+
+
+readNRx1 : WaveChannel -> Int
+readNRx1 channel =
+    -- This is intentional, register always reads as 0xFF!
+    0xFF
+
+
+readNRx2 : WaveChannel -> Int
+readNRx2 channel =
+    let
+        volumeCode =
+            if channel.volume == 0 then
+                0x00
+
+            else if channel.volume == maxVolume then
+                0x01
+
+            else if channel.volume == (maxVolume // 2) then
+                0x02
+
+            else
+                0x03
+    in
+    volumeCode
+        |> Bitwise.shiftLeftBy 5
+        |> Bitwise.or 0x9F
+
+
+readNRx3 : WaveChannel -> Int
+readNRx3 channel =
+    -- This is intentional, register always reads as 0xFF!
+    0xFF
+
+
+readNRx4 : WaveChannel -> Int
+readNRx4 channel =
+    Util.boolToBit channel.lengthEnabled
+        |> Bitwise.shiftLeftBy 6
+        |> Bitwise.or 0xBF
+
+
+readWaveRam : Int -> WaveChannel -> Int
+readWaveRam address channel =
+    RAM.readWord8 channel.waveRam address
 
 
 
@@ -291,6 +360,20 @@ setWavePositionTimerValue wavePosition timerValue channel =
     , frequency = channel.frequency
     , wavePosition = wavePosition
     , timerValue = timerValue
+    , dacPower = channel.dacPower
+    , enabled = channel.enabled
+    , volume = channel.volume
+    , lengthCounter = channel.lengthCounter
+    , lengthEnabled = channel.lengthEnabled
+    }
+
+
+setWaveRam : RAM -> WaveChannel -> WaveChannel
+setWaveRam ram channel =
+    { waveRam = ram
+    , frequency = channel.frequency
+    , wavePosition = channel.wavePosition
+    , timerValue = channel.timerValue
     , dacPower = channel.dacPower
     , enabled = channel.enabled
     , volume = channel.volume

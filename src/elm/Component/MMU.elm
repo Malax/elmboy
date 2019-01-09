@@ -81,6 +81,60 @@ readWord8 gameBoy address =
     else if address == 0xFF07 then
         Timer.readTac gameBoy.timer
 
+    else if address == 0xFF10 then
+        APU.readNR10 gameBoy.apu
+
+    else if address == 0xFF11 then
+        APU.readNR11 gameBoy.apu
+
+    else if address == 0xFF12 then
+        APU.readNR12 gameBoy.apu
+
+    else if address == 0xFF13 then
+        APU.readNR13 gameBoy.apu
+
+    else if address == 0xFF14 then
+        APU.readNR14 gameBoy.apu
+
+    else if address == 0xFF16 then
+        APU.readNR21 gameBoy.apu
+
+    else if address == 0xFF17 then
+        APU.readNR22 gameBoy.apu
+
+    else if address == 0xFF18 then
+        APU.readNR23 gameBoy.apu
+
+    else if address == 0xFF19 then
+        APU.readNR24 gameBoy.apu
+
+    else if address == 0xFF1A then
+        APU.readNR30 gameBoy.apu
+
+    else if address == 0xFF1B then
+        APU.readNR31 gameBoy.apu
+
+    else if address == 0xFF1C then
+        APU.readNR32 gameBoy.apu
+
+    else if address == 0xFF1D then
+        APU.readNR33 gameBoy.apu
+
+    else if address == 0xFF1E then
+        APU.readNR34 gameBoy.apu
+
+    else if address == 0xFF20 then
+        APU.readNR41 gameBoy.apu
+
+    else if address == 0xFF21 then
+        APU.readNR42 gameBoy.apu
+
+    else if address == 0xFF22 then
+        APU.readNR43 gameBoy.apu
+
+    else if address == 0xFF23 then
+        APU.readNR44 gameBoy.apu
+
     else if address == 0xFF24 then
         APU.readNR50 gameBoy.apu
 
@@ -89,6 +143,9 @@ readWord8 gameBoy address =
 
     else if address == 0xFF26 then
         APU.readNR52 gameBoy.apu
+
+    else if address >= 0xFF30 && address <= 0xFF3F then
+        APU.readWaveRam (address - 0xFF30) gameBoy.apu
 
     else if address == 0xFF40 then
         PPU.readLCDC gameBoy.ppu
