@@ -7,6 +7,7 @@ module Component.CPU.FlagRegister exposing
     , normalize
     , setAllFlags
     , setFlag
+    , toString
     )
 
 import Bitwise
@@ -114,6 +115,22 @@ getFlag flag flags =
 normalize : Int -> Int
 normalize flagByte =
     Bitwise.and flagByte 0xF0
+
+
+toString : Flag -> String
+toString flag =
+    case flag of
+        Zero ->
+            "Zero"
+
+        Subtract ->
+            "Subtract"
+
+        HalfCarry ->
+            "HalfCarry"
+
+        Carry ->
+            "Carry"
 
 
 
