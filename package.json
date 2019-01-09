@@ -10,7 +10,7 @@
     "start": "parcel src/index.html",
     "postinstall": "parcel build src/index.html --public-url=./",
     "test": "standard src/js && elm-format --validate src/elm",
-    "benchmark": "cd benchmarks && elm make src/Main.elm && open index.html"
+    "benchmark": "cd benchmarks && elm make --optimize src/Main.elm && open index.html"
   },
   "author": "",
   "license": "AGPL-3.0-or-later",
