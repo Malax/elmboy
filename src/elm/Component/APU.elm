@@ -25,6 +25,7 @@ module Component.APU exposing
     , readNR51
     , readNR52
     , readWaveRam
+    , setEnabled
     , writeNR10
     , writeNR11
     , writeNR12
@@ -212,6 +213,26 @@ drainAudioBuffer apu =
 
     else
         ( apu, Array.empty )
+
+
+setEnabled : Bool -> APU -> APU
+setEnabled enabled apu =
+    { sampleBuffer = apu.sampleBuffer
+    , cycleAccumulator = apu.cycleAccumulator
+    , channel1 = apu.channel1
+    , channel2 = apu.channel2
+    , channel3 = apu.channel3
+    , channel4 = apu.channel4
+    , frameSequencerCounter = apu.frameSequencerCounter
+    , frameSequence = apu.frameSequence
+    , enabled = enabled
+    , powerOn = apu.powerOn
+    , leftVolume = apu.leftVolume
+    , rightVolume = apu.rightVolume
+    , vinLeftEnable = apu.vinLeftEnable
+    , vinRightEnable = apu.vinRightEnable
+    , enabledChannels = apu.enabledChannels
+    }
 
 
 writeNR10 : Int -> APU -> APU

@@ -52,7 +52,6 @@ init _ =
       , frameTimes = []
       , errorModal = Nothing
       , debuggerEnabled = False
-      , apuEnabled = False
       }
     , Cmd.none
     )
@@ -65,10 +64,16 @@ update msg model =
             case model.gameBoy of
                 Just gameBoy ->
                     let
+                        timeToEmulate =
+                            min time 1000
+
+                        cyclesToEmulate =
+                            ceiling ((timeToEmulate / 1000) * toFloat Constants.cyclesPerSecond)
+
                         ( emulatedGameBoy, audioSamples ) =
                             gameBoy
-                                |> Emulator.emulateCycles (Constants.cyclesPerSecond // 60)
-                                |> GameBoy.drainAudioBuffer (44100 // 6)
+                                |> Emulator.emulateCycles cyclesToEmulate
+                                |> GameBoy.drainAudioBuffer
 
                         cmds =
                             Cmd.batch
@@ -100,6 +105,12 @@ update msg model =
         Resume ->
             ( { model | emulateOnAnimationFrame = True }, Cmd.none )
 
+        EnableAPU ->
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setAPUEnabled True) }, Cmd.none )
+
+        DisableAPU ->
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setAPUEnabled False) }, Cmd.none )
+
         OpenFileSelect ->
             ( model, File.Select.file [] FileSelected )
 
@@ -113,14 +124,16 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge model.apuEnabled), emulateOnAnimationFrame = True }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge False), emulateOnAnimationFrame = True }, Cmd.none )
 
                 Nothing ->
                     let
                         errorModal =
                             { visibility = Modal.shown
                             , title = "Unsupported ROM"
-                            , body = "Your selected ROM is not yet supported by Elmboy. This is usually the case due to an unsupported memory bank controller required by the ROM you're trying to run. Please select another game and report the issue in the GitHub issue tracker."
+                            , body =
+                                "Your selected ROM is not yet supported by Elmboy. This is usually the case due to an unsupported memory bank controller"
+                                    ++ " required by the ROM you're trying to run. Please select another game and report the issue in the GitHub issue tracker."
                             }
                     in
                     ( { model | errorModal = Just errorModal }, Cmd.none )

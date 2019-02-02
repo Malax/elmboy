@@ -176,11 +176,15 @@ body {
   padding: 10px 15px;
 
   display: flex;
-  justify-content: space-between;
   align-items: center;
+
+  .audio-controls {
+    margin-left: 5px;
+  }
 
   .fps-counter {
     color: $gray-600;
     user-select: none;
+    margin-left: auto;
   }
 }

@@ -7,6 +7,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Display as Display
 import Bootstrap.Utilities.Spacing as Spacing
+import GameBoy
 import Html exposing (Html, a, div, em, h1, h4, hr, i, kbd, p, small, span, strong, text)
 import Html.Attributes exposing (class, href, target)
 import Model exposing (Model)
@@ -27,10 +28,10 @@ view canvasId model =
                             |> Maybe.withDefault (text "")
                         ]
 
-                Just _ ->
+                Just gameBoy ->
                     div []
                         [ screen canvasId
-                        , emulationToolbar model.emulateOnAnimationFrame model.frameTimes
+                        , emulationToolbar model.emulateOnAnimationFrame (GameBoy.isAPUEnabled gameBoy) model.frameTimes
                         ]
     in
     scaffolding leftContent projectDescription
@@ -100,8 +101,8 @@ projectDescription =
         ]
 
 
-emulationToolbar : Bool -> List Float -> Html Msg
-emulationToolbar emulateOnAnimationFrame frameTimes =
+emulationToolbar : Bool -> Bool -> List Float -> Html Msg
+emulationToolbar emulateOnAnimationFrame apuEnabled frameTimes =
     let
         pauseResumeButton =
             if emulateOnAnimationFrame then
@@ -109,6 +110,23 @@ emulationToolbar emulateOnAnimationFrame frameTimes =
 
             else
                 ButtonGroup.button [ Button.secondary, Button.onClick Resume ] [ i [ class "fa fa-play" ] [] ]
+
+        apuControlButton =
+            if apuEnabled then
+                Button.button
+                    [ Button.secondary
+                    , Button.onClick DisableAPU
+                    , Button.attrs [ class "audio-controls" ]
+                    ]
+                    [ text "Disable Sound" ]
+
+            else
+                Button.button
+                    [ Button.secondary
+                    , Button.onClick EnableAPU
+                    , Button.attrs [ class "audio-controls" ]
+                    ]
+                    [ text "Enable Sound (Experimental)" ]
 
         frameCount =
             toFloat (List.length frameTimes)
@@ -124,5 +142,6 @@ emulationToolbar emulateOnAnimationFrame frameTimes =
             [ pauseResumeButton
             , ButtonGroup.button [ Button.secondary, Button.onClick Reset ] [ i [ class "fa fa-power-off" ] [], text " Reset" ]
             ]
+        , apuControlButton
         , span [ class "fps-counter" ] [ text fps ]
         ]

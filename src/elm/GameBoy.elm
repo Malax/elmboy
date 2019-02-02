@@ -2,7 +2,9 @@ module GameBoy exposing
     ( GameBoy
     , drainAudioBuffer
     , init
+    , isAPUEnabled
     , setAPU
+    , setAPUEnabled
     , setButtonStatus
     , setCPU
     , setCPUAndCycles
@@ -95,14 +97,20 @@ setButtonStatus button status gameBoy =
     setJoypad updatedJoypad gameBoy
 
 
-drainAudioBuffer : Int -> GameBoy -> ( GameBoy, Array ( Float, Float ) )
-drainAudioBuffer minSamples gameBoy =
-    if Array.length gameBoy.apu.sampleBuffer >= minSamples then
-        APU.drainAudioBuffer gameBoy.apu
-            |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+setAPUEnabled : Bool -> GameBoy -> GameBoy
+setAPUEnabled enabled ({ apu } as gameBoy) =
+    setAPU (APU.setEnabled enabled apu) gameBoy
 
-    else
-        ( gameBoy, Array.empty )
+
+isAPUEnabled : GameBoy -> Bool
+isAPUEnabled gameBoy =
+    gameBoy.apu.enabled
+
+
+drainAudioBuffer : GameBoy -> ( GameBoy, Array ( Float, Float ) )
+drainAudioBuffer gameBoy =
+    APU.drainAudioBuffer gameBoy.apu
+        |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
 
 
 

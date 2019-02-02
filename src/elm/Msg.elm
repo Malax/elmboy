@@ -16,3 +16,5 @@ type Msg
     | Pause
     | Resume
     | CloseErrorModal
+    | EnableAPU
+    | DisableAPU
