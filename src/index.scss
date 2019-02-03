@@ -12,11 +12,6 @@ $color-dark: rgb(48, 98, 48);
 $color-light: rgb(139, 172, 15);
 $color-lightest: rgb(155, 188, 15);
 
-
-body {
-  overflow: hidden;
-}
-
 .page-header {
   display: flex;
   justify-content: space-between;
@@ -74,9 +69,6 @@ body {
 
 .project-description {
   font-size: 18px;
-  overflow: auto;
-  height: 600px;
-
 
   a {
     color: $color-light;
