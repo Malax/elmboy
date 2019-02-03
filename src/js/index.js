@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
     setPixelsFromBatches(canvas, elmData.pixelBatches)
   })
 
-  const audioContext = new AudioContext()
+  const audioContext = new window.AudioContext()
   let lastBufferEnds = 0
 
   app.ports.queueAudioSamples.subscribe(function (elmData) {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
       const buffer = audioContext.createBuffer(2, elmData.length, sampleRate)
       const leftChannel = buffer.getChannelData(0)
       const rightChannel = buffer.getChannelData(1)
-      
+
       for (let i = 0; i < elmData.length; i++) {
         leftChannel[i] = elmData[i][0]
         rightChannel[i] = elmData[i][1]

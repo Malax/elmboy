@@ -9,7 +9,7 @@
   "scripts": {
     "start": "parcel src/index.html",
     "postinstall": "parcel build src/index.html --public-url=./",
-    "test": "standard src/js && elm-format --validate src/elm",
+    "test": "standard && elm-format --validate src/elm",
     "benchmark": "cd benchmarks && elm make --optimize src/Main.elm && open index.html"
   },
   "author": "",
