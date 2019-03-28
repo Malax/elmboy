@@ -31,7 +31,7 @@ module Component.PPU exposing
     , writeWindowY
     )
 
-import Array
+import Array exposing (Array)
 import Bitwise
 import Component.PPU.Constants exposing (cyclesPerFrame, cyclesPerLine, cyclesPerOamSearch, cyclesPerPixelTransfer, screenHeight, vBlankDurationInLines)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
@@ -219,10 +219,10 @@ writeOAMRam address value ppu =
     PPUTypes.setOamRam (Array.set address value ppu.objects) ppu
 
 
-replaceOAMRam : List Int -> PPU -> PPU
+replaceOAMRam : Array Int -> PPU -> PPU
 replaceOAMRam bytes ppu =
-    if List.length bytes == (40 * 4) then
-        PPUTypes.setOamRam (Array.fromList bytes) ppu
+    if Array.length bytes == (40 * 4) then
+        PPUTypes.setOamRam bytes ppu
 
     else
         ppu

@@ -7,6 +7,7 @@ module Component.MMU exposing
     , writeWord8Chunk
     )
 
+import Array exposing (Array)
 import Bitwise
 import Component.APU as APU
 import Component.CPU as CPU
@@ -395,11 +396,20 @@ writeWord16 address value gameBoy =
         |> writeWord8 (address + 1) highByte
 
 
-readWord8Chunk : GameBoy -> MemoryAddress -> Int -> List Int
+readWord8Chunk : GameBoy -> MemoryAddress -> Int -> Array Int
 readWord8Chunk gameBoy startAddress length =
-    List.repeat length startAddress
-        |> List.indexedMap (+)
-        |> List.map (readWord8 gameBoy)
+    -- This function is often used for reading a chunk from work RAM 0 or 1. We're special-casing those address ranges here for performance reasons.
+    if startAddress >= 0xC000 && startAddress + length <= 0xCFFF then
+        RAM.readWord8Slice gameBoy.workRamBank0 (startAddress - 0xC000) length
+
+    else if startAddress >= 0xD000 && startAddress + length <= 0xDFFF then
+        RAM.readWord8Slice gameBoy.workRamBank1 (startAddress - 0xD000) length
+
+    else
+        List.repeat length startAddress
+            |> List.indexedMap (+)
+            |> List.map (readWord8 gameBoy)
+            |> Array.fromList
 
 
 writeWord8Chunk : GameBoy -> MemoryAddress -> List Int -> GameBoy

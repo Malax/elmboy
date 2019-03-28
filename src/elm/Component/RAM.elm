@@ -3,6 +3,7 @@ module Component.RAM exposing
     , init
     , initZero
     , readWord8
+    , readWord8Slice
     , toArray
     , writeWord8
     )
@@ -39,6 +40,11 @@ readWord8 (RAM array) address =
 writeWord8 : MemoryAddress -> Int -> RAM -> RAM
 writeWord8 address value (RAM array) =
     Array.set address value array |> RAM
+
+
+readWord8Slice : RAM -> Int -> Int -> Array Int
+readWord8Slice (RAM array) start length =
+    Array.slice start (start + length) array
 
 
 toArray : RAM -> Array Int
