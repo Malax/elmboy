@@ -4,7 +4,6 @@ module Component.MMU exposing
     , readWord8Chunk
     , writeWord16
     , writeWord8
-    , writeWord8Chunk
     )
 
 import Array exposing (Array)
@@ -410,20 +409,6 @@ readWord8Chunk gameBoy startAddress length =
             |> List.indexedMap (+)
             |> List.map (readWord8 gameBoy)
             |> Array.fromList
-
-
-writeWord8Chunk : GameBoy -> MemoryAddress -> List Int -> GameBoy
-writeWord8Chunk gameBoy startAddress bytes =
-    case bytes of
-        [] ->
-            gameBoy
-
-        head :: tail ->
-            let
-                updatedGameBoy =
-                    writeWord8 startAddress head gameBoy
-            in
-            writeWord8Chunk updatedGameBoy (startAddress + 1) tail
 
 
 
