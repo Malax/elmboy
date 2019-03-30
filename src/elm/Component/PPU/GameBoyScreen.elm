@@ -49,11 +49,5 @@ serializePixelBatches (GameBoyScreen batchedPixels pixelsInBuffer buffer) =
 
             else
                 batchedPixels
-
-        missingBatchesAmount =
-            1440 - List.length resultAfterFlushing
-
-        emptyBatches =
-            List.repeat missingBatchesAmount 0x00
     in
-    List.append (List.reverse resultAfterFlushing) emptyBatches
+    List.reverse resultAfterFlushing
