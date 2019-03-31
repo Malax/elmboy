@@ -2,15 +2,17 @@ module Component.PPU.LineBuffer exposing
     ( LineBuffer(..)
     , ObjectPriority(..)
     , init
-    , mixPixels
+    , mixEightPixels
     , unpack
     )
 
+import Array exposing (Array)
+import Bitwise
 import Component.PPU.Pixel exposing (PixelSource(..), RawPixel)
 
 
 type LineBuffer
-    = LineBuffer (List RawPixel)
+    = LineBuffer (Array RawPixel)
 
 
 type ObjectPriority
@@ -18,45 +20,78 @@ type ObjectPriority
     | OverBackground
 
 
-mixPixels : Int -> List RawPixel -> ObjectPriority -> LineBuffer -> LineBuffer
-mixPixels offset pixels priority (LineBuffer bufferedPixels) =
+mixEightPixels : Int -> ( Int, Int ) -> Bool -> PixelSource -> ObjectPriority -> LineBuffer -> LineBuffer
+mixEightPixels offset ( highByte, lowByte ) reversed source priority (LineBuffer rawPixels) =
     let
-        clampedOffset =
-            clamp 0 (List.length bufferedPixels) offset
+        pixel1 =
+            ( Bitwise.and 0x01 highByte * 2 + Bitwise.and 0x01 lowByte, source )
 
-        dropPixelCount =
-            if offset < 0 then
-                abs offset
+        pixel2 =
+            ( Bitwise.and 0x02 highByte // 0x01 + Bitwise.and 0x02 lowByte // 0x02, source )
 
-            else
-                0
+        pixel3 =
+            ( Bitwise.and 0x04 highByte // 0x02 + Bitwise.and 0x04 lowByte // 0x04, source )
 
-        takePixelCount =
-            List.length bufferedPixels - clampedOffset
+        pixel4 =
+            ( Bitwise.and 0x08 highByte // 0x04 + Bitwise.and 0x08 lowByte // 0x08, source )
 
-        sanitizedPixels =
-            pixels |> List.drop dropPixelCount |> List.take takePixelCount
+        pixel5 =
+            ( Bitwise.and 0x10 highByte // 0x08 + Bitwise.and 0x10 lowByte // 0x10, source )
+
+        pixel6 =
+            ( Bitwise.and 0x20 highByte // 0x10 + Bitwise.and 0x20 lowByte // 0x20, source )
+
+        pixel7 =
+            ( Bitwise.and 0x40 highByte // 0x20 + Bitwise.and 0x40 lowByte // 0x40, source )
+
+        pixel8 =
+            ( Bitwise.and 0x80 highByte // 0x40 + Bitwise.and 0x80 lowByte // 0x80, source )
     in
-    modifySliceSlice (\slice -> zip slice sanitizedPixels |> List.map (mixPixel priority)) clampedOffset (clampedOffset + List.length sanitizedPixels) bufferedPixels
-        |> LineBuffer
+    let
+        defaultPixel =
+            ( 4, Background )
+    in
+    if reversed then
+        rawPixels
+            |> Array.set (offset + 0) (Array.get (offset + 0) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel1) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 1) (Array.get (offset + 1) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel2) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 2) (Array.get (offset + 2) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel3) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 3) (Array.get (offset + 3) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel4) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 4) (Array.get (offset + 4) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel5) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 5) (Array.get (offset + 5) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel6) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 6) (Array.get (offset + 6) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel7) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 7) (Array.get (offset + 7) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel8) |> Maybe.withDefault defaultPixel)
+            |> LineBuffer
+
+    else
+        rawPixels
+            |> Array.set (offset + 0) (Array.get (offset + 0) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel8) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 1) (Array.get (offset + 1) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel7) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 2) (Array.get (offset + 2) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel6) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 3) (Array.get (offset + 3) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel5) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 4) (Array.get (offset + 4) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel4) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 5) (Array.get (offset + 5) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel3) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 6) (Array.get (offset + 6) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel2) |> Maybe.withDefault defaultPixel)
+            |> Array.set (offset + 7) (Array.get (offset + 7) rawPixels |> Maybe.map (\prevPixel -> mixPixel priority prevPixel pixel1) |> Maybe.withDefault defaultPixel)
+            |> LineBuffer
 
 
 unpack : LineBuffer -> List RawPixel
 unpack (LineBuffer array) =
-    array
+    array |> Array.toList
 
 
 init : List RawPixel -> LineBuffer
-init pixels =
-    LineBuffer pixels
+init =
+    Array.fromList >> LineBuffer
 
 
 
 -- Internal
 
 
-mixPixel : ObjectPriority -> ( RawPixel, RawPixel ) -> RawPixel
-mixPixel priority ( existingPixel, newPixel ) =
+mixPixel : ObjectPriority -> RawPixel -> RawPixel -> RawPixel
+mixPixel priority existingPixel newPixel =
     if isTransparentPixel newPixel then
         existingPixel
 
@@ -88,26 +123,3 @@ isObjectPixel rawPixel =
 isTransparentPixel : RawPixel -> Bool
 isTransparentPixel rawPixel =
     Tuple.first rawPixel == 0x00
-
-
-modifySliceSlice : (List a -> List a) -> Int -> Int -> List a -> List a
-modifySliceSlice f start end list =
-    let
-        prefix =
-            List.take start list
-
-        suffix =
-            List.drop end list
-
-        slice =
-            list |> List.drop start |> List.take (end - start)
-
-        mappedSlice =
-            f slice
-    in
-    List.append prefix (List.append mappedSlice suffix)
-
-
-zip : List a -> List b -> List ( a, b )
-zip =
-    List.map2 Tuple.pair

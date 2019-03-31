@@ -70,7 +70,7 @@ backgroundPixels mapY mapX pixelAmount lcdc mapAddress vram =
                         tileDataAddress =
                             backgroundTileAddress lcdc tileId
                     in
-                    List.append (readTileLinePixels tileDataAddress tileLineIndex vram False Background) acc
+                    List.append (readTileLinePixels tileDataAddress tileLineIndex vram |> bytesToPixels Background False) acc
     in
     pixels
         -- TODO: Not happy with this, maybe we can avoid creating the pixels in the first place?
@@ -139,12 +139,8 @@ viewportBackgroundLinePixels screenY scrollY scrollX windowX windowY lcdc vram =
         backgroundPixels backgroundMapY scrollX requiredBackgroundPixels lcdc backgroundMapMemoryOffset vram
 
 
-{-| Reads an eight pixel line of a tile from memory.
-This works for background (and therefore window) as well as for objects tiles - they are encoded the same way.
-To support 8x16 tiles, we allow the lineNumber to be larger than 8. Note that a number larger than 8 will actually read the next tile in memory!
--}
-readTileLinePixels : MemoryAddress -> Int -> RAM -> Bool -> PixelSource -> List RawPixel
-readTileLinePixels tileAddress lineNumber vram readReversed pixelSource =
+readTileLinePixels : MemoryAddress -> Int -> RAM -> ( Int, Int )
+readTileLinePixels tileAddress lineNumber vram =
     let
         tileLineAddress =
             tileAddress + (lineNumber * 2)
@@ -155,33 +151,57 @@ readTileLinePixels tileAddress lineNumber vram readReversed pixelSource =
         tileLineLowByte =
             RAM.readWord8 vram tileLineAddress
     in
-    Util.foldRIndexes 8 [] <|
-        \reversedIndex acc ->
-            let
-                -- TODO: The order seems correct here, but we need to reverse it so that it looks right.
-                -- TODO: Maybe another part of the code is reversing it again? Remember that we're building the resuling list with cons, so our order should
-                -- be correct.
-                index =
-                    if readReversed then
-                        reversedIndex
+    ( tileLineHighByte, tileLineLowByte )
 
-                    else
-                        7 - reversedIndex
 
-                pixelDataBitmask =
-                    Bitwise.shiftLeftBy index 0x01
+bytesToPixels : PixelSource -> Bool -> ( Int, Int ) -> List RawPixel
+bytesToPixels source reversed ( highByte, lowByte ) =
+    let
+        pixel1 =
+            Bitwise.and 0x01 highByte * 2 + Bitwise.and 0x01 lowByte
 
-                highValue =
-                    Bitwise.and tileLineHighByte pixelDataBitmask
-                        |> Bitwise.shiftRightZfBy index
-                        -- We cannot directly reduce the amount shifted to the right, as the index might be zero.
-                        |> Bitwise.shiftLeftBy 1
+        pixel2 =
+            Bitwise.and 0x02 highByte // 0x01 + Bitwise.and 0x02 lowByte // 0x02
 
-                lowValue =
-                    Bitwise.and tileLineLowByte pixelDataBitmask
-                        |> Bitwise.shiftRightZfBy index
-            in
-            ( Bitwise.or highValue lowValue, pixelSource ) :: acc
+        pixel3 =
+            Bitwise.and 0x04 highByte // 0x02 + Bitwise.and 0x04 lowByte // 0x04
+
+        pixel4 =
+            Bitwise.and 0x08 highByte // 0x04 + Bitwise.and 0x08 lowByte // 0x08
+
+        pixel5 =
+            Bitwise.and 0x10 highByte // 0x08 + Bitwise.and 0x10 lowByte // 0x10
+
+        pixel6 =
+            Bitwise.and 0x20 highByte // 0x10 + Bitwise.and 0x20 lowByte // 0x20
+
+        pixel7 =
+            Bitwise.and 0x40 highByte // 0x20 + Bitwise.and 0x40 lowByte // 0x40
+
+        pixel8 =
+            Bitwise.and 0x80 highByte // 0x40 + Bitwise.and 0x80 lowByte // 0x80
+    in
+    if reversed then
+        [ ( pixel1, source )
+        , ( pixel2, source )
+        , ( pixel3, source )
+        , ( pixel4, source )
+        , ( pixel5, source )
+        , ( pixel6, source )
+        , ( pixel7, source )
+        , ( pixel8, source )
+        ]
+
+    else
+        [ ( pixel8, source )
+        , ( pixel7, source )
+        , ( pixel6, source )
+        , ( pixel5, source )
+        , ( pixel4, source )
+        , ( pixel3, source )
+        , ( pixel2, source )
+        , ( pixel1, source )
+        ]
 
 
 addObjectsToLineBuffer : Int -> RAM -> Array Int -> Int -> LineBuffer -> LineBuffer
@@ -246,9 +266,9 @@ addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTil
             objectTileId * 16
 
         rawPixels =
-            readTileLinePixels tileAddress line vram flipX palette
+            readTileLinePixels tileAddress line vram
     in
-    LineBuffer.mixPixels normalizedX rawPixels priority buffer
+    LineBuffer.mixEightPixels normalizedX rawPixels flipX palette priority buffer
 
 
 
