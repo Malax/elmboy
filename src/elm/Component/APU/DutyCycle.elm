@@ -1,8 +1,5 @@
 module Component.APU.DutyCycle exposing (DutyCycle(..), sample)
 
-import Array exposing (Array)
-import Component.APU.Constants as APUConstants
-
 
 type DutyCycle
     = Zero
@@ -14,44 +11,110 @@ type DutyCycle
 sample : DutyCycle -> Int -> Float
 sample duty index =
     let
-        array =
-            case duty of
-                Zero ->
-                    dutyZeroCycles
-
-                One ->
-                    dutyOneCycles
-
-                Two ->
-                    dutyTwoCycles
-
-                Three ->
-                    dutyThreeCycles
+        normalizedIndex =
+            remainderBy 8 index
     in
-    array
-        |> Array.get (remainderBy 8 index)
-        |> Maybe.withDefault APUConstants.silence
+    case duty of
+        Zero ->
+            case normalizedIndex of
+                0 ->
+                    -1
 
+                1 ->
+                    -1
 
-dutyZeroCycles : Array Float
-dutyZeroCycles =
-    Array.fromList
-        [ -1, -1, -1, -1, -1, -1, -1, 1 ]
+                2 ->
+                    -1
 
+                3 ->
+                    -1
 
-dutyOneCycles : Array Float
-dutyOneCycles =
-    Array.fromList
-        [ 1, -1, -1, -1, -1, -1, -1, 1 ]
+                4 ->
+                    -1
 
+                5 ->
+                    -1
 
-dutyTwoCycles : Array Float
-dutyTwoCycles =
-    Array.fromList
-        [ 1, -1, -1, -1, -1, 1, 1, 1 ]
+                6 ->
+                    -1
 
+                _ ->
+                    1
 
-dutyThreeCycles : Array Float
-dutyThreeCycles =
-    Array.fromList
-        [ -1, 1, 1, 1, 1, 1, 1, -1 ]
+        One ->
+            case normalizedIndex of
+                0 ->
+                    1
+
+                1 ->
+                    -1
+
+                2 ->
+                    -1
+
+                3 ->
+                    -1
+
+                4 ->
+                    -1
+
+                5 ->
+                    -1
+
+                6 ->
+                    -1
+
+                _ ->
+                    1
+
+        Two ->
+            case normalizedIndex of
+                0 ->
+                    1
+
+                1 ->
+                    -1
+
+                2 ->
+                    -1
+
+                3 ->
+                    -1
+
+                4 ->
+                    -1
+
+                5 ->
+                    1
+
+                6 ->
+                    1
+
+                _ ->
+                    1
+
+        Three ->
+            case normalizedIndex of
+                0 ->
+                    -1
+
+                1 ->
+                    1
+
+                2 ->
+                    1
+
+                3 ->
+                    1
+
+                4 ->
+                    1
+
+                5 ->
+                    1
+
+                6 ->
+                    1
+
+                _ ->
+                    -1
