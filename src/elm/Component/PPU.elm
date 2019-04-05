@@ -62,6 +62,7 @@ init =
     , lastCompleteFrame = GameBoyScreen.empty
     , cyclesSinceLastCompleteFrame = 0
     , triggeredInterrupt = None
+    , omitFrame = False
     }
 
 
@@ -262,7 +263,7 @@ lcdStatus mode line lineCompare previousLcdStatus =
 
 
 emulate : Int -> PPU -> PPU
-emulate cycles ({ mode, cyclesSinceLastCompleteFrame } as ppu) =
+emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
     let
         lastEmulatedCycle =
             cyclesSinceLastCompleteFrame + cycles
@@ -322,10 +323,18 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame } as ppu) =
     in
     case ( mode, currentMode ) of
         ( PixelTransfer, HBlank ) ->
-            LineDrawing.drawLine currentLine modifiedPPUData
+            if not omitFrame then
+                LineDrawing.drawLine currentLine modifiedPPUData
+
+            else
+                modifiedPPUData
 
         ( HBlank, VBlank ) ->
-            PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty VBlankInterrupt modifiedPPUData
+            if not omitFrame then
+                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True VBlankInterrupt modifiedPPUData
+
+            else
+                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False VBlankInterrupt modifiedPPUData
 
         _ ->
             modifiedPPUData

@@ -43,6 +43,13 @@ type alias PPU =
     , objectPalette1 : Int
     , triggeredInterrupt : PPUInterrupt
     , lcdStatus : Int
+
+    {-
+       We omit every other frame to increase emulation performance. Omitted frames are still emulated, but no pixels will be
+       produced - speeding up the emulation at the cost of halved refresh rate (30fps). Omitted frames will use the same pixels as the
+       previous frame.
+    -}
+    , omitFrame : Bool
     }
 
 
@@ -85,6 +92,7 @@ setOamRam value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -108,6 +116,7 @@ setVram value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -131,6 +140,7 @@ setLcdc value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -154,6 +164,7 @@ setLcdStatus value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -177,6 +188,7 @@ setScrollX value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -200,6 +212,7 @@ setScrollY value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -223,6 +236,7 @@ setWindowX value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -246,6 +260,7 @@ setWindowY value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -269,6 +284,7 @@ setLineCompare value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -292,6 +308,7 @@ setBackgroundPalette value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -315,6 +332,7 @@ setObjectPalette0 value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -338,11 +356,12 @@ setObjectPalette1 value ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
-setVBlankData : GameBoyScreen -> GameBoyScreen -> PPUInterrupt -> PPU -> PPU
-setVBlankData lastCompleteFrame screen triggeredInterrupt ppu =
+setVBlankData : GameBoyScreen -> GameBoyScreen -> Bool -> PPUInterrupt -> PPU -> PPU
+setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     { mode = ppu.mode
     , vram = ppu.vram
     , line = ppu.line
@@ -361,6 +380,7 @@ setVBlankData lastCompleteFrame screen triggeredInterrupt ppu =
     , lastCompleteFrame = lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = triggeredInterrupt
+    , omitFrame = omitFrame
     }
 
 
@@ -384,6 +404,7 @@ setEmulateData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame in
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = cyclesSinceLastCompleteFrame
     , triggeredInterrupt = interrupt
+    , omitFrame = ppu.omitFrame
     }
 
 
@@ -407,4 +428,5 @@ setScreen screen ppu =
     , lastCompleteFrame = ppu.lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
     }
