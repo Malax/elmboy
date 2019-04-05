@@ -36,7 +36,6 @@ import Bitwise
 import Component.PPU.Constants exposing (cyclesPerFrame, cyclesPerLine, cyclesPerOamSearch, cyclesPerPixelTransfer, screenHeight, vBlankDurationInLines)
 import Component.PPU.GameBoyScreen as GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.LineDrawing as LineDrawing
-import Component.PPU.Pixel exposing (PixelSource(..))
 import Component.PPU.Types as PPUTypes exposing (Mode(..), PPU, PPUInterrupt(..))
 import Component.RAM as RAM
 import Constants

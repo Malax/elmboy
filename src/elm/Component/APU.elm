@@ -65,7 +65,7 @@ type alias APU =
     , channel2 : PulseChannel
     , channel3 : WaveChannel
     , channel4 : NoiseChannel
-    , sampleBuffer : Array ( Float, Float )
+    , sampleBuffer : List ( Float, Float )
     , cycleAccumulator : Int
     , frameSequencerCounter : Int
     , frameSequence : Int
@@ -94,7 +94,7 @@ init enabled =
     , channel2 = PulseChannel.init
     , channel3 = WaveChannel.init
     , channel4 = NoiseChannel.init
-    , sampleBuffer = Array.empty
+    , sampleBuffer = []
     , cycleAccumulator = 0
     , frameSequencerCounter = 0
     , frameSequence = 0
@@ -163,7 +163,7 @@ emulate cycles apu =
 
             updatedSampleBuffer =
                 if generateSample then
-                    Array.push (mixSamples updatedChannel1 updatedChannel2 updatedChannel3 updatedChannel4 apu) apu.sampleBuffer
+                    mixSamples updatedChannel1 updatedChannel2 updatedChannel3 updatedChannel4 apu :: apu.sampleBuffer
 
                 else
                     apu.sampleBuffer
@@ -189,10 +189,10 @@ emulate cycles apu =
         apu
 
 
-drainAudioBuffer : APU -> ( APU, Array ( Float, Float ) )
+drainAudioBuffer : APU -> ( APU, List ( Float, Float ) )
 drainAudioBuffer apu =
     if apu.enabled then
-        ( { sampleBuffer = Array.empty
+        ( { sampleBuffer = []
           , cycleAccumulator = apu.cycleAccumulator
           , channel1 = apu.channel1
           , channel2 = apu.channel2
@@ -212,7 +212,7 @@ drainAudioBuffer apu =
         )
 
     else
-        ( apu, Array.empty )
+        ( apu, [] )
 
 
 setEnabled : Bool -> APU -> APU

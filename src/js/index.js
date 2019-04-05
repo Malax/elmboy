@@ -30,8 +30,8 @@ document.addEventListener('DOMContentLoaded', function (event) {
       const rightChannel = buffer.getChannelData(1)
 
       for (let i = 0; i < elmData.length; i++) {
-        leftChannel[i] = elmData[i][0]
-        rightChannel[i] = elmData[i][1]
+        leftChannel[i] = elmData[elmData.length - 1 - i][0]
+        rightChannel[i] = elmData[elmData.length - 1 - i][1]
       }
 
       var bufferSource = audioContext.createBufferSource()
@@ -58,7 +58,7 @@ function setPixelsFromBatches (canvas, pixelBatches) {
     const pixelValue = (pixelBatches[batchIndex] & individualPixelMask) >>> shift
     const pixelColor = colorMap[pixelValue]
 
-    imageData.data[pixelIndex * 4 + 0] = pixelColor[0]
+    imageData.data[pixelIndex * 4] = pixelColor[0]
     imageData.data[pixelIndex * 4 + 1] = pixelColor[1]
     imageData.data[pixelIndex * 4 + 2] = pixelColor[2]
     imageData.data[pixelIndex * 4 + 3] = 255
