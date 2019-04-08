@@ -97,7 +97,25 @@ clockTimer cycles channel =
             else
                 channel.wavePosition
     in
-    setWavePositionTimerValue wavePosition timerValue channel
+    { dutyCycle = channel.dutyCycle
+    , wavePosition = wavePosition
+    , volume = channel.volume
+    , enabled = channel.enabled
+    , frequency = channel.frequency
+    , sweepPeriod = channel.sweepPeriod
+    , sweepNegate = channel.sweepNegate
+    , sweepShift = channel.sweepShift
+    , envelopeStartingVolume = channel.envelopeStartingVolume
+    , envelopeAdd = channel.envelopeAdd
+    , envelopePeriod = channel.envelopePeriod
+    , envelopeCounter = channel.envelopeCounter
+    , timerValue = timerValue
+    , sweepShadowFrequency = channel.sweepShadowFrequency
+    , sweepCounter = channel.sweepCounter
+    , sweepEnabled = channel.sweepEnabled
+    , lengthCounter = channel.lengthCounter
+    , lengthEnabled = channel.lengthEnabled
+    }
 
 
 clockLengthCounter : PulseChannel -> PulseChannel
@@ -514,29 +532,6 @@ setSweepPeriodNegateShift sweepPeriod sweepNegate sweepShift channel =
     , envelopePeriod = channel.envelopePeriod
     , envelopeCounter = channel.envelopeCounter
     , timerValue = channel.timerValue
-    , sweepShadowFrequency = channel.sweepShadowFrequency
-    , sweepCounter = channel.sweepCounter
-    , sweepEnabled = channel.sweepEnabled
-    , lengthCounter = channel.lengthCounter
-    , lengthEnabled = channel.lengthEnabled
-    }
-
-
-setWavePositionTimerValue : Int -> Int -> PulseChannel -> PulseChannel
-setWavePositionTimerValue wavePosition timerValue channel =
-    { dutyCycle = channel.dutyCycle
-    , wavePosition = wavePosition
-    , volume = channel.volume
-    , enabled = channel.enabled
-    , frequency = channel.frequency
-    , sweepPeriod = channel.sweepPeriod
-    , sweepNegate = channel.sweepNegate
-    , sweepShift = channel.sweepShift
-    , envelopeStartingVolume = channel.envelopeStartingVolume
-    , envelopeAdd = channel.envelopeAdd
-    , envelopePeriod = channel.envelopePeriod
-    , envelopeCounter = channel.envelopeCounter
-    , timerValue = timerValue
     , sweepShadowFrequency = channel.sweepShadowFrequency
     , sweepCounter = channel.sweepCounter
     , sweepEnabled = channel.sweepEnabled
