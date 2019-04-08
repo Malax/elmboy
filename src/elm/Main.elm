@@ -70,16 +70,21 @@ update msg model =
                         cyclesToEmulate =
                             ceiling ((timeToEmulate / 1000) * toFloat Constants.cyclesPerSecond)
 
-                        ( emulatedGameBoy, audioSamples ) =
+                        ( emulatedGameBoy, audioSamples, screen ) =
                             gameBoy
                                 |> Emulator.emulateCycles cyclesToEmulate
-                                |> GameBoy.drainAudioBuffer
+                                |> GameBoy.drainBuffers
+
+                        setPixelsCmd =
+                            case screen of
+                                Just a ->
+                                    Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches a }
+
+                                Nothing ->
+                                    Cmd.none
 
                         cmds =
-                            Cmd.batch
-                                [ Ports.setPixelsFromBatches { canvasId = canvasId, pixelBatches = GameBoyScreen.serializePixelBatches (PPU.getLastCompleteFrame emulatedGameBoy.ppu) }
-                                , Ports.queueAudioSamples audioSamples
-                                ]
+                            Cmd.batch [ setPixelsCmd, Ports.queueAudioSamples audioSamples ]
                     in
                     ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 30 model.frameTimes }, cmds )
 
@@ -124,7 +129,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge False), emulateOnAnimationFrame = True }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge True), emulateOnAnimationFrame = True }, Cmd.none )
 
                 Nothing ->
                     let

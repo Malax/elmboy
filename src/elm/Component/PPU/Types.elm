@@ -4,6 +4,7 @@ module Component.PPU.Types exposing
     , PPUInterrupt(..)
     , setBackgroundPalette
     , setEmulateData
+    , setLastCompleteFrame
     , setLcdStatus
     , setLcdc
     , setLineCompare
@@ -36,7 +37,7 @@ type alias PPU =
     , lcdc : Int
     , objects : Array Int
     , screen : GameBoyScreen
-    , lastCompleteFrame : GameBoyScreen
+    , lastCompleteFrame : Maybe GameBoyScreen
     , cyclesSinceLastCompleteFrame : Int
     , backgroundPalette : Int
     , objectPalette0 : Int
@@ -360,7 +361,7 @@ setObjectPalette1 value ppu =
     }
 
 
-setVBlankData : GameBoyScreen -> GameBoyScreen -> Bool -> PPUInterrupt -> PPU -> PPU
+setVBlankData : Maybe GameBoyScreen -> GameBoyScreen -> Bool -> PPUInterrupt -> PPU -> PPU
 setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     { mode = ppu.mode
     , vram = ppu.vram
@@ -426,6 +427,30 @@ setScreen screen ppu =
     , objectPalette1 = ppu.objectPalette1
     , screen = screen
     , lastCompleteFrame = ppu.lastCompleteFrame
+    , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
+    , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
+    }
+
+
+setLastCompleteFrame : Maybe GameBoyScreen -> PPU -> PPU
+setLastCompleteFrame lastCompleteFrame ppu =
+    { mode = ppu.mode
+    , vram = ppu.vram
+    , line = ppu.line
+    , lineCompare = ppu.lineCompare
+    , scrollX = ppu.scrollX
+    , scrollY = ppu.scrollY
+    , windowX = ppu.windowX
+    , windowY = ppu.windowY
+    , objects = ppu.objects
+    , lcdc = ppu.lcdc
+    , lcdStatus = ppu.lcdStatus
+    , backgroundPalette = ppu.backgroundPalette
+    , objectPalette0 = ppu.objectPalette0
+    , objectPalette1 = ppu.objectPalette1
+    , screen = ppu.screen
+    , lastCompleteFrame = lastCompleteFrame
     , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
     , triggeredInterrupt = ppu.triggeredInterrupt
     , omitFrame = ppu.omitFrame

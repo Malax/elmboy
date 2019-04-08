@@ -11,6 +11,7 @@ import Component.CPU.Opcode as Opcode
 import Component.CPU.OpcodeMapper as OpcodeMapper
 import Component.MMU as MMU
 import Component.PPU as PPU
+import Component.PPU.GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.Types exposing (PPUInterrupt(..))
 import Component.Timer as Timer
 import Constants

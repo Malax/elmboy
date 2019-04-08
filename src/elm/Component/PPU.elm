@@ -59,16 +59,21 @@ init =
     , objectPalette0 = 0xFF
     , objectPalette1 = 0xFF
     , screen = GameBoyScreen.empty
-    , lastCompleteFrame = GameBoyScreen.empty
+    , lastCompleteFrame = Nothing
     , cyclesSinceLastCompleteFrame = 0
     , triggeredInterrupt = None
     , omitFrame = False
     }
 
 
-getLastCompleteFrame : PPU -> GameBoyScreen
-getLastCompleteFrame =
-    .lastCompleteFrame
+getLastCompleteFrame : PPU -> ( PPU, Maybe GameBoyScreen )
+getLastCompleteFrame ppu =
+    case ppu.lastCompleteFrame of
+        Just a ->
+            ( PPUTypes.setLastCompleteFrame Nothing ppu, Just a )
+
+        Nothing ->
+            ( ppu, Nothing )
 
 
 
@@ -292,7 +297,26 @@ emulate cycles ppu =
     in
     -- Mode and line did not change, we can just update essential fields and skip some work for performance reasons
     if updatedMode == ppu.mode && updatedLine == ppu.line then
-        PPUTypes.setEmulateData updatedMode updatedLine ppu.lcdStatus lastEmulatedCycle None ppu
+        { mode = updatedMode
+        , vram = ppu.vram
+        , line = updatedLine
+        , lineCompare = ppu.lineCompare
+        , scrollX = ppu.scrollX
+        , scrollY = ppu.scrollY
+        , windowX = ppu.windowX
+        , windowY = ppu.windowY
+        , objects = ppu.objects
+        , lcdc = ppu.lcdc
+        , lcdStatus = ppu.lcdStatus
+        , backgroundPalette = ppu.backgroundPalette
+        , objectPalette0 = ppu.objectPalette0
+        , objectPalette1 = ppu.objectPalette1
+        , screen = ppu.screen
+        , lastCompleteFrame = ppu.lastCompleteFrame
+        , cyclesSinceLastCompleteFrame = lastEmulatedCycle
+        , triggeredInterrupt = None
+        , omitFrame = ppu.omitFrame
+        }
 
     else
         -- If the mode or line changes, we need to check for possible interrupts, updating LCDSTAT and/or drawing pixels.
@@ -325,10 +349,10 @@ emulate cycles ppu =
 
                 else if ppu.mode == HBlank && updatedMode == VBlank then
                     if ppu.omitFrame then
-                        PPUTypes.setVBlankData ppu.screen GameBoyScreen.empty False VBlankInterrupt
+                        PPUTypes.setVBlankData Nothing GameBoyScreen.empty False VBlankInterrupt
 
                     else
-                        PPUTypes.setVBlankData ppu.screen ppu.screen True VBlankInterrupt
+                        PPUTypes.setVBlankData (Just ppu.screen) GameBoyScreen.empty True VBlankInterrupt
 
                 else
                     identity

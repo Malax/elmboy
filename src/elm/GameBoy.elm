@@ -1,6 +1,7 @@
 module GameBoy exposing
     ( GameBoy
     , drainAudioBuffer
+    , drainBuffers
     , init
     , isAPUEnabled
     , setAPU
@@ -20,12 +21,12 @@ module GameBoy exposing
     , setWorkRamBank1
     )
 
-import Array exposing (Array)
 import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (CPU)
 import Component.Cartridge exposing (Cartridge)
 import Component.Joypad as Joypad exposing (GameBoyButton(..), Joypad)
 import Component.PPU as PPU
+import Component.PPU.GameBoyScreen exposing (GameBoyScreen)
 import Component.PPU.Types exposing (PPU)
 import Component.RAM as RAM exposing (RAM)
 import Component.Timer as Timer exposing (Timer)
@@ -111,6 +112,21 @@ drainAudioBuffer : GameBoy -> ( GameBoy, List ( Float, Float ) )
 drainAudioBuffer gameBoy =
     APU.drainAudioBuffer gameBoy.apu
         |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
+
+
+drainBuffers : GameBoy -> ( GameBoy, List ( Float, Float ), Maybe GameBoyScreen )
+drainBuffers gameBoy =
+    let
+        ( updatedAPU, samples ) =
+            APU.drainAudioBuffer gameBoy.apu
+
+        ( updatedPPU, screen ) =
+            PPU.getLastCompleteFrame gameBoy.ppu
+
+        updatedGameBoy =
+            setComponents gameBoy.cpu updatedPPU gameBoy.timer updatedAPU gameBoy
+    in
+    ( updatedGameBoy, samples, screen )
 
 
 
