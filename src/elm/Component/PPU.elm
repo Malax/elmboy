@@ -263,31 +263,22 @@ lcdStatus mode line lineCompare previousLcdStatus =
 
 
 emulate : Int -> PPU -> PPU
-emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
+emulate cycles ppu =
     let
         lastEmulatedCycle =
-            cyclesSinceLastCompleteFrame + cycles
-
-        currentLine =
-            lastEmulatedCycle // cyclesPerLine
+            ppu.cyclesSinceLastCompleteFrame + cycles
 
         cyclesSinceLastCompleteLine =
             remainderBy cyclesPerLine lastEmulatedCycle
 
-        hBlankInterruptEnabled =
-            Bitwise.and ppu.lcdStatus Constants.bit3Mask == Constants.bit3Mask
+        updatedLine =
+            lastEmulatedCycle // cyclesPerLine
 
-        oamInterruptEnabled =
-            Bitwise.and ppu.lcdStatus Constants.bit5Mask == Constants.bit5Mask
-
-        lineCompareInterruptEnabled =
-            Bitwise.and ppu.lcdStatus Constants.bit6Mask == Constants.bit6Mask
-
-        currentMode =
-            if currentLine > (screenHeight + vBlankDurationInLines) then
+        updatedMode =
+            if updatedLine > (screenHeight + vBlankDurationInLines) then
                 OamSearch
 
-            else if currentLine >= screenHeight then
+            else if updatedLine >= screenHeight then
                 VBlank
 
             else if cyclesSinceLastCompleteLine < cyclesPerOamSearch then
@@ -298,43 +289,50 @@ emulate cycles ({ mode, cyclesSinceLastCompleteFrame, omitFrame } as ppu) =
 
             else
                 HBlank
-
-        interrupt =
-            if hBlankInterruptEnabled && currentMode == HBlank && mode /= currentMode then
-                HBlankInterrupt
-
-            else if lineCompareInterruptEnabled && currentLine == ppu.lineCompare && ppu.line /= currentLine then
-                LineCompareInterrupt
-
-            else if oamInterruptEnabled && currentMode == OamSearch && mode /= currentMode then
-                OamInterrupt
-
-            else
-                None
-
-        modifiedPPUData =
-            PPUTypes.setEmulateData
-                currentMode
-                currentLine
-                (lcdStatus currentMode currentLine ppu.lineCompare ppu.lcdStatus)
-                (remainderBy cyclesPerFrame lastEmulatedCycle)
-                interrupt
-                ppu
     in
-    case ( mode, currentMode ) of
-        ( PixelTransfer, HBlank ) ->
-            if not omitFrame then
-                LineDrawing.drawLine currentLine modifiedPPUData
+    -- Mode and line did not change, we can just update essential fields and skip some work for performance reasons
+    if updatedMode == ppu.mode && updatedLine == ppu.line then
+        PPUTypes.setEmulateData updatedMode updatedLine ppu.lcdStatus lastEmulatedCycle None ppu
 
-            else
-                modifiedPPUData
+    else
+        -- If the mode or line changes, we need to check for possible interrupts, updating LCDSTAT and/or drawing pixels.
+        let
+            hBlankInterruptEnabled =
+                Bitwise.and ppu.lcdStatus Constants.bit3Mask == Constants.bit3Mask
 
-        ( HBlank, VBlank ) ->
-            if not omitFrame then
-                PPUTypes.setVBlankData modifiedPPUData.screen modifiedPPUData.screen True VBlankInterrupt modifiedPPUData
+            oamInterruptEnabled =
+                Bitwise.and ppu.lcdStatus Constants.bit5Mask == Constants.bit5Mask
 
-            else
-                PPUTypes.setVBlankData modifiedPPUData.screen GameBoyScreen.empty False VBlankInterrupt modifiedPPUData
+            lineCompareInterruptEnabled =
+                Bitwise.and ppu.lcdStatus Constants.bit6Mask == Constants.bit6Mask
 
-        _ ->
-            modifiedPPUData
+            interrupt =
+                if hBlankInterruptEnabled && updatedMode == HBlank && ppu.mode /= updatedMode then
+                    HBlankInterrupt
+
+                else if lineCompareInterruptEnabled && updatedLine == ppu.lineCompare && ppu.line /= updatedLine then
+                    LineCompareInterrupt
+
+                else if oamInterruptEnabled && updatedMode == OamSearch && ppu.mode /= updatedMode then
+                    OamInterrupt
+
+                else
+                    None
+
+            modeChangeEffect =
+                if ppu.mode == PixelTransfer && updatedMode == HBlank && not ppu.omitFrame then
+                    LineDrawing.drawLine updatedLine
+
+                else if ppu.mode == HBlank && updatedMode == VBlank then
+                    if ppu.omitFrame then
+                        PPUTypes.setVBlankData ppu.screen GameBoyScreen.empty False VBlankInterrupt
+
+                    else
+                        PPUTypes.setVBlankData ppu.screen ppu.screen True VBlankInterrupt
+
+                else
+                    identity
+        in
+        ppu
+            |> PPUTypes.setEmulateData updatedMode updatedLine (lcdStatus updatedMode updatedLine ppu.lineCompare ppu.lcdStatus) (remainderBy cyclesPerFrame lastEmulatedCycle) interrupt
+            |> modeChangeEffect
