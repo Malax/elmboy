@@ -44,38 +44,85 @@ backgroundPixels mapY mapX pixelAmount lcdc mapAddress vram =
         tileLineIndex =
             remainderBy tileHeight mapY
 
-        -- The offset of the lines of tiles for the line we're getting the pixels from.
-        backgroundMapLineOffset =
-            (mapY // tileHeight) * backgroundMapWidth
-
-        -- The offset of the first tile we're grabbing pixels from, relative to the start of the line tiles in the background map.
-        firstTileOffset =
-            mapX // tileWidth
-
         tileAmount =
             (pixelAmount // tileWidth) + 1
 
         pixels =
-            Util.foldRIndexes tileAmount [] <|
-                \index acc ->
-                    let
-                        -- If we run out of tiles on the right, we just start at the beginning of the line again, instead of
-                        -- possibly reading data from the next line. This implements the required screen wrapping.
-                        tileIdAddress =
-                            mapAddress + backgroundMapLineOffset + remainderBy backgroundMapWidth (firstTileOffset + index)
-
-                        tileId =
-                            RAM.readWord8 vram tileIdAddress
-
-                        tileDataAddress =
-                            backgroundTileAddress lcdc tileId
-                    in
-                    List.append (readTileLinePixels tileDataAddress tileLineIndex vram |> bytesToPixels Background False) acc
+            fetchTileLines mapAddress lcdc (mapX // tileWidth) (mapY // tileHeight) tileLineIndex tileAmount vram
     in
     pixels
         -- TODO: Not happy with this, maybe we can avoid creating the pixels in the first place?
         |> List.drop (remainderBy tileWidth mapX)
         |> List.take pixelAmount
+
+
+fetchTileLines : MemoryAddress -> Int -> Int -> Int -> Int -> Int -> RAM -> List RawPixel
+fetchTileLines mapAddress lcdc tileMapX tileMapY tileLine amount vram =
+    fetchTileLinesHelp mapAddress lcdc ( tileMapX, tileMapY ) tileLine amount vram []
+
+
+fetchTileLinesHelp : MemoryAddress -> Int -> ( Int, Int ) -> Int -> Int -> RAM -> List RawPixel -> List RawPixel
+fetchTileLinesHelp mapAddress lcdc ( tileMapX, tileMapY ) tileLine amount vram acc =
+    if amount == 0 then
+        acc
+
+    else
+        let
+            wrappedTileMapX =
+                remainderBy backgroundMapWidth (tileMapX + amount - 1)
+
+            tileIdAddress =
+                mapAddress + (tileMapY * backgroundMapWidth) + wrappedTileMapX
+
+            tileId =
+                RAM.readWord8 vram tileIdAddress
+
+            tileDataAddress =
+                if Bitwise.and Constants.bit4Mask lcdc == Constants.bit4Mask then
+                    tileId * 16
+
+                else
+                    0x0800 + ((Util.byteToSignedInt tileId + 128) * 16)
+
+            ( highByte, lowByte ) =
+                readTileLinePixels tileDataAddress tileLine vram
+
+            pixel1 =
+                Bitwise.and 0x01 highByte * 2 + Bitwise.and 0x01 lowByte
+
+            pixel2 =
+                Bitwise.and 0x02 highByte // 0x01 + Bitwise.and 0x02 lowByte // 0x02
+
+            pixel3 =
+                Bitwise.and 0x04 highByte // 0x02 + Bitwise.and 0x04 lowByte // 0x04
+
+            pixel4 =
+                Bitwise.and 0x08 highByte // 0x04 + Bitwise.and 0x08 lowByte // 0x08
+
+            pixel5 =
+                Bitwise.and 0x10 highByte // 0x08 + Bitwise.and 0x10 lowByte // 0x10
+
+            pixel6 =
+                Bitwise.and 0x20 highByte // 0x10 + Bitwise.and 0x20 lowByte // 0x20
+
+            pixel7 =
+                Bitwise.and 0x40 highByte // 0x20 + Bitwise.and 0x40 lowByte // 0x40
+
+            pixel8 =
+                Bitwise.and 0x80 highByte // 0x40 + Bitwise.and 0x80 lowByte // 0x80
+
+            updatedAcc =
+                ( pixel8, Background )
+                    :: ( pixel7, Background )
+                    :: ( pixel6, Background )
+                    :: ( pixel5, Background )
+                    :: ( pixel4, Background )
+                    :: ( pixel3, Background )
+                    :: ( pixel2, Background )
+                    :: ( pixel1, Background )
+                    :: acc
+        in
+        fetchTileLinesHelp mapAddress lcdc ( tileMapX, tileMapY ) tileLine (amount - 1) vram updatedAcc
 
 
 {-| Reads a whole line of raw pixels from the background map (and referenced tiles) for the given screen line and screen scroll offsets.
@@ -154,56 +201,6 @@ readTileLinePixels tileAddress lineNumber vram =
     ( tileLineHighByte, tileLineLowByte )
 
 
-bytesToPixels : PixelSource -> Bool -> ( Int, Int ) -> List RawPixel
-bytesToPixels source reversed ( highByte, lowByte ) =
-    let
-        pixel1 =
-            Bitwise.and 0x01 highByte * 2 + Bitwise.and 0x01 lowByte
-
-        pixel2 =
-            Bitwise.and 0x02 highByte // 0x01 + Bitwise.and 0x02 lowByte // 0x02
-
-        pixel3 =
-            Bitwise.and 0x04 highByte // 0x02 + Bitwise.and 0x04 lowByte // 0x04
-
-        pixel4 =
-            Bitwise.and 0x08 highByte // 0x04 + Bitwise.and 0x08 lowByte // 0x08
-
-        pixel5 =
-            Bitwise.and 0x10 highByte // 0x08 + Bitwise.and 0x10 lowByte // 0x10
-
-        pixel6 =
-            Bitwise.and 0x20 highByte // 0x10 + Bitwise.and 0x20 lowByte // 0x20
-
-        pixel7 =
-            Bitwise.and 0x40 highByte // 0x20 + Bitwise.and 0x40 lowByte // 0x40
-
-        pixel8 =
-            Bitwise.and 0x80 highByte // 0x40 + Bitwise.and 0x80 lowByte // 0x80
-    in
-    if reversed then
-        [ ( pixel1, source )
-        , ( pixel2, source )
-        , ( pixel3, source )
-        , ( pixel4, source )
-        , ( pixel5, source )
-        , ( pixel6, source )
-        , ( pixel7, source )
-        , ( pixel8, source )
-        ]
-
-    else
-        [ ( pixel8, source )
-        , ( pixel7, source )
-        , ( pixel6, source )
-        , ( pixel5, source )
-        , ( pixel4, source )
-        , ( pixel3, source )
-        , ( pixel2, source )
-        , ( pixel1, source )
-        ]
-
-
 addObjectsToLineBuffer : Int -> RAM -> Array Int -> Int -> LineBuffer -> LineBuffer
 addObjectsToLineBuffer screenY vram objects objectHeight buffer =
     let
@@ -269,16 +266,3 @@ addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTil
             readTileLinePixels tileAddress line vram
     in
     LineBuffer.mixEightPixels normalizedX rawPixels flipX palette priority buffer
-
-
-
--- Addressing Helpers
-
-
-backgroundTileAddress : Int -> Int -> MemoryAddress
-backgroundTileAddress lcdc tileId =
-    if Bitwise.and Constants.bit4Mask lcdc == Constants.bit4Mask then
-        tileId * 16
-
-    else
-        0x0800 + ((Util.byteToSignedInt tileId + 128) * 16)
