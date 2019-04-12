@@ -183,7 +183,8 @@ mixPixelLine offset ( highByte, lowByte ) reversed source priority rawPixels =
 
 mixPixel : ObjectPriority -> RawPixel -> RawPixel -> RawPixel
 mixPixel priority existingPixel newPixel =
-    if isTransparentPixel newPixel then
+    -- New pixel is transparent
+    if Tuple.first newPixel == 0x00 then
         existingPixel
 
     else if isSpritePixel existingPixel then
@@ -192,7 +193,8 @@ mixPixel priority existingPixel newPixel =
     else
         case priority of
             BehindBackground ->
-                if isTransparentPixel existingPixel then
+                -- Existing pixel is transparent
+                if Tuple.first existingPixel == 0x00 then
                     newPixel
 
                 else
@@ -209,8 +211,3 @@ isSpritePixel rawPixel =
             Tuple.second rawPixel
     in
     source == ObjectWithPalette0 || source == ObjectWithPalette1
-
-
-isTransparentPixel : RawPixel -> Bool
-isTransparentPixel rawPixel =
-    Tuple.first rawPixel == 0x00
