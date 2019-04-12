@@ -18,3 +18,5 @@ type Msg
     | CloseErrorModal
     | EnableAPU
     | DisableAPU
+    | VirtualDPadInputDown String
+    | VirtualDPadInputUp String

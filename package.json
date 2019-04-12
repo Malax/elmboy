@@ -16,7 +16,8 @@
   "license": "AGPL-3.0-or-later",
   "dependencies": {
     "@fortawesome/fontawesome-free": "^5.4.1",
-    "bootstrap": "^4.0.0"
+    "bootstrap": "^4.0.0",
+    "nipplejs": "^0.8.1"
   },
   "devDependencies": {
     "elm-format": "^0.8.1",

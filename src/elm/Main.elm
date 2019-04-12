@@ -24,6 +24,7 @@ import UI.KeyDecoder
 import Util
 import View.Debugger
 import View.Emulator
+import View.Mobile
 
 
 main : Program () Model Msg
@@ -42,7 +43,7 @@ view model =
         View.Debugger.view canvasId model
 
     else
-        View.Emulator.view canvasId model
+        View.Mobile.view canvasId model
 
 
 init : () -> ( Model, Cmd Msg )
@@ -91,6 +92,48 @@ update msg model =
                 Nothing ->
                     ( model, Cmd.none )
 
+        VirtualDPadInputDown direction ->
+            let
+                button =
+                    Debug.log "DIR" (
+                    case direction of
+                        "up" ->
+                            Up
+
+                        "left" ->
+                            Left
+
+                        "right" ->
+                            Right
+
+                        _ ->
+                            Down)
+            in
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setButtonStatus button True) }
+            , Cmd.none
+            )
+
+        VirtualDPadInputUp direction ->
+            let
+                button =
+                    Debug.log "UP" (
+                    case direction of
+                        "up" ->
+                            Up
+
+                        "left" ->
+                            Left
+
+                        "right" ->
+                            Right
+
+                        _ ->
+                            Down)
+            in
+            ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setButtonStatus button False) }
+            , Cmd.none
+            )
+
         ButtonDown button ->
             ( { model | gameBoy = model.gameBoy |> Maybe.map (GameBoy.setButtonStatus button True) }
             , Cmd.none
@@ -129,7 +172,7 @@ update msg model =
         CartridgeSelected maybeCartridge ->
             case maybeCartridge of
                 Just cartridge ->
-                    ( { model | gameBoy = Just (GameBoy.init cartridge True), emulateOnAnimationFrame = True }, Cmd.none )
+                    ( { model | gameBoy = Just (GameBoy.init cartridge False), emulateOnAnimationFrame = True }, Cmd.none )
 
                 Nothing ->
                     let
@@ -161,6 +204,8 @@ subscriptions model =
         [ animationFrameSubscription
         , Browser.Events.onKeyDown (Decode.map ButtonDown UI.KeyDecoder.decodeKey)
         , Browser.Events.onKeyUp (Decode.map ButtonUp UI.KeyDecoder.decodeKey)
+        , Ports.virtualDPadInput VirtualDPadInputDown
+        , Ports.virtualDPadInputUp VirtualDPadInputUp
         ]
 
 

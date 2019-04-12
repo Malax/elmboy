@@ -1,4 +1,5 @@
 import { Elm } from '../elm/Main.elm'
+import nipplejs from 'nipplejs'
 
 document.addEventListener('DOMContentLoaded', function (event) {
   // There is currently no way to prevent default for Browser.Events in Elm. I took the pragmatic approach here to just prevent default
@@ -14,11 +15,71 @@ document.addEventListener('DOMContentLoaded', function (event) {
     node: document.getElementById('elmboy')
   })
 
+  console.log('prts', app.ports)
+
   app.ports.setPixelsFromBatches.subscribe(function (elmData) {
     const canvas = document.getElementById(elmData.canvasId)
 
+    initializeVirtualDPad()
+
     setPixelsFromBatches(canvas, elmData.pixelBatches)
   })
+
+  let virtualDPad = null
+  let lastVirtualDPadDirection = null
+  const initializeVirtualDPad = () => {
+    if (!virtualDPad) {
+      virtualDPad = nipplejs.create({
+        zone: document.getElementById('virtual-dpad'),
+        color: 'blue'
+      });
+
+      virtualDPad.on('dir:up', (t, e) => {
+        if (lastVirtualDPadDirection) {
+          app.ports.virtualDPadInputUp.send(lastVirtualDPadDirection)
+        }
+
+        app.ports.virtualDPadInput.send('up')
+        lastVirtualDPadDirection = 'up'
+      })
+
+      virtualDPad.on('dir:down', (t, e) => {
+        if (lastVirtualDPadDirection) {
+          app.ports.virtualDPadInputUp.send(lastVirtualDPadDirection)
+
+        }
+        app.ports.virtualDPadInput.send('down')
+        lastVirtualDPadDirection = 'down'
+      })
+
+      virtualDPad.on('dir:left', (t, e) => {
+        if (lastVirtualDPadDirection) {
+          app.ports.virtualDPadInputUp.send(lastVirtualDPadDirection)
+
+        }
+        app.ports.virtualDPadInput.send('left')
+        lastVirtualDPadDirection = 'left'
+      })
+
+      virtualDPad.on('dir:right', (t, e) => {
+        if (lastVirtualDPadDirection) {
+          app.ports.virtualDPadInputUp.send(lastVirtualDPadDirection)
+
+        }
+        app.ports.virtualDPadInput.send('right')
+        lastVirtualDPadDirection = 'right'
+      })
+
+      virtualDPad.on('end', (t, e) => {
+        if (lastVirtualDPadDirection) {
+          app.ports.virtualDPadInputUp.send(lastVirtualDPadDirection)
+        }
+
+        lastVirtualDPadDirection = null
+      })
+    }
+  }
+
 
   const AudioContext = window.AudioContext|| window.webkitAudioContext
   const audioContext = new AudioContext()

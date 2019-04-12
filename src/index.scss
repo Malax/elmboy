@@ -112,8 +112,8 @@ $color-lightest: rgb(155, 188, 15);
   image-rendering: -moz-crisp-edges; // For Firefox
 
   @include media-breakpoint-down('xs') {
-    width: 160px * 2;
-    height: 144px * 2;
+    width: 160px * 2.25;
+    height: 144px * 2.25;
   }
 }
 
