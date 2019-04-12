@@ -209,22 +209,17 @@ addSpritesToLineBuffer line videoRam sprites spriteHeight buffer =
         maxY =
             line + 16
 
-        visible =
+        visibleSprites =
             Array.filter (\sprite -> sprite.y >= minY && sprite.y <= maxY) sprites
     in
-    Array.foldl
-        (\sprite updatedBuffer ->
-            addSpriteToLineBuffer line videoRam spriteHeight updatedBuffer sprite
-        )
-        buffer
-        visible
+    Array.foldl (addSpriteToLineBuffer line videoRam spriteHeight) buffer visibleSprites
 
 
 {-| Adds pixel data of an spite into the given line buffer. This function will not validate if the sprite is actually visible in the given line and might
 read garbage data from unrelated memory or other tiles and render it! This is useful for 8x16 sprites as, in that we case, we want to read into the next tile.
 -}
-addSpriteToLineBuffer : Int -> RAM -> Int -> Array RawPixel -> Sprite -> Array RawPixel
-addSpriteToLineBuffer screenY videoRam spriteHeight buffer sprite =
+addSpriteToLineBuffer : Int -> RAM -> Int -> Sprite -> Array RawPixel -> Array RawPixel
+addSpriteToLineBuffer screenY videoRam spriteHeight sprite buffer =
     let
         normalizedY =
             sprite.y - 16
