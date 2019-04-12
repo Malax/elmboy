@@ -118,7 +118,7 @@ emulationToolbar emulateOnAnimationFrame apuEnabled frameTimes =
                     , Button.onClick DisableAPU
                     , Button.attrs [ class "audio-controls" ]
                     ]
-                    [ text "Disable Sound" ]
+                    [ i [ class "fa fa-volume-mute" ] [] ]
 
             else
                 Button.button
@@ -126,7 +126,7 @@ emulationToolbar emulateOnAnimationFrame apuEnabled frameTimes =
                     , Button.onClick EnableAPU
                     , Button.attrs [ class "audio-controls" ]
                     ]
-                    [ text "Enable Sound (Experimental)" ]
+                    [ i [ class "fa fa-volume-up" ] [] ]
 
         frameCount =
             toFloat (List.length frameTimes)
