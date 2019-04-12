@@ -4,7 +4,6 @@ module Component.RAM exposing
     , initZero
     , readWord8
     , readWord8Slice
-    , toArray
     , writeWord8
     )
 
@@ -33,8 +32,12 @@ initZero size =
 
 readWord8 : RAM -> MemoryAddress -> Int
 readWord8 (RAM array) address =
-    Array.get address array
-        |> Maybe.withDefault 0xFF
+    case Array.get address array of
+        Just value ->
+            value
+
+        Nothing ->
+            0xFF
 
 
 writeWord8 : MemoryAddress -> Int -> RAM -> RAM
@@ -45,8 +48,3 @@ writeWord8 address value (RAM array) =
 readWord8Slice : RAM -> Int -> Int -> Array Int
 readWord8Slice (RAM array) start length =
     Array.slice start (start + length) array
-
-
-toArray : RAM -> Array Int
-toArray (RAM array) =
-    array

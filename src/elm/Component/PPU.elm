@@ -52,7 +52,7 @@ init =
     , scrollY = 0
     , windowX = 0
     , windowY = 0
-    , objects = Array.repeat (40 * 4) 0x00
+    , sprites = Array.empty
     , lcdc = 0x91
     , lcdStatus = 0x80
     , backgroundPalette = 0xE4
@@ -61,7 +61,7 @@ init =
     , screen = GameBoyScreen.empty
     , lastCompleteFrame = Nothing
     , cyclesSinceLastCompleteFrame = 0
-    , triggeredInterrupt = None
+    , triggeredInterrupt = NoInterrupt
     , omitFrame = False
     }
 
@@ -145,9 +145,31 @@ readVRAM { vram } address =
 
 
 readOamRam : PPU -> MemoryAddress -> Int
-readOamRam { objects } address =
-    Array.get address objects
-        |> Maybe.withDefault 0xFF
+readOamRam ppu address =
+    let
+        spriteIndex =
+            address // 4
+
+        maybeSprite =
+            Array.get spriteIndex ppu.sprites
+    in
+    case maybeSprite of
+        Just sprite ->
+            case remainderBy 4 address of
+                0 ->
+                    sprite.y
+
+                1 ->
+                    sprite.x
+
+                2 ->
+                    sprite.tileId
+
+                _ ->
+                    sprite.flags
+
+        Nothing ->
+            0xFF
 
 
 
@@ -221,7 +243,37 @@ writeVRAM address value ppu =
 
 writeOAMRam : MemoryAddress -> Int -> PPU -> PPU
 writeOAMRam address value ppu =
-    PPUTypes.setOamRam (Array.set address value ppu.objects) ppu
+    let
+        spriteIndex =
+            address // 4
+
+        maybeSprite =
+            Array.get spriteIndex ppu.sprites
+    in
+    case maybeSprite of
+        Just sprite ->
+            let
+                updatedSprite =
+                    case remainderBy 4 address of
+                        0 ->
+                            { y = value, x = sprite.x, tileId = sprite.tileId, flags = sprite.flags }
+
+                        1 ->
+                            { y = sprite.y, x = value, tileId = sprite.tileId, flags = sprite.flags }
+
+                        2 ->
+                            { y = sprite.y, x = sprite.x, tileId = value, flags = sprite.flags }
+
+                        _ ->
+                            { y = sprite.y, x = sprite.x, tileId = sprite.tileId, flags = value }
+
+                updatedSprites =
+                    Array.set spriteIndex updatedSprite ppu.sprites
+            in
+            PPUTypes.setSprites updatedSprites ppu
+
+        Nothing ->
+            ppu
 
 
 replaceOAMRam : Array Int -> PPU -> PPU
@@ -295,7 +347,7 @@ emulate cycles ppu =
             else
                 HBlank
     in
-    -- Mode and line did not change, we can just update essential fields and skip some work for performance reasons
+    -- Mode and line did not change, we can just update essential fields and skip some work, gaining some performance.
     if updatedMode == ppu.mode && updatedLine == ppu.line then
         { mode = updatedMode
         , vram = ppu.vram
@@ -305,7 +357,7 @@ emulate cycles ppu =
         , scrollY = ppu.scrollY
         , windowX = ppu.windowX
         , windowY = ppu.windowY
-        , objects = ppu.objects
+        , sprites = ppu.sprites
         , lcdc = ppu.lcdc
         , lcdStatus = ppu.lcdStatus
         , backgroundPalette = ppu.backgroundPalette
@@ -314,7 +366,7 @@ emulate cycles ppu =
         , screen = ppu.screen
         , lastCompleteFrame = ppu.lastCompleteFrame
         , cyclesSinceLastCompleteFrame = lastEmulatedCycle
-        , triggeredInterrupt = None
+        , triggeredInterrupt = NoInterrupt
         , omitFrame = ppu.omitFrame
         }
 
@@ -341,7 +393,7 @@ emulate cycles ppu =
                     OamInterrupt
 
                 else
-                    None
+                    NoInterrupt
 
             modeChangeEffect =
                 if ppu.mode == PixelTransfer && updatedMode == HBlank && not ppu.omitFrame then

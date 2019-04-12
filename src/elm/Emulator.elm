@@ -51,7 +51,7 @@ emulateNextInstruction gameBoy =
                         OamInterrupt ->
                             0x02
 
-                        None ->
+                        NoInterrupt ->
                             0x00
 
                 timerInterruptMask =

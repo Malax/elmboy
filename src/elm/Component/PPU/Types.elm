@@ -2,6 +2,7 @@ module Component.PPU.Types exposing
     ( Mode(..)
     , PPU
     , PPUInterrupt(..)
+    , Sprite
     , setBackgroundPalette
     , setEmulateData
     , setLastCompleteFrame
@@ -14,6 +15,7 @@ module Component.PPU.Types exposing
     , setScreen
     , setScrollX
     , setScrollY
+    , setSprites
     , setVBlankData
     , setVram
     , setWindowX
@@ -23,6 +25,14 @@ module Component.PPU.Types exposing
 import Array exposing (Array)
 import Component.PPU.GameBoyScreen exposing (GameBoyScreen)
 import Component.RAM exposing (RAM)
+
+
+type alias Sprite =
+    { y : Int
+    , x : Int
+    , tileId : Int
+    , flags : Int
+    }
 
 
 type alias PPU =
@@ -35,7 +45,7 @@ type alias PPU =
     , windowX : Int
     , windowY : Int
     , lcdc : Int
-    , objects : Array Int
+    , sprites : Array Sprite
     , screen : GameBoyScreen
     , lastCompleteFrame : Maybe GameBoyScreen
     , cyclesSinceLastCompleteFrame : Int
@@ -66,11 +76,53 @@ type PPUInterrupt
     | HBlankInterrupt
     | LineCompareInterrupt
     | OamInterrupt
-    | None
+    | NoInterrupt
 
 
 
 -- Performance Optimized Setters
+
+
+parseSprites : Array Int -> Array Sprite -> Array Sprite
+parseSprites objectAttributeMemory acc =
+    let
+        parsedSprite =
+            Maybe.map4 Sprite
+                (Array.get 0 objectAttributeMemory)
+                (Array.get 1 objectAttributeMemory)
+                (Array.get 2 objectAttributeMemory)
+                (Array.get 3 objectAttributeMemory)
+    in
+    case parsedSprite of
+        Just sprite ->
+            parseSprites (Array.slice 4 (Array.length objectAttributeMemory) objectAttributeMemory) (Array.push sprite acc)
+
+        Nothing ->
+            acc
+
+
+setSprites : Array Sprite -> PPU -> PPU
+setSprites value ppu =
+    { mode = ppu.mode
+    , vram = ppu.vram
+    , line = ppu.line
+    , lineCompare = ppu.lineCompare
+    , scrollX = ppu.scrollX
+    , scrollY = ppu.scrollY
+    , windowX = ppu.windowX
+    , windowY = ppu.windowY
+    , sprites = value
+    , lcdc = ppu.lcdc
+    , lcdStatus = ppu.lcdStatus
+    , backgroundPalette = ppu.backgroundPalette
+    , objectPalette0 = ppu.objectPalette0
+    , objectPalette1 = ppu.objectPalette1
+    , screen = ppu.screen
+    , lastCompleteFrame = ppu.lastCompleteFrame
+    , cyclesSinceLastCompleteFrame = ppu.cyclesSinceLastCompleteFrame
+    , triggeredInterrupt = ppu.triggeredInterrupt
+    , omitFrame = ppu.omitFrame
+    }
 
 
 setOamRam : Array Int -> PPU -> PPU
@@ -83,7 +135,7 @@ setOamRam value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = value
+    , sprites = parseSprites value Array.empty
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -107,7 +159,7 @@ setVram value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -131,7 +183,7 @@ setLcdc value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = value
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -155,7 +207,7 @@ setLcdStatus value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = value
     , backgroundPalette = ppu.backgroundPalette
@@ -179,7 +231,7 @@ setScrollX value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -203,7 +255,7 @@ setScrollY value ppu =
     , scrollY = value
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -227,7 +279,7 @@ setWindowX value ppu =
     , scrollY = ppu.scrollY
     , windowX = value
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -251,7 +303,7 @@ setWindowY value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = value
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -275,7 +327,7 @@ setLineCompare value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -299,7 +351,7 @@ setBackgroundPalette value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = value
@@ -323,7 +375,7 @@ setObjectPalette0 value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -347,7 +399,7 @@ setObjectPalette1 value ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -371,7 +423,7 @@ setVBlankData lastCompleteFrame screen omitFrame triggeredInterrupt ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -395,7 +447,7 @@ setEmulateData currentMode currentLine lcdStatus cyclesSinceLastCompleteFrame in
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -419,7 +471,7 @@ setScreen screen ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette
@@ -443,7 +495,7 @@ setLastCompleteFrame lastCompleteFrame ppu =
     , scrollY = ppu.scrollY
     , windowX = ppu.windowX
     , windowY = ppu.windowY
-    , objects = ppu.objects
+    , sprites = ppu.sprites
     , lcdc = ppu.lcdc
     , lcdStatus = ppu.lcdStatus
     , backgroundPalette = ppu.backgroundPalette

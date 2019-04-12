@@ -4,10 +4,9 @@ import Array exposing (Array)
 import Bitwise
 import Component.PPU.Constants exposing (backgroundMapHeight, backgroundMapWidth, screenWidth, tileHeight, tileWidth)
 import Component.PPU.GameBoyScreen as GameBoyScreen
-import Component.PPU.LineBuffer as LineBuffer exposing (LineBuffer)
-import Component.PPU.OAM as OAM
+import Component.PPU.LineBuffer as LineBuffer
 import Component.PPU.Pixel as Pixel exposing (PixelSource(..), RawPixel)
-import Component.PPU.Types as PPUTypes exposing (PPU)
+import Component.PPU.Types as PPUTypes exposing (PPU, Sprite)
 import Component.RAM as RAM exposing (RAM)
 import Constants
 import Types exposing (MemoryAddress)
@@ -15,9 +14,9 @@ import Util
 
 
 drawLine : Int -> PPU -> PPU
-drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, scrollY, scrollX, windowX, windowY, objects, lcdc, vram } as ppu) =
+drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, scrollY, scrollX, windowX, windowY, sprites, lcdc, vram } as ppu) =
     let
-        objectHeight =
+        spriteHeight =
             if Bitwise.and Constants.bit2Mask lcdc == Constants.bit2Mask then
                 16
 
@@ -26,9 +25,10 @@ drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, s
 
         linePixels =
             viewportBackgroundLinePixels screenY scrollY scrollX windowX windowY lcdc vram
-                |> LineBuffer.init
-                |> addObjectsToLineBuffer screenY vram objects objectHeight
-                |> LineBuffer.unpack
+                -- TODO: Get rid of Array/List conversions!
+                |> Array.fromList
+                |> addSpritesToLineBuffer screenY vram sprites spriteHeight
+                |> Array.toList
                 |> List.map (Pixel.bake backgroundPalette objectPalette0 objectPalette1)
     in
     PPUTypes.setScreen (GameBoyScreen.pushPixels screen linePixels) ppu
@@ -38,7 +38,7 @@ drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, s
 so this function can be used for both getting pixels from the background or the window map.
 -}
 backgroundPixels : Int -> Int -> Int -> Int -> MemoryAddress -> RAM -> List RawPixel
-backgroundPixels mapY mapX pixelAmount lcdc mapAddress vram =
+backgroundPixels mapY mapX pixelAmount lcdc mapAddress videoRam =
     let
         -- The line index inside the tiles we need to grab pixels from.
         tileLineIndex =
@@ -48,10 +48,9 @@ backgroundPixels mapY mapX pixelAmount lcdc mapAddress vram =
             (pixelAmount // tileWidth) + 1
 
         pixels =
-            fetchTileLines mapAddress lcdc (mapX // tileWidth) (mapY // tileHeight) tileLineIndex tileAmount vram
+            fetchTileLines mapAddress lcdc (mapX // tileWidth) (mapY // tileHeight) tileLineIndex tileAmount videoRam
     in
     pixels
-        -- TODO: Not happy with this, maybe we can avoid creating the pixels in the first place?
         |> List.drop (remainderBy tileWidth mapX)
         |> List.take pixelAmount
 
@@ -201,52 +200,53 @@ readTileLinePixels tileAddress lineNumber vram =
     ( tileLineHighByte, tileLineLowByte )
 
 
-addObjectsToLineBuffer : Int -> RAM -> Array Int -> Int -> LineBuffer -> LineBuffer
-addObjectsToLineBuffer screenY vram objects objectHeight buffer =
+addSpritesToLineBuffer : Int -> RAM -> Array Sprite -> Int -> Array RawPixel -> Array RawPixel
+addSpritesToLineBuffer line videoRam sprites spriteHeight buffer =
     let
-        objectIndexes =
-            OAM.searchVisibleObjects screenY objectHeight objects
+        minY =
+            (17 - spriteHeight) + line
+
+        maxY =
+            line + 16
+
+        visible =
+            Array.filter (\sprite -> sprite.y >= minY && sprite.y <= maxY) sprites
     in
-    List.foldl
-        (\index line ->
-            Maybe.map4 (addObjectToLineBuffer screenY vram objectHeight line)
-                (Array.get (index * 4) objects)
-                (Array.get (index * 4 + 1) objects)
-                (Array.get (index * 4 + 2) objects)
-                (Array.get (index * 4 + 3) objects)
-                |> Maybe.withDefault line
+    Array.foldl
+        (\sprite b2 ->
+            addSpriteToLineBuffer line videoRam spriteHeight b2 sprite
         )
         buffer
-        objectIndexes
+        visible
 
 
-{-| Adds pixel data of an object into the given line buffer. This function will not validate if the object is actually visible in the given line and might
-read garbage data from unrelated memory or other tiles and render it! This is useful for 8x16 objects as, in that we case, we want to read into the next tile.
+{-| Adds pixel data of an spite into the given line buffer. This function will not validate if the sprite is actually visible in the given line and might
+read garbage data from unrelated memory or other tiles and render it! This is useful for 8x16 sprites as, in that we case, we want to read into the next tile.
 -}
-addObjectToLineBuffer : Int -> RAM -> Int -> LineBuffer -> Int -> Int -> Int -> Int -> LineBuffer
-addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTileId objectFlags =
+addSpriteToLineBuffer : Int -> RAM -> Int -> Array RawPixel -> Sprite -> Array RawPixel
+addSpriteToLineBuffer screenY videoRam spriteHeight buffer sprite =
     let
         normalizedY =
-            objectY - 16
+            sprite.y - 16
 
         normalizedX =
-            objectX - 8
+            sprite.x - 8
 
         palette =
-            if Bitwise.and Constants.bit4Mask objectFlags == Constants.bit4Mask then
+            if Bitwise.and Constants.bit4Mask sprite.flags == Constants.bit4Mask then
                 ObjectWithPalette1
 
             else
                 ObjectWithPalette0
 
         flipX =
-            Bitwise.and Constants.bit5Mask objectFlags == Constants.bit5Mask
+            Bitwise.and Constants.bit5Mask sprite.flags == Constants.bit5Mask
 
         flipY =
-            Bitwise.and Constants.bit6Mask objectFlags == Constants.bit6Mask
+            Bitwise.and Constants.bit6Mask sprite.flags == Constants.bit6Mask
 
         priority =
-            if Bitwise.and Constants.bit7Mask objectFlags == Constants.bit7Mask then
+            if Bitwise.and Constants.bit7Mask sprite.flags == Constants.bit7Mask then
                 LineBuffer.BehindBackground
 
             else
@@ -254,15 +254,15 @@ addObjectToLineBuffer screenY vram objectHeight buffer objectY objectX objectTil
 
         line =
             if flipY then
-                (objectHeight - 1) - (screenY - normalizedY)
+                (spriteHeight - 1) - (screenY - normalizedY)
 
             else
                 screenY - normalizedY
 
         tileAddress =
-            objectTileId * 16
+            sprite.tileId * 16
 
         rawPixels =
-            readTileLinePixels tileAddress line vram
+            readTileLinePixels tileAddress line videoRam
     in
-    LineBuffer.mixEightPixels normalizedX rawPixels flipX palette priority buffer
+    LineBuffer.mixPixelLine normalizedX rawPixels flipX palette priority buffer
