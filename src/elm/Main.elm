@@ -81,10 +81,12 @@ update msg model =
                                 Nothing ->
                                     Cmd.none
 
-                        cmds =
-                            Cmd.batch [ setPixelsCmd, Ports.queueAudioSamples audioSamples ]
+                        queueAudioSamplesCmd =
+                            Ports.queueAudioSamples audioSamples
                     in
-                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 30 model.frameTimes }, cmds )
+                    ( { model | gameBoy = Just emulatedGameBoy, frameTimes = time :: List.take 30 model.frameTimes }
+                    , Cmd.batch [ setPixelsCmd, queueAudioSamplesCmd ]
+                    )
 
                 Nothing ->
                     ( model, Cmd.none )
