@@ -6,8 +6,6 @@ import Browser.Events
 import Bytes
 import Bytes.Decode
 import Component.Cartridge as Cartridge
-import Component.Joypad exposing (GameBoyButton(..))
-import Component.PPU as PPU
 import Component.PPU.GameBoyScreen as GameBoyScreen
 import Constants
 import Emulator

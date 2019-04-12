@@ -203,7 +203,7 @@ readNRx0 channel =
 
 
 readNRx1 : WaveChannel -> Int
-readNRx1 channel =
+readNRx1 _ =
     -- This is intentional, register always reads as 0xFF!
     0xFF
 
@@ -230,7 +230,7 @@ readNRx2 channel =
 
 
 readNRx3 : WaveChannel -> Int
-readNRx3 channel =
+readNRx3 _ =
     -- This is intentional, register always reads as 0xFF!
     0xFF
 

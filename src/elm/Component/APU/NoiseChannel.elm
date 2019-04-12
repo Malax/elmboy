@@ -247,7 +247,7 @@ writeNRx4 value channel =
 
 
 readNRx1 : NoiseChannel -> Int
-readNRx1 channel =
+readNRx1 _ =
     -- This is intentional, register always reads as 0xFF!
     0xFF
 

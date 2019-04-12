@@ -372,7 +372,7 @@ readNRx2 channel =
 
 
 readNRx3 : PulseChannel -> Int
-readNRx3 channel =
+readNRx3 _ =
     -- This is intentional, register always reads as 0xFF!
     0xFF
 

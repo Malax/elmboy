@@ -50,7 +50,6 @@ module Component.APU exposing
     , writeWaveRam
     )
 
-import Array exposing (Array)
 import Bitwise
 import Component.APU.Constants as APUConstants
 import Component.APU.NoiseChannel as NoiseChannel exposing (NoiseChannel)
