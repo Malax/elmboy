@@ -95,8 +95,12 @@ fromBytes romBytes =
 readWord8 : Cartridge -> MemoryAddress -> Int
 readWord8 cartridge address =
     if address <= 0x3FFF then
-        Array.get address cartridge.bytes
-            |> Maybe.withDefault 0xFF
+        case Array.get address cartridge.bytes of
+            Just byte ->
+                byte
+
+            Nothing ->
+                0xFF
 
     else if address >= 0x4000 && address <= 0x7FFF then
         let
@@ -115,8 +119,12 @@ readWord8 cartridge address =
             offset =
                 (address - 0x4000) + (selectedRomBank * romBankSize)
         in
-        Array.get offset cartridge.bytes
-            |> Maybe.withDefault 0xFF
+        case Array.get offset cartridge.bytes of
+            Just byte ->
+                byte
+
+            Nothing ->
+                0xFF
 
     else if address >= 0xA000 && address <= 0xBFFF then
         let
