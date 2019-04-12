@@ -27,7 +27,7 @@ init size =
 
 initZero : Int -> RAM
 initZero size =
-    Array.initialize size (\_ -> 0x00) |> RAM
+    Array.initialize size (always 0x00) |> RAM
 
 
 readWord8 : RAM -> MemoryAddress -> Int
