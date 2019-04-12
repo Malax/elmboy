@@ -213,8 +213,8 @@ addSpritesToLineBuffer line videoRam sprites spriteHeight buffer =
             Array.filter (\sprite -> sprite.y >= minY && sprite.y <= maxY) sprites
     in
     Array.foldl
-        (\sprite b2 ->
-            addSpriteToLineBuffer line videoRam spriteHeight b2 sprite
+        (\sprite updatedBuffer ->
+            addSpriteToLineBuffer line videoRam spriteHeight updatedBuffer sprite
         )
         buffer
         visible
