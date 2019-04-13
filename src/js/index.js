@@ -35,12 +35,14 @@ document.addEventListener('DOMContentLoaded', function (event) {
         rightChannel[i] = elmData[elmData.length - 1 - i][1]
       }
 
-      var bufferSource = audioContext.createBufferSource()
+      const bufferSource = audioContext.createBufferSource()
       bufferSource.buffer = buffer
       bufferSource.connect(audioContext.destination)
 
-      bufferSource.start(lastBufferEnds)
-      lastBufferEnds += (elmData.length / sampleRate)
+      const currentBufferStart = audioContext.currentTime + Math.max(0, lastBufferEnds - audioContext.currentTime)
+      lastBufferEnds = currentBufferStart + (elmData.length / sampleRate)
+
+      bufferSource.start(currentBufferStart)
     }
   })
 })
