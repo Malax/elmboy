@@ -405,6 +405,7 @@ readWord8Chunk gameBoy startAddress length =
         RAM.readWord8Slice gameBoy.workRamBank1 (startAddress - 0xD000) length
 
     else
+        -- TODO: This seems like a good candidate for a performance improvement
         List.repeat length startAddress
             |> List.indexedMap (+)
             |> List.map (readWord8 gameBoy)
