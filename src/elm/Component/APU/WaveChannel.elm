@@ -106,8 +106,24 @@ writeNRx0 value channel =
     let
         dacPower =
             Bitwise.and Constants.bit7Mask value == Constants.bit7Mask
+
+        enabled =
+            if not dacPower then
+                False
+
+            else
+                channel.enabled
     in
-    setDacPower dacPower channel
+    { waveRam = channel.waveRam
+    , frequency = channel.frequency
+    , wavePosition = channel.wavePosition
+    , timerValue = channel.timerValue
+    , dacPower = dacPower
+    , enabled = enabled
+    , volume = channel.volume
+    , lengthCounter = channel.lengthCounter
+    , lengthEnabled = channel.lengthEnabled
+    }
 
 
 writeNRx1 : Int -> WaveChannel -> WaveChannel
@@ -309,20 +325,6 @@ setFrequencyLengthEnabled frequency lengthEnabled channel =
     , volume = channel.volume
     , lengthCounter = channel.lengthCounter
     , lengthEnabled = lengthEnabled
-    }
-
-
-setDacPower : Bool -> WaveChannel -> WaveChannel
-setDacPower dacPower channel =
-    { waveRam = channel.waveRam
-    , frequency = channel.frequency
-    , wavePosition = channel.wavePosition
-    , timerValue = channel.timerValue
-    , dacPower = dacPower
-    , enabled = channel.enabled
-    , volume = channel.volume
-    , lengthCounter = channel.lengthCounter
-    , lengthEnabled = channel.lengthEnabled
     }
 
 

@@ -266,8 +266,33 @@ writeNRx2 value channel =
 
         envelopePeriod =
             Bitwise.and 0x07 value
+
+        enabled =
+            if Bitwise.and 0xF8 value == 0x00 then
+                False
+
+            else
+                channel.enabled
     in
-    setEnvelopeStartingVolumeAddPeriod envelopeStartingVolume envelopeAdd envelopePeriod channel
+    { dutyCycle = channel.dutyCycle
+    , wavePosition = channel.wavePosition
+    , volume = channel.volume
+    , enabled = enabled
+    , frequency = channel.frequency
+    , sweepPeriod = channel.sweepPeriod
+    , sweepNegate = channel.sweepNegate
+    , sweepShift = channel.sweepShift
+    , envelopeStartingVolume = envelopeStartingVolume
+    , envelopeAdd = envelopeAdd
+    , envelopePeriod = envelopePeriod
+    , envelopeCounter = channel.envelopeCounter
+    , timerValue = channel.timerValue
+    , sweepShadowFrequency = channel.sweepShadowFrequency
+    , sweepCounter = channel.sweepCounter
+    , sweepEnabled = channel.sweepEnabled
+    , lengthCounter = channel.lengthCounter
+    , lengthEnabled = channel.lengthEnabled
+    }
 
 
 writeNRx3 : Int -> PulseChannel -> PulseChannel
@@ -461,29 +486,6 @@ setFrequency frequency channel =
     , envelopeStartingVolume = channel.envelopeStartingVolume
     , envelopeAdd = channel.envelopeAdd
     , envelopePeriod = channel.envelopePeriod
-    , envelopeCounter = channel.envelopeCounter
-    , timerValue = channel.timerValue
-    , sweepShadowFrequency = channel.sweepShadowFrequency
-    , sweepCounter = channel.sweepCounter
-    , sweepEnabled = channel.sweepEnabled
-    , lengthCounter = channel.lengthCounter
-    , lengthEnabled = channel.lengthEnabled
-    }
-
-
-setEnvelopeStartingVolumeAddPeriod : Int -> Bool -> Int -> PulseChannel -> PulseChannel
-setEnvelopeStartingVolumeAddPeriod envelopeStartingVolume envelopeAdd envelopePeriod channel =
-    { dutyCycle = channel.dutyCycle
-    , wavePosition = channel.wavePosition
-    , volume = channel.volume
-    , enabled = channel.enabled
-    , frequency = channel.frequency
-    , sweepPeriod = channel.sweepPeriod
-    , sweepNegate = channel.sweepNegate
-    , sweepShift = channel.sweepShift
-    , envelopeStartingVolume = envelopeStartingVolume
-    , envelopeAdd = envelopeAdd
-    , envelopePeriod = envelopePeriod
     , envelopeCounter = channel.envelopeCounter
     , timerValue = channel.timerValue
     , sweepShadowFrequency = channel.sweepShadowFrequency

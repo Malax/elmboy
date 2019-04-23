@@ -165,8 +165,29 @@ writeNRx2 value channel =
 
         envelopePeriod =
             Bitwise.and 0x07 value
+
+        enabled =
+            if Bitwise.and 0xF8 value == 0x00 then
+                False
+
+            else
+                channel.enabled
     in
-    setEnvelopeStartingVolumeAddPeriod envelopeStartingVolume envelopeAdd envelopePeriod channel
+    { bits = channel.bits
+    , width = channel.width
+    , clockShift = channel.clockShift
+    , divisor = channel.divisor
+    , timerCounter = channel.timerCounter
+    , volume = channel.volume
+    , lastShiftRegisterOutput = channel.lastShiftRegisterOutput
+    , enabled = enabled
+    , envelopeStartingVolume = envelopeStartingVolume
+    , envelopeAdd = envelopeAdd
+    , envelopePeriod = envelopePeriod
+    , envelopeCounter = channel.envelopeCounter
+    , lengthCounter = channel.lengthCounter
+    , lengthEnabled = channel.lengthEnabled
+    }
 
 
 writeNRx3 : Int -> NoiseChannel -> NoiseChannel
@@ -407,25 +428,6 @@ setClockShiftDivisorWidth clockShift divisor width channel =
     , envelopeStartingVolume = channel.envelopeStartingVolume
     , envelopeAdd = channel.envelopeAdd
     , envelopePeriod = channel.envelopePeriod
-    , envelopeCounter = channel.envelopeCounter
-    , lengthCounter = channel.lengthCounter
-    , lengthEnabled = channel.lengthEnabled
-    }
-
-
-setEnvelopeStartingVolumeAddPeriod : Int -> Bool -> Int -> NoiseChannel -> NoiseChannel
-setEnvelopeStartingVolumeAddPeriod envelopeStartingVolume envelopeAdd envelopePeriod channel =
-    { bits = channel.bits
-    , width = channel.width
-    , clockShift = channel.clockShift
-    , divisor = channel.divisor
-    , timerCounter = channel.timerCounter
-    , volume = channel.volume
-    , lastShiftRegisterOutput = channel.lastShiftRegisterOutput
-    , enabled = channel.enabled
-    , envelopeStartingVolume = envelopeStartingVolume
-    , envelopeAdd = envelopeAdd
-    , envelopePeriod = envelopePeriod
     , envelopeCounter = channel.envelopeCounter
     , lengthCounter = channel.lengthCounter
     , lengthEnabled = channel.lengthEnabled
