@@ -412,11 +412,20 @@ writeNR52 value apu =
     , frameSequence = apu.frameSequence
     , enabled = apu.enabled
     , powerOn = powerOn
-    , leftVolume = apu.leftVolume
-    , rightVolume = apu.rightVolume
-    , vinLeftEnable = apu.vinLeftEnable
-    , vinRightEnable = apu.vinRightEnable
-    , enabledChannels = apu.enabledChannels
+    , leftVolume = 0
+    , rightVolume = 0
+    , vinLeftEnable = False
+    , vinRightEnable = False
+    , enabledChannels =
+        { channel1Left = False
+        , channel2Left = False
+        , channel3Left = False
+        , channel4Left = False
+        , channel1Right = False
+        , channel2Right = False
+        , channel3Right = False
+        , channel4Right = False
+        }
     }
 
 
