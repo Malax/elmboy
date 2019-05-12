@@ -24,23 +24,35 @@ document.addEventListener('DOMContentLoaded', function (event) {
   const audioContext = new AudioContext()
   let lastBufferEnds = 0
 
+  const channelCount = 5
+
   app.ports.queueAudioSamples.subscribe(function (elmData) {
     if (elmData.length > 0) {
-      const buffer = audioContext.createBuffer(2, elmData.length, sampleRate)
-      const leftChannel = buffer.getChannelData(0)
-      const rightChannel = buffer.getChannelData(1)
+      const buffer = audioContext.createBuffer(channelCount, elmData.length, sampleRate)
+      const channel1 = buffer.getChannelData(0)
+      const channel2 = buffer.getChannelData(1)
+      const channel3 = buffer.getChannelData(2)
+      const channel4 = buffer.getChannelData(3)
+      const channel5 = buffer.getChannelData(4)
 
-      for (let i = 0; i < elmData.length; i++) {
-        leftChannel[i] = elmData[elmData.length - 1 - i][0]
-        rightChannel[i] = elmData[elmData.length - 1 - i][1]
+      const samples = elmData.length / channelCount
+
+      for (let i = 0; i < samples; i++) {
+        channel1[i] = elmData[i * channelCount]
+        channel2[i] = elmData[i * channelCount + 1]
+        channel3[i] = elmData[i * channelCount + 2]
+        channel4[i] = elmData[i * channelCount + 3]
+        channel5[i] = elmData[i * channelCount + 4]
       }
+
+      audioContext.destination.channelCount = channelCount;
 
       const bufferSource = audioContext.createBufferSource()
       bufferSource.buffer = buffer
       bufferSource.connect(audioContext.destination)
 
       const currentBufferStart = audioContext.currentTime + Math.max(0, lastBufferEnds - audioContext.currentTime)
-      lastBufferEnds = currentBufferStart + (elmData.length / sampleRate)
+      lastBufferEnds = currentBufferStart + (elmData.length / channelCount / sampleRate)
 
       bufferSource.start(currentBufferStart)
     }
@@ -81,4 +93,4 @@ const colorMap = [
   [15, 56, 15]
 ]
 
-const sampleRate = 44100
+const sampleRate = 22050

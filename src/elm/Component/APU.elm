@@ -64,7 +64,7 @@ type alias APU =
     , channel2 : PulseChannel
     , channel3 : WaveChannel
     , channel4 : NoiseChannel
-    , sampleBuffer : List ( Float, Float )
+    , sampleBuffer : List Float
     , cycleAccumulator : Int
     , frameSequencerCounter : Int
     , frameSequence : Int
@@ -162,7 +162,7 @@ emulate cycles apu =
 
             updatedSampleBuffer =
                 if generateSample then
-                    mixSamples updatedChannel1 updatedChannel2 updatedChannel3 updatedChannel4 apu :: apu.sampleBuffer
+                    mixSamples updatedChannel1 updatedChannel2 updatedChannel3 updatedChannel4 apu apu.sampleBuffer
 
                 else
                     apu.sampleBuffer
@@ -188,7 +188,7 @@ emulate cycles apu =
         apu
 
 
-drainAudioBuffer : APU -> ( APU, List ( Float, Float ) )
+drainAudioBuffer : APU -> ( APU, List Float )
 drainAudioBuffer apu =
     if apu.enabled then
         ( { sampleBuffer = []
@@ -579,8 +579,8 @@ readWaveRam address apu =
 -- Internal
 
 
-mixSamples : PulseChannel -> PulseChannel -> WaveChannel -> NoiseChannel -> APU -> ( Float, Float )
-mixSamples channel1 channel2 channel3 channel4 { leftVolume, rightVolume, enabledChannels } =
+mixSamples : PulseChannel -> PulseChannel -> WaveChannel -> NoiseChannel -> APU -> List Float -> List Float
+mixSamples channel1 channel2 channel3 channel4 { leftVolume, enabledChannels } oldBuffer =
     let
         channel1Sample =
             PulseChannel.sample channel1
@@ -594,71 +594,43 @@ mixSamples channel1 channel2 channel3 channel4 { leftVolume, rightVolume, enable
         channel4Sample =
             NoiseChannel.sample channel4
 
-        left =
-            let
-                leftChannel1 =
-                    if enabledChannels.channel1Left then
-                        channel1Sample
+        leftChannel1 =
+            if enabledChannels.channel1Left then
+                channel1Sample
 
-                    else
-                        APUConstants.silence
+            else
+                APUConstants.silence
 
-                leftChannel2 =
-                    if enabledChannels.channel2Left then
-                        channel2Sample
+        leftChannel2 =
+            if enabledChannels.channel2Left then
+                channel2Sample
 
-                    else
-                        APUConstants.silence
+            else
+                APUConstants.silence
 
-                leftChannel3 =
-                    if enabledChannels.channel3Left then
-                        channel3Sample
+        leftChannel3 =
+            if enabledChannels.channel3Left then
+                channel3Sample
 
-                    else
-                        APUConstants.silence
+            else
+                APUConstants.silence
 
-                leftChannel4 =
-                    if enabledChannels.channel4Left then
-                        channel4Sample
+        leftChannel4 =
+            if enabledChannels.channel4Left then
+                channel4Sample
 
-                    else
-                        APUConstants.silence
-            in
+            else
+                APUConstants.silence
+
+        mixed =
             ((leftChannel1 + leftChannel2 + leftChannel3 + leftChannel4) / 4) * (toFloat leftVolume * (1 / 7))
-
-        right =
-            let
-                rightChannel1 =
-                    if enabledChannels.channel1Right then
-                        channel1Sample
-
-                    else
-                        APUConstants.silence
-
-                rightChannel2 =
-                    if enabledChannels.channel2Right then
-                        channel2Sample
-
-                    else
-                        APUConstants.silence
-
-                rightChannel3 =
-                    if enabledChannels.channel3Right then
-                        channel3Sample
-
-                    else
-                        APUConstants.silence
-
-                rightChannel4 =
-                    if enabledChannels.channel4Right then
-                        channel4Sample
-
-                    else
-                        APUConstants.silence
-            in
-            ((rightChannel1 + rightChannel2 + rightChannel3 + rightChannel4) / 4) * (toFloat rightVolume * (1 / 7))
     in
-    ( left, right )
+    (leftChannel1 * (toFloat leftVolume * (1 / 7)))
+        :: (leftChannel2 * (toFloat leftVolume * (1 / 7)))
+        :: (leftChannel3 * (toFloat leftVolume * (1 / 7)))
+        :: (leftChannel4 * (toFloat leftVolume * (1 / 7)))
+        :: mixed
+        :: oldBuffer
 
 
 updateChannelAfterFrameSequencer : Bool -> Int -> (a -> a) -> (a -> a) -> (a -> a) -> a -> a

@@ -108,13 +108,13 @@ isAPUEnabled gameBoy =
     gameBoy.apu.enabled
 
 
-drainAudioBuffer : GameBoy -> ( GameBoy, List ( Float, Float ) )
+drainAudioBuffer : GameBoy -> ( GameBoy, List Float )
 drainAudioBuffer gameBoy =
     APU.drainAudioBuffer gameBoy.apu
         |> Tuple.mapFirst (\apu -> setAPU apu gameBoy)
 
 
-drainBuffers : GameBoy -> ( GameBoy, List ( Float, Float ), Maybe GameBoyScreen )
+drainBuffers : GameBoy -> ( GameBoy, List Float, Maybe GameBoyScreen )
 drainBuffers gameBoy =
     let
         ( updatedAPU, samples ) =
