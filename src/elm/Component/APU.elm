@@ -621,15 +621,11 @@ mixSamples channel1 channel2 channel3 channel4 { leftVolume, enabledChannels } o
 
             else
                 APUConstants.silence
-
-        mixed =
-            ((leftChannel1 + leftChannel2 + leftChannel3 + leftChannel4) / 4) * (toFloat leftVolume * (1 / 7))
     in
     (leftChannel1 * (toFloat leftVolume * (1 / 7)))
         :: (leftChannel2 * (toFloat leftVolume * (1 / 7)))
         :: (leftChannel3 * (toFloat leftVolume * (1 / 7)))
         :: (leftChannel4 * (toFloat leftVolume * (1 / 7)))
-        :: mixed
         :: oldBuffer
 
 

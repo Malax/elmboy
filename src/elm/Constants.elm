@@ -48,4 +48,4 @@ cyclesPerSecond =
 
 outputSampleRate : Int
 outputSampleRate =
-    22050
+    44100
