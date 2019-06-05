@@ -9,7 +9,7 @@
   "scripts": {
     "start": "parcel src/index.html",
     "postinstall": "parcel build src/index.html --public-url=./",
-    "test": "standard && elm-format --validate src/elm",
+    "test": "standard && elm-format --validate src/elm && elm-test",
     "benchmark": "cd benchmarks && elm make --optimize src/Main.elm && open index.html"
   },
   "author": "",
@@ -24,6 +24,7 @@
     "node-elm-compiler": "^5.0.3",
     "parcel-bundler": "1.10.2",
     "sass": "^1.20.3",
-    "standard": "^12.0.1"
+    "standard": "^12.0.1",
+    "elm-test": "^0.19.0-rev6"
   }
 }

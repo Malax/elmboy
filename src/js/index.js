@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
     setPixelsFromBatches(canvas, elmData.pixelBatches)
   })
 
-  const AudioContext = window.AudioContext|| window.webkitAudioContext
+  const AudioContext = window.AudioContext || window.webkitAudioContext
   const audioContext = new AudioContext()
   let lastBufferEnds = 0
 

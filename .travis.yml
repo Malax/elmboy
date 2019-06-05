@@ -1,7 +1,5 @@
-language: elm
+language: node_js
 node_js: 'stable'
-elm:
-    - "0.19.0"
 
 deploy:
   provider: pages
