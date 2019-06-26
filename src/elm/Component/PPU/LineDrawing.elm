@@ -14,7 +14,7 @@ import Util
 
 
 drawLine : Int -> PPU -> PPU
-drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, scrollY, scrollX, windowX, windowY, sprites, lcdc, vram } as ppu) =
+drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, scrollY, scrollX, windowX, windowY, sprites, lcdc, vramBank0 } as ppu) =
     let
         spriteHeight =
             if Bitwise.and Constants.bit2Mask lcdc == Constants.bit2Mask then
@@ -24,10 +24,10 @@ drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, s
                 8
 
         linePixels =
-            viewportBackgroundLinePixels screenY scrollY scrollX windowX windowY lcdc vram
+            viewportBackgroundLinePixels screenY scrollY scrollX windowX windowY lcdc vramBank0
                 -- TODO: Get rid of Array/List conversions!
                 |> Array.fromList
-                |> addSpritesToLineBuffer screenY vram sprites spriteHeight
+                |> addSpritesToLineBuffer screenY vramBank0 sprites spriteHeight
                 |> Array.toList
                 |> List.map (Pixel.bake backgroundPalette objectPalette0 objectPalette1)
     in

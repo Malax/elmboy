@@ -45,7 +45,8 @@ import Types exposing (MemoryAddress)
 init : PPU
 init =
     { mode = VBlank
-    , vram = RAM.initZero 0x2000
+    , vramBank0 = RAM.initZero 0x2000
+    , vramBank1 = RAM.initZero 0x2000 -- Size unclear
     , line = 0
     , lineCompare = 0
     , scrollX = 0
@@ -58,6 +59,22 @@ init =
     , backgroundPalette = 0xE4
     , objectPalette0 = 0xFF
     , objectPalette1 = 0xFF
+    , colorBackgroundPalette0 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette1 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette2 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette3 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette4 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette5 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette6 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorBackgroundPalette7 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette0 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette1 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette2 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette3 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette4 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette5 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette6 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
+    , colorObjectPalette7 = Array.fromList [ 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 ]
     , screen = GameBoyScreen.empty
     , lastCompleteFrame = Nothing
     , cyclesSinceLastCompleteFrame = 0
@@ -139,9 +156,13 @@ readBackgroundPalette =
 -- RAM Reads
 
 
-readVRAM : PPU -> MemoryAddress -> Int
-readVRAM { vram } address =
-    RAM.readWord8 vram address
+readVRAM : PPU -> Int -> MemoryAddress -> Int
+readVRAM { vramBank0, vramBank1 } bank address =
+    if bank == 0 then
+        RAM.readWord8 vramBank0 address
+
+    else
+        RAM.readWord8 vramBank1 address
 
 
 readOamRam : PPU -> MemoryAddress -> Int
@@ -236,9 +257,17 @@ writeObjectPalette1 =
 -- RAM Writes
 
 
-writeVRAM : MemoryAddress -> Int -> PPU -> PPU
-writeVRAM address value ppu =
-    PPUTypes.setVram (RAM.writeWord8 address value ppu.vram) ppu
+writeVRAM : Int -> MemoryAddress -> Int -> PPU -> PPU
+writeVRAM bank address value ppu =
+    let
+        vram =
+            if bank == 0 then
+                ppu.vramBank0
+
+            else
+                ppu.vramBank1
+    in
+    PPUTypes.setVram (RAM.writeWord8 address value vram) ppu
 
 
 writeOAMRam : MemoryAddress -> Int -> PPU -> PPU
@@ -350,7 +379,8 @@ emulate cycles ppu =
     -- Mode and line did not change, we can just update essential fields and skip some work, gaining some performance.
     if updatedMode == ppu.mode && updatedLine == ppu.line then
         { mode = updatedMode
-        , vram = ppu.vram
+        , vramBank0 = ppu.vramBank0
+        , vramBank1 = ppu.vramBank1
         , line = updatedLine
         , lineCompare = ppu.lineCompare
         , scrollX = ppu.scrollX
@@ -363,6 +393,22 @@ emulate cycles ppu =
         , backgroundPalette = ppu.backgroundPalette
         , objectPalette0 = ppu.objectPalette0
         , objectPalette1 = ppu.objectPalette1
+        , colorBackgroundPalette0 = ppu.colorBackgroundPalette0
+        , colorBackgroundPalette1 = ppu.colorBackgroundPalette1
+        , colorBackgroundPalette2 = ppu.colorBackgroundPalette2
+        , colorBackgroundPalette3 = ppu.colorBackgroundPalette3
+        , colorBackgroundPalette4 = ppu.colorBackgroundPalette4
+        , colorBackgroundPalette5 = ppu.colorBackgroundPalette5
+        , colorBackgroundPalette6 = ppu.colorBackgroundPalette6
+        , colorBackgroundPalette7 = ppu.colorBackgroundPalette7
+        , colorObjectPalette0 = ppu.colorObjectPalette0
+        , colorObjectPalette1 = ppu.colorObjectPalette1
+        , colorObjectPalette2 = ppu.colorObjectPalette2
+        , colorObjectPalette3 = ppu.colorObjectPalette3
+        , colorObjectPalette4 = ppu.colorObjectPalette4
+        , colorObjectPalette5 = ppu.colorObjectPalette5
+        , colorObjectPalette6 = ppu.colorObjectPalette6
+        , colorObjectPalette7 = ppu.colorObjectPalette7
         , screen = ppu.screen
         , lastCompleteFrame = ppu.lastCompleteFrame
         , cyclesSinceLastCompleteFrame = lastEmulatedCycle

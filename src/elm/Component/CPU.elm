@@ -33,7 +33,8 @@ type alias CPU =
 
 init : CPU
 init =
-    { af = 0x01B0
+    -- If register A is 0x11, games assume game boy color support
+    { af = 0x11B0
     , bc = 0x13
     , de = 0xD8
     , hl = 0x014D

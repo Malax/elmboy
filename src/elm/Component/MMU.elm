@@ -36,7 +36,7 @@ readWord8 gameBoy address =
 
     else if address >= 0x8000 && address <= 0x9FFF then
         -- VRAM
-        PPU.readVRAM gameBoy.ppu (address - 0x8000)
+        PPU.readVRAM gameBoy.ppu 0 (address - 0x8000)
 
     else if address >= 0xA000 && address <= 0xBFFF then
         -- Cartridge RAM
@@ -209,7 +209,7 @@ writeWord8 address value gameBoy =
 
     else if address >= 0x8000 && address <= 0x9FFF then
         -- VRAM
-        GameBoy.setPPU (PPU.writeVRAM (address - 0x8000) sanitizedValue gameBoy.ppu) gameBoy
+        GameBoy.setPPU (PPU.writeVRAM 0 (address - 0x8000) sanitizedValue gameBoy.ppu) gameBoy
 
     else if address >= 0xA000 && address <= 0xBFFF then
         -- Cartridge RAM
@@ -358,6 +358,20 @@ writeWord8 address value gameBoy =
 
     else if address == 0xFF50 then
         { gameBoy | bootRomDisabled = True }
+
+    else if address == 0xFF68 then
+        let
+            _ =
+                ()
+        in
+        gameBoy
+
+    else if address == 0xFF69 then
+        let
+            _ =
+                ()
+        in
+        gameBoy
 
     else if address == 0xFF0F then
         GameBoy.setCPU (CPU.setInterruptFlag sanitizedValue gameBoy.cpu) gameBoy
