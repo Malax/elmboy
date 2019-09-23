@@ -80,7 +80,7 @@ fromBytes romBytes =
             (\memoryBankController2 ->
                 { bytes = romBytes
 
-                -- Even though most cartridges have less RAM, we initialize the maximum amout to
+                -- Even though most cartridges have less RAM, we initialize the maximum amount to
                 -- simplify implementation.
                 , ram = RAM.initZero (128 * 1024)
                 , selectedRomBank = 0x01
