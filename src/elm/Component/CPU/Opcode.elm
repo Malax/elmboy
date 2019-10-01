@@ -90,7 +90,7 @@ sub reader =
 
 and : Reader Int -> Effect
 and reader =
-    mapReader2 ALU.and_ (readRegister8 A) reader
+    mapReader2 ALU.and (readRegister8 A) reader
         |> flagSettingOpcode (writeRegister8 A)
 
 
@@ -114,13 +114,13 @@ inc reader writer =
 
 or : Reader Int -> Effect
 or reader =
-    mapReader2 ALU.or_ (readRegister8 A) reader
+    mapReader2 ALU.or (readRegister8 A) reader
         |> flagSettingOpcode (writeRegister8 A)
 
 
 xor : Reader Int -> Effect
 xor reader =
-    mapReader2 ALU.xor_ (readRegister8 A) reader
+    mapReader2 ALU.xor (readRegister8 A) reader
         |> flagSettingOpcode (writeRegister8 A)
 
 

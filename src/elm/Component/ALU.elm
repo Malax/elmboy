@@ -3,7 +3,7 @@ module Component.ALU exposing
     , add
     , add16
     , add16Signed8
-    , and_
+    , and
     , bit
     , cpl
     , daa
@@ -11,7 +11,7 @@ module Component.ALU exposing
     , dec16
     , inc
     , inc16
-    , or_
+    , or
     , res
     , rl
     , rla
@@ -28,10 +28,10 @@ module Component.ALU exposing
     , srl
     , sub
     , swap
-    , xor_
+    , xor
     )
 
-import Bitwise exposing (and, complement, or, shiftLeftBy, shiftRightBy, shiftRightZfBy, xor)
+import Bitwise
 import Component.CPU.FlagRegister as Flag exposing (Flag(..), FlagDelta(..), FlagsRegisterDelta)
 import Util
 
@@ -56,10 +56,10 @@ swap : Int -> ALUResultWithFlags
 swap value =
     let
         result =
-            shiftLeftBy 4 (and 0x0F value) + shiftRightZfBy 4 (and 0xF0 value)
+            Bitwise.shiftLeftBy 4 (Bitwise.and 0x0F value) + Bitwise.shiftRightZfBy 4 (Bitwise.and 0xF0 value)
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
@@ -81,13 +81,13 @@ adc operand1 operand2 flags =
             operand1 + operand2 + carry
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
 
         halfCarryFlag =
-            and 0x0F operand1 + and 0x0F operand2 + carry > 0x0F
+            Bitwise.and 0x0F operand1 + Bitwise.and 0x0F operand2 + carry > 0x0F
 
         carryFlag =
             result > 0xFF
@@ -109,15 +109,15 @@ sbc operand1 operand2 flags =
             operand1 - operand2 - carry
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
 
         halfCarryFlag =
-            and
-                (xor (xor operand1 operand2) maskedResult)
-                (shiftLeftBy 4 1)
+            Bitwise.and
+                (Bitwise.xor (Bitwise.xor operand1 operand2) maskedResult)
+                (Bitwise.shiftLeftBy 4 1)
                 /= 0x00
 
         carryFlag =
@@ -133,7 +133,7 @@ add operand1 operand2 =
             operand1 + operand2
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
@@ -142,7 +142,7 @@ add operand1 operand2 =
             result > 0xFF
 
         halfCarryFlag =
-            and 0x0F operand1 + and 0x0F operand2 > 0x0F
+            Bitwise.and 0x0F operand1 + Bitwise.and 0x0F operand2 > 0x0F
     in
     ( maskedResult, Flag.setAllFlags zeroFlag False halfCarryFlag carryFlag )
 
@@ -154,7 +154,7 @@ sub operand1 operand2 =
             operand1 - operand2
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
@@ -163,7 +163,7 @@ sub operand1 operand2 =
             operand1 < operand2
 
         halfCarryFlag =
-            and 0x0F operand1 < and 0x0F operand2
+            Bitwise.and 0x0F operand1 < Bitwise.and 0x0F operand2
     in
     ( maskedResult, Flag.setAllFlags zeroFlag True halfCarryFlag carryFlag )
 
@@ -175,13 +175,13 @@ inc operand =
             operand + 1
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
 
         halfCarryFlag =
-            and 0x0F operand + 1 > 0x0F
+            Bitwise.and 0x0F operand + 1 > 0x0F
     in
     ( maskedResult, Flag.modifyFlags (StaticValue zeroFlag) (StaticValue False) (StaticValue halfCarryFlag) Unchanged )
 
@@ -193,25 +193,25 @@ dec operand =
             operand - 1
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0x00
 
         halfCarryFlag =
-            and 0x0F operand == 0x00
+            Bitwise.and 0x0F operand == 0x00
     in
     ( maskedResult, Flag.modifyFlags (StaticValue zeroFlag) (StaticValue True) (StaticValue halfCarryFlag) Unchanged )
 
 
-and_ : Int -> Int -> ALUResultWithFlags
-and_ operand1 operand2 =
+and : Int -> Int -> ALUResultWithFlags
+and operand1 operand2 =
     let
         result =
-            and operand1 operand2
+            Bitwise.and operand1 operand2
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0
@@ -219,14 +219,14 @@ and_ operand1 operand2 =
     ( maskedResult, Flag.setAllFlags zeroFlag False True False )
 
 
-or_ : Int -> Int -> ALUResultWithFlags
-or_ operand1 operand2 =
+or : Int -> Int -> ALUResultWithFlags
+or operand1 operand2 =
     let
         result =
-            or operand1 operand2
+            Bitwise.or operand1 operand2
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0
@@ -234,14 +234,14 @@ or_ operand1 operand2 =
     ( maskedResult, Flag.setAllFlags zeroFlag False False False )
 
 
-xor_ : Int -> Int -> ALUResultWithFlags
-xor_ operand1 operand2 =
+xor : Int -> Int -> ALUResultWithFlags
+xor operand1 operand2 =
     let
         result =
-            xor operand1 operand2
+            Bitwise.xor operand1 operand2
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         zeroFlag =
             maskedResult == 0
@@ -288,11 +288,11 @@ daa operand1 flags =
                 operand1 |> additionHalfCarry |> additionCarry
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
 
         {- Contrary to other opcodes, this flag is not set with the result of
            the carry, but only if the result is acutally a carry. That means if
-           the carry flag was set prior to this opcode and the carry of this opcode
+           the carry flag was set prior to this opcode Bitwise.and the carry of this opcode
            is "no carry", the flag stays enabled.
         -}
         carryFlagDelta =
@@ -315,13 +315,13 @@ add16 operand1 operand2 =
             operand1 + operand2
 
         maskedResult =
-            and 0xFFFF result
+            Bitwise.and 0xFFFF result
 
         carryFlag =
             result > 0xFFFF
 
         halfCarryFlag =
-            and 0x0FFF operand1 + and 0x0FFF operand2 > 0x0FFF
+            Bitwise.and 0x0FFF operand1 + Bitwise.and 0x0FFF operand2 > 0x0FFF
     in
     ( maskedResult, Flag.modifyFlags Unchanged (StaticValue False) (StaticValue halfCarryFlag) (StaticValue carryFlag) )
 
@@ -336,32 +336,32 @@ add16Signed8 operand1 operand2 =
             operand1 + operandSigned
 
         maskedResult =
-            and 0xFFFF result
+            Bitwise.and 0xFFFF result
 
         carryFlag =
-            and 0xFF operand1 + and 0xFF operand2 > 0xFF
+            Bitwise.and 0xFF operand1 + Bitwise.and 0xFF operand2 > 0xFF
 
         halfCarryFlag =
-            and 0x0F operand1 + and 0x0F operand2 > 0x0F
+            Bitwise.and 0x0F operand1 + Bitwise.and 0x0F operand2 > 0x0F
     in
     ( maskedResult, Flag.setAllFlags False False halfCarryFlag carryFlag )
 
 
 inc16 : Int -> ALUResult
 inc16 operand =
-    and (operand + 1) 0xFFFF
+    Bitwise.and (operand + 1) 0xFFFF
 
 
 dec16 : Int -> ALUResult
 dec16 operand =
-    and (operand - 1) 0xFFFF
+    Bitwise.and (operand - 1) 0xFFFF
 
 
 bit : Int -> Int -> FlagsRegisterDelta
 bit index operand =
     let
         bitValue =
-            and operand (shiftLeftBy index 0x01) > 0
+            Bitwise.and operand (Bitwise.shiftLeftBy index 0x01) > 0
     in
     Flag.modifyFlags (StaticValue (not bitValue)) (StaticValue False) (StaticValue True) Unchanged
 
@@ -369,25 +369,25 @@ bit index operand =
 set : Int -> Int -> ALUResult
 set index operand =
     operand
-        |> or (shiftLeftBy index 0x01)
-        |> and 0xFF
+        |> Bitwise.or (Bitwise.shiftLeftBy index 0x01)
+        |> Bitwise.and 0xFF
 
 
 res : Int -> Int -> ALUResult
 res index operand =
     operand
-        |> and (shiftLeftBy index 0x01 |> complement)
-        |> and 0xFF
+        |> Bitwise.and (Bitwise.shiftLeftBy index 0x01 |> Bitwise.complement)
+        |> Bitwise.and 0xFF
 
 
 cpl : Int -> ALUResultWithFlagModification
 cpl operand =
     let
         result =
-            complement operand
+            Bitwise.complement operand
 
         maskedResult =
-            and 0xFF result
+            Bitwise.and 0xFF result
     in
     ( maskedResult, Flag.modifyFlags Unchanged (StaticValue True) (StaticValue True) Unchanged )
 
@@ -396,12 +396,12 @@ rlc : Int -> ALUResultWithFlags
 rlc operand =
     let
         rotatedValue =
-            shiftRightZfBy 7 (and operand 0x80)
+            Bitwise.shiftRightZfBy 7 (Bitwise.and operand 0x80)
 
         result =
-            shiftLeftBy 1 operand
-                |> or rotatedValue
-                |> and 0xFF
+            Bitwise.shiftLeftBy 1 operand
+                |> Bitwise.or rotatedValue
+                |> Bitwise.and 0xFF
 
         carryFlag =
             rotatedValue > 0
@@ -416,12 +416,12 @@ rrc : Int -> ALUResultWithFlags
 rrc operand =
     let
         rotatedValue =
-            shiftLeftBy 7 (and operand 0x01)
+            Bitwise.shiftLeftBy 7 (Bitwise.and operand 0x01)
 
         result =
-            shiftRightZfBy 1 operand
-                |> or rotatedValue
-                |> and 0xFF
+            Bitwise.shiftRightZfBy 1 operand
+                |> Bitwise.or rotatedValue
+                |> Bitwise.and 0xFF
 
         carryFlag =
             rotatedValue > 0
@@ -443,12 +443,12 @@ rl operand flags =
                 0x00
 
         result =
-            shiftLeftBy 1 operand
-                |> or carry
-                |> and 0xFF
+            Bitwise.shiftLeftBy 1 operand
+                |> Bitwise.or carry
+                |> Bitwise.and 0xFF
 
         carryFlag =
-            and 0x80 operand > 0
+            Bitwise.and 0x80 operand > 0
 
         zeroFlag =
             result == 0x00
@@ -467,12 +467,12 @@ rr operand flags =
                 0x00
 
         result =
-            shiftRightZfBy 1 operand
-                |> or carry
-                |> and 0xFF
+            Bitwise.shiftRightZfBy 1 operand
+                |> Bitwise.or carry
+                |> Bitwise.and 0xFF
 
         carryFlag =
-            and 0x01 operand > 0
+            Bitwise.and 0x01 operand > 0
 
         zeroFlag =
             result == 0x00
@@ -484,14 +484,14 @@ sla : Int -> ALUResultWithFlags
 sla operand =
     let
         result =
-            shiftLeftBy 1 operand
-                |> and 0xFF
+            Bitwise.shiftLeftBy 1 operand
+                |> Bitwise.and 0xFF
 
         zeroFlag =
             result == 0x00
 
         carryFlag =
-            and 0x80 operand > 0
+            Bitwise.and 0x80 operand > 0
     in
     ( result, Flag.setAllFlags zeroFlag False False carryFlag )
 
@@ -500,18 +500,18 @@ sra : Int -> ALUResultWithFlags
 sra operand =
     let
         signMask =
-            and 0x80 operand
+            Bitwise.and 0x80 operand
 
         result =
-            shiftRightBy 1 operand
-                |> or signMask
-                |> and 0xFF
+            Bitwise.shiftRightBy 1 operand
+                |> Bitwise.or signMask
+                |> Bitwise.and 0xFF
 
         zeroFlag =
             result == 0x00
 
         carryFlag =
-            and 0x01 operand > 0
+            Bitwise.and 0x01 operand > 0
     in
     ( result, Flag.setAllFlags zeroFlag False False carryFlag )
 
@@ -520,14 +520,14 @@ srl : Int -> ALUResultWithFlags
 srl operand =
     let
         result =
-            shiftRightZfBy 1 operand
-                |> and 0xFF
+            Bitwise.shiftRightZfBy 1 operand
+                |> Bitwise.and 0xFF
 
         zeroFlag =
             result == 0x00
 
         carryFlag =
-            and 0x01 operand > 0
+            Bitwise.and 0x01 operand > 0
     in
     ( result, Flag.setAllFlags zeroFlag False False carryFlag )
 
