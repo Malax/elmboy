@@ -1,20 +1,42 @@
 module Component.CPU exposing
     ( CPU
-    , Register16(..)
-    , Register8(..)
     , init
-    , readRegister16
-    , readRegister8
+    , readRegisterA
+    , readRegisterAF
+    , readRegisterB
+    , readRegisterBC
+    , readRegisterC
+    , readRegisterD
+    , readRegisterDE
+    , readRegisterE
+    , readRegisterF
+    , readRegisterH
+    , readRegisterHL
+    , readRegisterL
+    , readRegisterPC
+    , readRegisterSP
     , setHalted
     , setInterruptData
     , setInterruptEnable
     , setInterruptFlag
     , setInterruptMasterEnable
-    , writeRegister16
-    , writeRegister8
+    , writeRegisterA
+    , writeRegisterAF
+    , writeRegisterB
+    , writeRegisterBC
+    , writeRegisterC
+    , writeRegisterD
+    , writeRegisterDE
+    , writeRegisterE
+    , writeRegisterF
+    , writeRegisterH
+    , writeRegisterHL
+    , writeRegisterL
+    , writeRegisterPC
+    , writeRegisterSP
     )
 
-import Bitwise exposing (and, or, shiftLeftBy, shiftRightZfBy)
+import Bitwise
 
 
 type alias CPU =
@@ -46,299 +68,284 @@ init =
     }
 
 
-type Register8
-    = A
-    | B
-    | C
-    | D
-    | E
-    | F
-    | H
-    | L
+readRegisterA : CPU -> Int
+readRegisterA cpu =
+    Bitwise.shiftRightZfBy 8 cpu.af
 
 
-type Register16
-    = AF
-    | BC
-    | DE
-    | HL
-    | PC
-    | SP
+readRegisterB : CPU -> Int
+readRegisterB cpu =
+    Bitwise.shiftRightZfBy 8 cpu.bc
 
 
-readRegister8 : Register8 -> CPU -> Int
-readRegister8 r8 cpu =
-    case r8 of
-        A ->
-            shiftRightZfBy 8 cpu.af
-
-        B ->
-            shiftRightZfBy 8 cpu.bc
-
-        C ->
-            and 0xFF cpu.bc
-
-        D ->
-            shiftRightZfBy 8 cpu.de
-
-        E ->
-            and 0xFF cpu.de
-
-        F ->
-            and 0xFF cpu.af
-
-        H ->
-            shiftRightZfBy 8 cpu.hl
-
-        L ->
-            and 0xFF cpu.hl
+readRegisterC : CPU -> Int
+readRegisterC cpu =
+    Bitwise.and 0xFF cpu.bc
 
 
-readRegister16 : Register16 -> CPU -> Int
-readRegister16 r16 cpu =
-    case r16 of
-        AF ->
-            cpu.af
-
-        BC ->
-            cpu.bc
-
-        DE ->
-            cpu.de
-
-        HL ->
-            cpu.hl
-
-        PC ->
-            cpu.pc
-
-        SP ->
-            cpu.sp
+readRegisterD : CPU -> Int
+readRegisterD cpu =
+    Bitwise.shiftRightZfBy 8 cpu.de
 
 
-
-{- The following functions create new records instead of copying them. This increases performance up to 5000% in Firefox and 900% in Chrome.
-   Writing registers is a very common operation, that's why I made the tradeoff here.
--}
-
-
-writeRegister8 : Register8 -> Int -> CPU -> CPU
-writeRegister8 r8 value { af, bc, de, hl, pc, sp, halted, interruptFlag, interruptEnable, interruptMasterEnable } =
-    case r8 of
-        A ->
-            { af = and 0xFF af |> or (shiftLeftBy 8 value)
-
-            -- 1:1 Copies
-            , bc = bc
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        F ->
-            { af = and 0xFF00 af |> or value
-
-            -- 1:1 Copies
-            , bc = bc
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        B ->
-            { bc = and 0xFF bc |> or (shiftLeftBy 8 value)
-
-            -- 1:1 Copies
-            , af = af
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        C ->
-            { bc = and 0xFF00 bc |> or value
-
-            -- 1:1 Copies
-            , af = af
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        D ->
-            { de = and 0xFF de |> or (shiftLeftBy 8 value)
-
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        E ->
-            { de = and 0xFF00 de |> or value
-
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        H ->
-            { hl = and 0xFF hl |> or (shiftLeftBy 8 value)
-
-            -- 1:1 Copies
-            , af = af
-            , de = de
-            , bc = bc
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
-
-        L ->
-            { hl = and 0xFF00 hl |> or value
-
-            -- 1:1 Copies
-            , af = af
-            , de = de
-            , bc = bc
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
+readRegisterE : CPU -> Int
+readRegisterE cpu =
+    Bitwise.and 0xFF cpu.de
 
 
-writeRegister16 : Register16 -> Int -> CPU -> CPU
-writeRegister16 r16 value { af, bc, de, hl, pc, sp, halted, interruptFlag, interruptEnable, interruptMasterEnable } =
-    case r16 of
-        AF ->
-            -- The lowest 4 bits are always discarded for the F register as per spec
-            { af = and 0xFFF0 value
+readRegisterF : CPU -> Int
+readRegisterF cpu =
+    Bitwise.and 0xFF cpu.af
 
-            -- 1:1 Copies
-            , bc = bc
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
 
-        BC ->
-            { bc = and 0xFFFF value
+readRegisterH : CPU -> Int
+readRegisterH cpu =
+    Bitwise.shiftRightZfBy 8 cpu.hl
 
-            -- 1:1 Copies
-            , af = af
-            , de = de
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
 
-        DE ->
-            { de = and 0xFFFF value
+readRegisterL : CPU -> Int
+readRegisterL cpu =
+    Bitwise.and 0xFF cpu.hl
 
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , hl = hl
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
 
-        HL ->
-            { hl = and 0xFFFF value
+readRegisterAF : CPU -> Int
+readRegisterAF =
+    .af
 
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , de = de
-            , pc = pc
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
 
-        PC ->
-            { pc = and 0xFFFF value
+readRegisterBC : CPU -> Int
+readRegisterBC =
+    .bc
 
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , de = de
-            , hl = hl
-            , sp = sp
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
 
-        SP ->
-            { sp = and 0xFFFF value
+readRegisterDE : CPU -> Int
+readRegisterDE =
+    .de
 
-            -- 1:1 Copies
-            , af = af
-            , bc = bc
-            , de = de
-            , hl = hl
-            , pc = pc
-            , halted = halted
-            , interruptFlag = interruptFlag
-            , interruptEnable = interruptEnable
-            , interruptMasterEnable = interruptMasterEnable
-            }
+
+readRegisterHL : CPU -> Int
+readRegisterHL =
+    .hl
+
+
+readRegisterPC : CPU -> Int
+readRegisterPC =
+    .pc
+
+
+readRegisterSP : CPU -> Int
+readRegisterSP =
+    .sp
+
+
+writeRegisterA : Int -> CPU -> CPU
+writeRegisterA value cpu =
+    { af = Bitwise.and 0xFF cpu.af |> Bitwise.or (Bitwise.shiftLeftBy 8 value)
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterB : Int -> CPU -> CPU
+writeRegisterB value cpu =
+    { af = cpu.af
+    , bc = Bitwise.and 0xFF cpu.bc |> Bitwise.or (Bitwise.shiftLeftBy 8 value)
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterC : Int -> CPU -> CPU
+writeRegisterC value cpu =
+    { af = cpu.af
+    , bc = Bitwise.and 0xFF00 cpu.bc |> Bitwise.or value
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterD : Int -> CPU -> CPU
+writeRegisterD value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = Bitwise.and 0xFF cpu.de |> Bitwise.or (Bitwise.shiftLeftBy 8 value)
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterE : Int -> CPU -> CPU
+writeRegisterE value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = Bitwise.and 0xFF00 cpu.de |> Bitwise.or value
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterF : Int -> CPU -> CPU
+writeRegisterF value cpu =
+    { af = Bitwise.and 0xFF00 cpu.af |> Bitwise.or value
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterH : Int -> CPU -> CPU
+writeRegisterH value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = Bitwise.and 0xFF cpu.hl |> Bitwise.or (Bitwise.shiftLeftBy 8 value)
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterL : Int -> CPU -> CPU
+writeRegisterL value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = Bitwise.and 0xFF00 cpu.hl |> Bitwise.or value
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterAF : Int -> CPU -> CPU
+writeRegisterAF value cpu =
+    { af = Bitwise.and 0xFFF0 value -- The lowest 4 bits are always discarded for the F register as per spec
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterBC : Int -> CPU -> CPU
+writeRegisterBC value cpu =
+    { af = cpu.af
+    , bc = Bitwise.and 0xFFFF value
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterDE : Int -> CPU -> CPU
+writeRegisterDE value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = Bitwise.and 0xFFFF value
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterHL : Int -> CPU -> CPU
+writeRegisterHL value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = Bitwise.and 0xFFFF value
+    , pc = cpu.pc
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterPC : Int -> CPU -> CPU
+writeRegisterPC value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = Bitwise.and 0xFFFF value
+    , sp = cpu.sp
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
+
+
+writeRegisterSP : Int -> CPU -> CPU
+writeRegisterSP value cpu =
+    { af = cpu.af
+    , bc = cpu.bc
+    , de = cpu.de
+    , hl = cpu.hl
+    , pc = cpu.pc
+    , sp = Bitwise.and 0xFFFF value
+    , halted = cpu.halted
+    , interruptFlag = cpu.interruptFlag
+    , interruptEnable = cpu.interruptEnable
+    , interruptMasterEnable = cpu.interruptMasterEnable
+    }
 
 
 setInterruptFlag : Int -> CPU -> CPU

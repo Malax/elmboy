@@ -1,7 +1,7 @@
 module InstructionTiming exposing (suite)
 
 import Bitwise
-import Component.CPU as CPU exposing (Register8(..))
+import Component.CPU as CPU
 import Component.CPU.FlagRegister as FlagRegister exposing (Flag(..))
 import Component.CPU.OpcodeMapper as OpcodeMapper
 import Component.Cartridge as Cartridge
@@ -282,7 +282,7 @@ checkInstructionTimingWithFlag : Int -> ( Flag, Bool ) -> Int -> GameBoy -> Test
 checkInstructionTimingWithFlag opcode ( flag, flagEnabled ) expectedCycles gameBoy =
     let
         updatedCPU =
-            CPU.writeRegister8 F (FlagRegister.setFlag flag flagEnabled (CPU.readRegister8 F gameBoy.cpu)) gameBoy.cpu
+            CPU.writeRegisterF (FlagRegister.setFlag flag flagEnabled (CPU.readRegisterF gameBoy.cpu)) gameBoy.cpu
 
         updatedGameBoy =
             GameBoy.setCPU updatedCPU gameBoy

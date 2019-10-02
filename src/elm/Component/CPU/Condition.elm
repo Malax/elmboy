@@ -1,6 +1,5 @@
 module Component.CPU.Condition exposing (Condition(..), check)
 
-import Component.CPU exposing (Register16(..), Register8(..))
 import Component.CPU.FlagRegister as FlagRegister
 
 

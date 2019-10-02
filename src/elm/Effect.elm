@@ -10,7 +10,6 @@ module Effect exposing
     , mapReader3
     )
 
-import Component.CPU exposing (Register16(..), Register8(..))
 import GameBoy exposing (GameBoy)
 
 

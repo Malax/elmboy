@@ -6,7 +6,7 @@ module Emulator exposing
 
 import Bitwise
 import Component.APU as APU
-import Component.CPU as CPU exposing (Register16(..), Register8(..))
+import Component.CPU as CPU
 import Component.CPU.Opcode as Opcode
 import Component.CPU.OpcodeMapper as OpcodeMapper
 import Component.MMU as MMU
@@ -14,7 +14,7 @@ import Component.PPU as PPU
 import Component.PPU.Types exposing (PPUInterrupt(..))
 import Component.Timer as Timer
 import Constants
-import CoreEffect exposing (readRegister16, writeRegister16)
+import CoreEffect
 import Effect exposing (Effect)
 import GameBoy exposing (GameBoy)
 
@@ -123,7 +123,7 @@ emulateInstruction gameBoy =
                 MMU.readWord8 gameBoyAfterInterruptHandling gameBoyAfterInterruptHandling.cpu.pc |> OpcodeMapper.get
 
             gameBoyAfterOpcodeFetching =
-                GameBoy.setCPUAndCycles (CPU.writeRegister16 PC (gameBoyAfterInterruptHandling.cpu.pc + 1) gameBoyAfterInterruptHandling.cpu) 4 gameBoyAfterInterruptHandling
+                GameBoy.setCPUAndCycles (CPU.writeRegisterPC (gameBoyAfterInterruptHandling.cpu.pc + 1) gameBoyAfterInterruptHandling.cpu) 4 gameBoyAfterInterruptHandling
         in
         opcode gameBoyAfterOpcodeFetching
 
@@ -173,5 +173,5 @@ performInterrupt : Int -> Int -> Effect
 performInterrupt interruptServiceRoutineAddress modifiedInterruptFlag gameBoy =
     gameBoy
         |> GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu)
-        |> Opcode.push (readRegister16 PC)
-        |> writeRegister16 PC interruptServiceRoutineAddress
+        |> Opcode.push CoreEffect.readRegisterPC
+        |> CoreEffect.writeRegisterPC interruptServiceRoutineAddress

@@ -1,7 +1,7 @@
 module APURegisterReadWrite exposing (suite)
 
 import Bitwise
-import Component.CPU as CPU exposing (Register8(..))
+import Component.CPU as CPU
 import Component.CPU.FlagRegister as FlagRegister exposing (Flag(..))
 import Component.CPU.OpcodeMapper as OpcodeMapper
 import Component.Cartridge as Cartridge
