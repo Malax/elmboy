@@ -23,6 +23,7 @@ module Component.CPU.Opcode exposing
     , jr
     , ld
     , ldHLSPPlusSignedImmediate
+    , ldSPHL
     , nop
     , or
     , pop
@@ -50,12 +51,16 @@ module Component.CPU.Opcode exposing
     , xor
     )
 
+import Array exposing (Array)
 import Component.ALU as ALU
 import Component.CPU as CPU
 import Component.CPU.Condition as Condition exposing (Condition(..))
 import Component.CPU.FlagRegister as FlagRegister exposing (FlagDelta(..), FlagsRegisterDelta)
-import CoreEffect exposing (extraCycles, readMemory16, readMemory16AdvancePC, readMemory8AdvancePC, writeMemory16)
-import Effect exposing (Effect, Reader, Writer, join, join2, join3, mapReader, mapReader2, mapReader3)
+import Component.MMU as MMU
+import Effect exposing (Effect, join, join2, join3)
+import Effect.Operand
+import Effect.Reader exposing (Reader)
+import Effect.Writer exposing (Writer)
 import GameBoy
 import Util
 
@@ -66,62 +71,62 @@ import Util
 
 adc : Reader Int -> Effect
 adc reader =
-    mapReader3 ALU.adc CoreEffect.readRegisterA reader CoreEffect.readRegisterF
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map3 ALU.adc Effect.Operand.read8RegisterA reader Effect.Operand.read8RegisterF
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 sbc : Reader Int -> Effect
 sbc reader =
-    mapReader3 ALU.sbc CoreEffect.readRegisterA reader CoreEffect.readRegisterF
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map3 ALU.sbc Effect.Operand.read8RegisterA reader Effect.Operand.read8RegisterF
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 add : Reader Int -> Effect
 add reader =
-    mapReader2 ALU.add CoreEffect.readRegisterA reader
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.add Effect.Operand.read8RegisterA reader
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 sub : Reader Int -> Effect
 sub reader =
-    mapReader2 ALU.sub CoreEffect.readRegisterA reader
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.sub Effect.Operand.read8RegisterA reader
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 and : Reader Int -> Effect
 and reader =
-    mapReader2 ALU.and CoreEffect.readRegisterA reader
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.and Effect.Operand.read8RegisterA reader
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 cp : Reader Int -> Effect
 cp reader =
-    mapReader2 ALU.sub CoreEffect.readRegisterA reader
+    Effect.Reader.map2 ALU.sub Effect.Operand.read8RegisterA reader
         |> flagSettingOnlyOpcode
 
 
 dec : Reader Int -> Writer Int -> Effect
 dec reader writer =
-    mapReader ALU.dec reader
+    Effect.Reader.map ALU.dec reader
         |> flagModifyingOpcode writer
 
 
 inc : Reader Int -> Writer Int -> Effect
 inc reader writer =
-    mapReader ALU.inc reader
+    Effect.Reader.map ALU.inc reader
         |> flagModifyingOpcode writer
 
 
 or : Reader Int -> Effect
 or reader =
-    mapReader2 ALU.or CoreEffect.readRegisterA reader
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.or Effect.Operand.read8RegisterA reader
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 xor : Reader Int -> Effect
 xor reader =
-    mapReader2 ALU.xor CoreEffect.readRegisterA reader
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.xor Effect.Operand.read8RegisterA reader
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 
@@ -130,18 +135,18 @@ xor reader =
 
 add16 : Reader Int -> Effect
 add16 reader =
-    mapReader2 ALU.add16 (extraCycles 4 >> CoreEffect.readRegisterHL) reader
-        |> flagModifyingOpcode CoreEffect.writeRegisterHL
+    Effect.Reader.map2 ALU.add16 (extraCycles 4 >> Effect.Operand.read16RegisterHL) reader
+        |> flagModifyingOpcode Effect.Operand.write16RegisterHL
 
 
 dec16 : Reader Int -> Writer Int -> Effect
 dec16 reader writer =
-    extraCycles 4 >> join (mapReader ALU.dec16 reader) writer
+    extraCycles 4 >> join (Effect.Reader.map ALU.dec16 reader) writer
 
 
 inc16 : Reader Int -> Writer Int -> Effect
 inc16 reader writer =
-    extraCycles 4 >> join (mapReader ALU.inc16 reader) writer
+    extraCycles 4 >> join (Effect.Reader.map ALU.inc16 reader) writer
 
 
 
@@ -150,23 +155,23 @@ inc16 reader writer =
 
 bit : Int -> Reader Int -> Effect
 bit index reader =
-    mapReader (ALU.bit index) reader
+    Effect.Reader.map (ALU.bit index) reader
         |> flagModifyingOnlyOpcode
 
 
 set : Int -> Reader Int -> Writer Int -> Effect
 set index reader writer =
-    join (mapReader (ALU.set index) reader) writer
+    join (Effect.Reader.map (ALU.set index) reader) writer
 
 
 res : Int -> Reader Int -> Writer Int -> Effect
 res index reader writer =
-    join (mapReader (ALU.res index) reader) writer
+    join (Effect.Reader.map (ALU.res index) reader) writer
 
 
 swap : Reader Int -> Writer Int -> Effect
 swap reader writer =
-    mapReader ALU.swap reader
+    Effect.Reader.map ALU.swap reader
         |> flagSettingOpcode writer
 
 
@@ -176,68 +181,68 @@ swap reader writer =
 
 rlc : Reader Int -> Writer Int -> Effect
 rlc reader writer =
-    mapReader ALU.rlc reader
+    Effect.Reader.map ALU.rlc reader
         |> flagSettingOpcode writer
 
 
 rrc : Reader Int -> Writer Int -> Effect
 rrc reader writer =
-    mapReader ALU.rrc reader
+    Effect.Reader.map ALU.rrc reader
         |> flagSettingOpcode writer
 
 
 rl : Reader Int -> Writer Int -> Effect
 rl reader writer =
-    mapReader2 ALU.rl reader CoreEffect.readRegisterF
+    Effect.Reader.map2 ALU.rl reader Effect.Operand.read8RegisterF
         |> flagSettingOpcode writer
 
 
 rr : Reader Int -> Writer Int -> Effect
 rr reader writer =
-    mapReader2 ALU.rr reader CoreEffect.readRegisterF
+    Effect.Reader.map2 ALU.rr reader Effect.Operand.read8RegisterF
         |> flagSettingOpcode writer
 
 
 sla : Reader Int -> Writer Int -> Effect
 sla reader writer =
-    mapReader ALU.sla reader
+    Effect.Reader.map ALU.sla reader
         |> flagSettingOpcode writer
 
 
 sra : Reader Int -> Writer Int -> Effect
 sra reader writer =
-    mapReader ALU.sra reader
+    Effect.Reader.map ALU.sra reader
         |> flagSettingOpcode writer
 
 
 srl : Reader Int -> Writer Int -> Effect
 srl reader writer =
-    mapReader ALU.srl reader
+    Effect.Reader.map ALU.srl reader
         |> flagSettingOpcode writer
 
 
 rla : Effect
 rla =
-    mapReader2 ALU.rla CoreEffect.readRegisterA CoreEffect.readRegisterF
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.rla Effect.Operand.read8RegisterA Effect.Operand.read8RegisterF
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 rra : Effect
 rra =
-    mapReader2 ALU.rra CoreEffect.readRegisterA CoreEffect.readRegisterF
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.rra Effect.Operand.read8RegisterA Effect.Operand.read8RegisterF
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 rlca : Effect
 rlca =
-    mapReader ALU.rlca CoreEffect.readRegisterA
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map ALU.rlca Effect.Operand.read8RegisterA
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 rrca : Effect
 rrca =
-    mapReader ALU.rrca CoreEffect.readRegisterA
-        |> flagSettingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map ALU.rrca Effect.Operand.read8RegisterA
+        |> flagSettingOpcode Effect.Operand.write8RegisterA
 
 
 
@@ -249,6 +254,11 @@ ld writer reader =
     join reader writer
 
 
+ldSPHL : Effect
+ldSPHL =
+    extraCycles 4 >> join Effect.Operand.read16RegisterHL Effect.Operand.write16RegisterSP
+
+
 
 -- Jumps and Subroutines
 
@@ -256,17 +266,17 @@ ld writer reader =
 jpIndirectHL : Effect
 jpIndirectHL =
     -- JP (HL) is a special case as it only uses 4 cycles in total
-    join CoreEffect.readRegisterHL CoreEffect.writeRegisterPC
+    join Effect.Operand.read16RegisterHL Effect.Operand.write16RegisterPC
 
 
 jp : Condition -> Reader Int -> Effect
 jp condition reader =
     join2
         reader
-        CoreEffect.readRegisterF
+        Effect.Operand.read8RegisterF
         (\address flags ->
             if Condition.check condition flags then
-                extraCycles 4 >> CoreEffect.writeRegisterPC address
+                extraCycles 4 >> Effect.Operand.write16RegisterPC address
 
             else
                 identity
@@ -276,12 +286,12 @@ jp condition reader =
 jr : Condition -> Effect
 jr condition =
     join3
-        (mapReader Util.byteToSignedInt readMemory8AdvancePC)
-        CoreEffect.readRegisterPC
-        CoreEffect.readRegisterF
+        (Effect.Reader.map Util.byteToSignedInt Effect.Operand.read8Immediate)
+        Effect.Operand.read16RegisterPC
+        Effect.Operand.read8RegisterF
         (\offset currentAddress flags ->
             if Condition.check condition flags then
-                extraCycles 4 >> CoreEffect.writeRegisterPC (currentAddress + offset)
+                extraCycles 4 >> Effect.Operand.write16RegisterPC (currentAddress + offset)
 
             else
                 identity
@@ -290,11 +300,11 @@ jr condition =
 
 call : Condition -> Effect
 call condition =
-    join2 CoreEffect.readRegisterF
-        readMemory16AdvancePC
+    join2 Effect.Operand.read8RegisterF
+        Effect.Operand.read16Immediate
         (\flags address ->
             if Condition.check condition flags then
-                push CoreEffect.readRegisterPC >> CoreEffect.writeRegisterPC address
+                push Effect.Operand.read16RegisterPC >> Effect.Operand.write16RegisterPC address
 
             else
                 identity
@@ -303,7 +313,7 @@ call condition =
 
 ret : Condition -> Effect
 ret condition =
-    join CoreEffect.readRegisterF
+    join Effect.Operand.read8RegisterF
         (\flags ->
             if Condition.check condition flags then
                 let
@@ -314,7 +324,7 @@ ret condition =
                         else
                             8
                 in
-                extraCycles extraCyclesAmount >> pop CoreEffect.writeRegisterPC
+                extraCycles extraCyclesAmount >> pop Effect.Operand.write16RegisterPC
 
             else
                 extraCycles 4
@@ -323,12 +333,12 @@ ret condition =
 
 reti : Effect
 reti =
-    extraCycles 4 >> pop CoreEffect.writeRegisterPC >> ei
+    extraCycles 4 >> pop Effect.Operand.write16RegisterPC >> ei
 
 
 rst : Int -> Effect
 rst memoryAddress =
-    push CoreEffect.readRegisterPC >> CoreEffect.writeRegisterPC memoryAddress
+    push Effect.Operand.read16RegisterPC >> Effect.Operand.write16RegisterPC memoryAddress
 
 
 
@@ -337,28 +347,28 @@ rst memoryAddress =
 
 push : Reader Int -> Effect
 push reader =
-    join2 reader CoreEffect.readRegisterSP <|
+    join2 reader Effect.Operand.read16RegisterSP <|
         \value sp ->
-            extraCycles 4 >> CoreEffect.writeRegisterSP (sp - 2) >> writeMemory16 CoreEffect.readRegisterSP value
+            extraCycles 4 >> Effect.Operand.write16RegisterSP (sp - 2) >> writeMemory16 Effect.Operand.read16RegisterSP value
 
 
 pop : Writer Int -> Effect
 pop writer =
-    join2 CoreEffect.readRegisterSP (readMemory16 CoreEffect.readRegisterSP) <|
+    join2 Effect.Operand.read16RegisterSP Effect.Operand.read16IndirectSP <|
         \sp value ->
-            CoreEffect.writeRegisterSP (sp + 2) >> writer value
+            Effect.Operand.write16RegisterSP (sp + 2) >> writer value
 
 
 addSPSignedImmediate : Effect
 addSPSignedImmediate =
-    mapReader2 ALU.add16Signed8 (extraCycles 8 >> CoreEffect.readRegisterSP) readMemory8AdvancePC
-        |> flagSettingOpcode CoreEffect.writeRegisterSP
+    Effect.Reader.map2 ALU.add16Signed8 (extraCycles 8 >> Effect.Operand.read16RegisterSP) Effect.Operand.read8Immediate
+        |> flagSettingOpcode Effect.Operand.write16RegisterSP
 
 
 ldHLSPPlusSignedImmediate : Effect
 ldHLSPPlusSignedImmediate =
-    mapReader2 ALU.add16Signed8 (extraCycles 4 >> CoreEffect.readRegisterSP) readMemory8AdvancePC
-        |> flagSettingOpcode CoreEffect.writeRegisterHL
+    Effect.Reader.map2 ALU.add16Signed8 (extraCycles 4 >> Effect.Operand.read16RegisterSP) Effect.Operand.read8Immediate
+        |> flagSettingOpcode Effect.Operand.write16RegisterHL
 
 
 
@@ -372,18 +382,18 @@ nop =
 
 cpl : Effect
 cpl =
-    mapReader ALU.cpl CoreEffect.readRegisterA
-        |> flagModifyingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map ALU.cpl Effect.Operand.read8RegisterA
+        |> flagModifyingOpcode Effect.Operand.write8RegisterA
 
 
 scf : Effect
 scf =
-    join (mapReader (FlagRegister.modifyFlags Unchanged (StaticValue False) (StaticValue False) (StaticValue True)) CoreEffect.readRegisterF) CoreEffect.writeRegisterF
+    join (Effect.Reader.map (FlagRegister.modifyFlags Unchanged (StaticValue False) (StaticValue False) (StaticValue True)) Effect.Operand.read8RegisterF) Effect.Operand.write8RegisterF
 
 
 ccf : Effect
 ccf =
-    join (mapReader (FlagRegister.modifyFlags Unchanged (StaticValue False) (StaticValue False) Complemented) CoreEffect.readRegisterF) CoreEffect.writeRegisterF
+    join (Effect.Reader.map (FlagRegister.modifyFlags Unchanged (StaticValue False) (StaticValue False) Complemented) Effect.Operand.read8RegisterF) Effect.Operand.write8RegisterF
 
 
 ei : Effect
@@ -398,8 +408,8 @@ di gameBoy =
 
 daa : Effect
 daa =
-    mapReader2 ALU.daa CoreEffect.readRegisterA CoreEffect.readRegisterF
-        |> flagModifyingOpcode CoreEffect.writeRegisterA
+    Effect.Reader.map2 ALU.daa Effect.Operand.read8RegisterA Effect.Operand.read8RegisterF
+        |> flagModifyingOpcode Effect.Operand.write8RegisterA
 
 
 halt : Effect
@@ -407,13 +417,18 @@ halt gameBoy =
     GameBoy.setCPU (CPU.setHalted True gameBoy.cpu) gameBoy
 
 
-extensionOpcode : (Int -> Effect) -> Effect
+extensionOpcode : Array Effect -> Effect
 extensionOpcode mapper gameBoy =
     let
         ( opcode, gameBoyB ) =
-            readMemory8AdvancePC gameBoy
+            Effect.Operand.read8Immediate gameBoy
     in
-    mapper opcode gameBoyB
+    case Array.get opcode mapper of
+        Just effect ->
+            effect gameBoyB
+
+        Nothing ->
+            gameBoyB
 
 
 
@@ -422,27 +437,41 @@ extensionOpcode mapper gameBoy =
 
 flagModifyingOpcode : Writer a -> Reader ( a, FlagsRegisterDelta ) -> Effect
 flagModifyingOpcode writer reader =
-    join2 reader CoreEffect.readRegisterF <|
+    join2 reader Effect.Operand.read8RegisterF <|
         \( value, modifier ) flags ->
-            writer value >> CoreEffect.writeRegisterF (modifier flags)
+            writer value >> Effect.Operand.write8RegisterF (modifier flags)
 
 
 flagSettingOpcode : Writer a -> Reader ( a, Int ) -> Effect
 flagSettingOpcode writer reader =
     join reader <|
         \( value, flags ) ->
-            writer value >> CoreEffect.writeRegisterF flags
+            writer value >> Effect.Operand.write8RegisterF flags
 
 
 flagSettingOnlyOpcode : Reader ( a, Int ) -> Effect
 flagSettingOnlyOpcode reader =
     join reader <|
         \( _, flags ) ->
-            CoreEffect.writeRegisterF flags
+            Effect.Operand.write8RegisterF flags
 
 
 flagModifyingOnlyOpcode : Reader FlagsRegisterDelta -> Effect
 flagModifyingOnlyOpcode reader =
-    join2 reader CoreEffect.readRegisterF <|
+    join2 reader Effect.Operand.read8RegisterF <|
         \modifier flags ->
-            CoreEffect.writeRegisterF (modifier flags)
+            Effect.Operand.write8RegisterF (modifier flags)
+
+
+extraCycles : Writer Int
+extraCycles value gameBoy =
+    GameBoy.setLastInstructionCycles (gameBoy.lastInstructionCycles + value) gameBoy
+
+
+writeMemory16 : Reader Int -> Writer Int
+writeMemory16 reader value gameBoy =
+    let
+        ( memoryAddress, gameBoy2 ) =
+            reader gameBoy
+    in
+    MMU.writeWord16 memoryAddress value (GameBoy.setLastInstructionCycles (gameBoy2.lastInstructionCycles + 8) gameBoy2)

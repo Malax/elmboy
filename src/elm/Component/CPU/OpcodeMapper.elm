@@ -1,13 +1,10 @@
 module Component.CPU.OpcodeMapper exposing (get)
 
 import Array exposing (Array)
-import Component.CPU as CPU
 import Component.CPU.Condition as Condition exposing (Condition(..))
 import Component.CPU.Opcode as HighLevelOpcode
-import Component.MMU as MMU
-import CoreEffect exposing (readMemory16AdvancePC, readMemory8, readMemory8AdvancePC, writeMemory16, writeMemory8)
-import Effect exposing (Effect, Reader, Writer, mapReader)
-import GameBoy
+import Effect exposing (Effect)
+import Effect.Operand exposing (..)
 
 
 get : Int -> Effect
@@ -30,401 +27,401 @@ opcodes =
         [ -- 0x00
           HighLevelOpcode.nop
         , -- 0x01
-          HighLevelOpcode.ld CoreEffect.writeRegisterBC readMemory16AdvancePC
+          HighLevelOpcode.ld write16RegisterBC read16Immediate
         , -- 0x02
-          HighLevelOpcode.ld (CoreEffect.readRegisterBC |> writeMemory8) CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectBC read8RegisterA
         , -- 0x03
-          HighLevelOpcode.inc16 CoreEffect.readRegisterBC CoreEffect.writeRegisterBC
+          HighLevelOpcode.inc16 read16RegisterBC write16RegisterBC
         , -- 0x04
-          HighLevelOpcode.inc CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.inc read8RegisterB write8RegisterB
         , -- 0x05
-          HighLevelOpcode.dec CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.dec read8RegisterB write8RegisterB
         , -- 0x06
-          HighLevelOpcode.ld CoreEffect.writeRegisterB readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterB read8Immediate
         , -- 0x07
           HighLevelOpcode.rlca
         , -- 0x08
-          HighLevelOpcode.ld (writeMemory16 readMemory16AdvancePC) CoreEffect.readRegisterSP
+          HighLevelOpcode.ld write16IndirectWord16Operand read16RegisterSP
         , -- 0x09
-          HighLevelOpcode.add16 CoreEffect.readRegisterBC
+          HighLevelOpcode.add16 read16RegisterBC
         , -- 0x0A
-          HighLevelOpcode.ld CoreEffect.writeRegisterA (CoreEffect.readRegisterBC |> readMemory8)
+          HighLevelOpcode.ld write8RegisterA read8IndirectBC
         , -- 0x0B
-          HighLevelOpcode.dec16 CoreEffect.readRegisterBC CoreEffect.writeRegisterBC
+          HighLevelOpcode.dec16 read16RegisterBC write16RegisterBC
         , -- 0x0C
-          HighLevelOpcode.inc CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.inc read8RegisterC write8RegisterC
         , -- 0x0D
-          HighLevelOpcode.dec CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.dec read8RegisterC write8RegisterC
         , -- 0x0E
-          HighLevelOpcode.ld CoreEffect.writeRegisterC readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterC read8Immediate
         , -- 0x0F
           HighLevelOpcode.rrca
         , -- 0x10
           HighLevelOpcode.nop -- Stop
         , -- 0x11
-          HighLevelOpcode.ld CoreEffect.writeRegisterDE readMemory16AdvancePC
+          HighLevelOpcode.ld write16RegisterDE read16Immediate
         , -- 0x12
-          HighLevelOpcode.ld (CoreEffect.readRegisterDE |> writeMemory8) CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectDE read8RegisterA
         , -- 0x13
-          HighLevelOpcode.inc16 CoreEffect.readRegisterDE CoreEffect.writeRegisterDE
+          HighLevelOpcode.inc16 read16RegisterDE write16RegisterDE
         , -- 0x14
-          HighLevelOpcode.inc CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.inc read8RegisterD write8RegisterD
         , -- 0x15
-          HighLevelOpcode.dec CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.dec read8RegisterD write8RegisterD
         , -- 0x16
-          HighLevelOpcode.ld CoreEffect.writeRegisterD readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterD read8Immediate
         , -- 0x17
           HighLevelOpcode.rla
         , -- 0x18
           HighLevelOpcode.jr Condition.Always
         , -- 0x19
-          HighLevelOpcode.add16 CoreEffect.readRegisterDE
+          HighLevelOpcode.add16 read16RegisterDE
         , -- 0x1A
-          HighLevelOpcode.ld CoreEffect.writeRegisterA (CoreEffect.readRegisterDE |> readMemory8)
+          HighLevelOpcode.ld write8RegisterA read8IndirectDE
         , -- 0x1B
-          HighLevelOpcode.dec16 CoreEffect.readRegisterDE CoreEffect.writeRegisterDE
+          HighLevelOpcode.dec16 read16RegisterDE write16RegisterDE
         , -- 0x1C
-          HighLevelOpcode.inc CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.inc read8RegisterE write8RegisterE
         , -- 0x1D
-          HighLevelOpcode.dec CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.dec read8RegisterE write8RegisterE
         , -- 0x1E
-          HighLevelOpcode.ld CoreEffect.writeRegisterE readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterE read8Immediate
         , -- 0x1F
           HighLevelOpcode.rra
         , -- 0x20
           HighLevelOpcode.jr Condition.NotZero
         , -- 0x21
-          HighLevelOpcode.ld CoreEffect.writeRegisterHL readMemory16AdvancePC
+          HighLevelOpcode.ld write16RegisterHL read16Immediate
         , -- 0x22
-          HighLevelOpcode.ld writeIndirectHLPostIncrement CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectHLPostIncrement read8RegisterA
         , -- 0x23
-          HighLevelOpcode.inc16 CoreEffect.readRegisterHL CoreEffect.writeRegisterHL
+          HighLevelOpcode.inc16 read16RegisterHL write16RegisterHL
         , -- 0x24
-          HighLevelOpcode.inc CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.inc read8RegisterH write8RegisterH
         , -- 0x25
-          HighLevelOpcode.dec CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.dec read8RegisterH write8RegisterH
         , -- 0x26
-          HighLevelOpcode.ld CoreEffect.writeRegisterH readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterH read8Immediate
         , -- 0x27
           HighLevelOpcode.daa
         , -- 0x28
           HighLevelOpcode.jr Condition.Zero
         , -- 0x29
-          HighLevelOpcode.add16 CoreEffect.readRegisterHL
+          HighLevelOpcode.add16 read16RegisterHL
         , -- 0x2A
-          HighLevelOpcode.ld CoreEffect.writeRegisterA readIndirectHLPostIncrement
+          HighLevelOpcode.ld write8RegisterA read8IndirectHLPostIncrement
         , -- 0x2B
-          HighLevelOpcode.dec16 CoreEffect.readRegisterHL CoreEffect.writeRegisterHL
+          HighLevelOpcode.dec16 read16RegisterHL write16RegisterHL
         , -- 0x2C
-          HighLevelOpcode.inc CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.inc read8RegisterL write8RegisterL
         , -- 0x2D
-          HighLevelOpcode.dec CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.dec read8RegisterL write8RegisterL
         , -- 0x2E
-          HighLevelOpcode.ld CoreEffect.writeRegisterL readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterL read8Immediate
         , -- 0x2F
           HighLevelOpcode.cpl
         , -- 0x30
           HighLevelOpcode.jr Condition.NotCarry
         , -- 0x31
-          HighLevelOpcode.ld CoreEffect.writeRegisterSP readMemory16AdvancePC
+          HighLevelOpcode.ld write16RegisterSP read16Immediate
         , -- 0x32
-          HighLevelOpcode.ld writeIndirectHLPostDecrement CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectHLPostDecrement read8RegisterA
         , -- 0x33
-          HighLevelOpcode.inc16 CoreEffect.readRegisterSP CoreEffect.writeRegisterSP
+          HighLevelOpcode.inc16 read16RegisterSP write16RegisterSP
         , -- 0x34
-          HighLevelOpcode.inc readIndirectHL writeIndirectHL
+          HighLevelOpcode.inc read8IndirectHL write8IndirectHL
         , -- 0x35
-          HighLevelOpcode.dec readIndirectHL writeIndirectHL
+          HighLevelOpcode.dec read8IndirectHL write8IndirectHL
         , -- 0x36
-          HighLevelOpcode.ld writeIndirectHL readMemory8AdvancePC
+          HighLevelOpcode.ld write8IndirectHL read8Immediate
         , -- 0x37
           HighLevelOpcode.scf
         , -- 0x38
           HighLevelOpcode.jr Condition.Carry
         , -- 0x39
-          HighLevelOpcode.add16 CoreEffect.readRegisterSP
+          HighLevelOpcode.add16 read16RegisterSP
         , -- 0x3A
-          HighLevelOpcode.ld CoreEffect.writeRegisterA readIndirectHLPostDecrement
+          HighLevelOpcode.ld write8RegisterA read8IndirectHLPostDecrement
         , -- 0x3B
-          HighLevelOpcode.dec16 CoreEffect.readRegisterSP CoreEffect.writeRegisterSP
+          HighLevelOpcode.dec16 read16RegisterSP write16RegisterSP
         , -- 0x3C
-          HighLevelOpcode.inc CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.inc read8RegisterA write8RegisterA
         , -- 0x3D
-          HighLevelOpcode.dec CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.dec read8RegisterA write8RegisterA
         , -- 0x3E
-          HighLevelOpcode.ld CoreEffect.writeRegisterA readMemory8AdvancePC
+          HighLevelOpcode.ld write8RegisterA read8Immediate
         , -- 0x3F
           HighLevelOpcode.ccf
         , -- 0x40
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterB read8RegisterB
         , -- 0x41
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterB read8RegisterC
         , -- 0x42
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterB read8RegisterD
         , -- 0x43
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterB read8RegisterE
         , -- 0x44
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterB read8RegisterH
         , -- 0x45
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterB read8RegisterL
         , -- 0x46
-          HighLevelOpcode.ld CoreEffect.writeRegisterB (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterB read8IndirectHL
         , -- 0x47
-          HighLevelOpcode.ld CoreEffect.writeRegisterB CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterB read8RegisterA
         , -- 0x48
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterC read8RegisterB
         , -- 0x49
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterC read8RegisterC
         , -- 0x4A
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterC read8RegisterD
         , -- 0x4B
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterC read8RegisterE
         , -- 0x4C
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterC read8RegisterH
         , -- 0x4D
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterC read8RegisterL
         , -- 0x4E
-          HighLevelOpcode.ld CoreEffect.writeRegisterC (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterC read8IndirectHL
         , -- 0x4F
-          HighLevelOpcode.ld CoreEffect.writeRegisterC CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterC read8RegisterA
         , -- 0x50
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterD read8RegisterB
         , -- 0x51
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterD read8RegisterC
         , -- 0x52
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterD read8RegisterD
         , -- 0x53
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterD read8RegisterE
         , -- 0x54
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterD read8RegisterH
         , -- 0x55
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterD read8RegisterL
         , -- 0x56
-          HighLevelOpcode.ld CoreEffect.writeRegisterD (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterD read8IndirectHL
         , -- 0x57
-          HighLevelOpcode.ld CoreEffect.writeRegisterD CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterD read8RegisterA
         , -- 0x58
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterE read8RegisterB
         , -- 0x59
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterE read8RegisterC
         , -- 0x5A
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterE read8RegisterD
         , -- 0x5B
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterE read8RegisterE
         , -- 0x5C
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterE read8RegisterH
         , -- 0x5D
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterE read8RegisterL
         , -- 0x5E
-          HighLevelOpcode.ld CoreEffect.writeRegisterE (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterE read8IndirectHL
         , -- 0x5F
-          HighLevelOpcode.ld CoreEffect.writeRegisterE CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterE read8RegisterA
         , -- 0x60
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterH read8RegisterB
         , -- 0x61
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterH read8RegisterC
         , -- 0x62
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterH read8RegisterD
         , -- 0x63
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterH read8RegisterE
         , -- 0x64
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterH read8RegisterH
         , -- 0x65
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterH read8RegisterL
         , -- 0x66
-          HighLevelOpcode.ld CoreEffect.writeRegisterH (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterH read8IndirectHL
         , -- 0x67
-          HighLevelOpcode.ld CoreEffect.writeRegisterH CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterH read8RegisterA
         , -- 0x68
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterL read8RegisterB
         , -- 0x69
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterL read8RegisterC
         , -- 0x6A
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterL read8RegisterD
         , -- 0x6B
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterL read8RegisterE
         , -- 0x6C
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterL read8RegisterH
         , -- 0x6D
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterL read8RegisterL
         , -- 0x6E
-          HighLevelOpcode.ld CoreEffect.writeRegisterL (readMemory8 CoreEffect.readRegisterHL)
+          HighLevelOpcode.ld write8RegisterL read8IndirectHL
         , -- 0x6F
-          HighLevelOpcode.ld CoreEffect.writeRegisterL CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterL read8RegisterA
         , -- 0x70
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8IndirectHL read8RegisterB
         , -- 0x71
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8IndirectHL read8RegisterC
         , -- 0x72
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8IndirectHL read8RegisterD
         , -- 0x73
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8IndirectHL read8RegisterE
         , -- 0x74
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8IndirectHL read8RegisterH
         , -- 0x75
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8IndirectHL read8RegisterL
         , -- 0x76
           HighLevelOpcode.halt
         , -- 0x77
-          HighLevelOpcode.ld writeIndirectHL CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectHL read8RegisterA
         , -- 0x78
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterB
+          HighLevelOpcode.ld write8RegisterA read8RegisterB
         , -- 0x79
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterC
+          HighLevelOpcode.ld write8RegisterA read8RegisterC
         , -- 0x7A
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterD
+          HighLevelOpcode.ld write8RegisterA read8RegisterD
         , -- 0x7B
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterE
+          HighLevelOpcode.ld write8RegisterA read8RegisterE
         , -- 0x7C
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterH
+          HighLevelOpcode.ld write8RegisterA read8RegisterH
         , -- 0x7D
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterL
+          HighLevelOpcode.ld write8RegisterA read8RegisterL
         , -- 0x7E
-          HighLevelOpcode.ld CoreEffect.writeRegisterA readIndirectHL
+          HighLevelOpcode.ld write8RegisterA read8IndirectHL
         , -- 0x7F
-          HighLevelOpcode.ld CoreEffect.writeRegisterA CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8RegisterA read8RegisterA
         , -- 0x80
-          HighLevelOpcode.add CoreEffect.readRegisterB
+          HighLevelOpcode.add read8RegisterB
         , -- 0x81
-          HighLevelOpcode.add CoreEffect.readRegisterC
+          HighLevelOpcode.add read8RegisterC
         , -- 0x82
-          HighLevelOpcode.add CoreEffect.readRegisterD
+          HighLevelOpcode.add read8RegisterD
         , -- 0x83
-          HighLevelOpcode.add CoreEffect.readRegisterE
+          HighLevelOpcode.add read8RegisterE
         , -- 0x84
-          HighLevelOpcode.add CoreEffect.readRegisterH
+          HighLevelOpcode.add read8RegisterH
         , -- 0x85
-          HighLevelOpcode.add CoreEffect.readRegisterL
+          HighLevelOpcode.add read8RegisterL
         , -- 0x86
-          HighLevelOpcode.add readIndirectHL
+          HighLevelOpcode.add read8IndirectHL
         , -- 0x87
-          HighLevelOpcode.add CoreEffect.readRegisterA
+          HighLevelOpcode.add read8RegisterA
         , -- 0x88
-          HighLevelOpcode.adc CoreEffect.readRegisterB
+          HighLevelOpcode.adc read8RegisterB
         , -- 0x89
-          HighLevelOpcode.adc CoreEffect.readRegisterC
+          HighLevelOpcode.adc read8RegisterC
         , -- 0x8A
-          HighLevelOpcode.adc CoreEffect.readRegisterD
+          HighLevelOpcode.adc read8RegisterD
         , -- 0x8B
-          HighLevelOpcode.adc CoreEffect.readRegisterE
+          HighLevelOpcode.adc read8RegisterE
         , -- 0x8C
-          HighLevelOpcode.adc CoreEffect.readRegisterH
+          HighLevelOpcode.adc read8RegisterH
         , -- 0x8D
-          HighLevelOpcode.adc CoreEffect.readRegisterL
+          HighLevelOpcode.adc read8RegisterL
         , -- 0x8E
-          HighLevelOpcode.adc readIndirectHL
+          HighLevelOpcode.adc read8IndirectHL
         , -- 0x8F
-          HighLevelOpcode.adc CoreEffect.readRegisterA
+          HighLevelOpcode.adc read8RegisterA
         , -- 0x90
-          HighLevelOpcode.sub CoreEffect.readRegisterB
+          HighLevelOpcode.sub read8RegisterB
         , -- 0x91
-          HighLevelOpcode.sub CoreEffect.readRegisterC
+          HighLevelOpcode.sub read8RegisterC
         , -- 0x92
-          HighLevelOpcode.sub CoreEffect.readRegisterD
+          HighLevelOpcode.sub read8RegisterD
         , -- 0x93
-          HighLevelOpcode.sub CoreEffect.readRegisterE
+          HighLevelOpcode.sub read8RegisterE
         , -- 0x94
-          HighLevelOpcode.sub CoreEffect.readRegisterH
+          HighLevelOpcode.sub read8RegisterH
         , -- 0x95
-          HighLevelOpcode.sub CoreEffect.readRegisterL
+          HighLevelOpcode.sub read8RegisterL
         , -- 0x96
-          HighLevelOpcode.sub readIndirectHL
+          HighLevelOpcode.sub read8IndirectHL
         , -- 0x97
-          HighLevelOpcode.sub CoreEffect.readRegisterA
+          HighLevelOpcode.sub read8RegisterA
         , -- 0x98
-          HighLevelOpcode.sbc CoreEffect.readRegisterB
+          HighLevelOpcode.sbc read8RegisterB
         , -- 0x99
-          HighLevelOpcode.sbc CoreEffect.readRegisterC
+          HighLevelOpcode.sbc read8RegisterC
         , -- 0x9A
-          HighLevelOpcode.sbc CoreEffect.readRegisterD
+          HighLevelOpcode.sbc read8RegisterD
         , -- 0x9B
-          HighLevelOpcode.sbc CoreEffect.readRegisterE
+          HighLevelOpcode.sbc read8RegisterE
         , -- 0x9C
-          HighLevelOpcode.sbc CoreEffect.readRegisterH
+          HighLevelOpcode.sbc read8RegisterH
         , -- 0x9D
-          HighLevelOpcode.sbc CoreEffect.readRegisterL
+          HighLevelOpcode.sbc read8RegisterL
         , -- 0x9E
-          HighLevelOpcode.sbc readIndirectHL
+          HighLevelOpcode.sbc read8IndirectHL
         , -- 0x9F
-          HighLevelOpcode.sbc CoreEffect.readRegisterA
+          HighLevelOpcode.sbc read8RegisterA
         , -- 0xA0
-          HighLevelOpcode.and CoreEffect.readRegisterB
+          HighLevelOpcode.and read8RegisterB
         , -- 0xA1
-          HighLevelOpcode.and CoreEffect.readRegisterC
+          HighLevelOpcode.and read8RegisterC
         , -- 0xA2
-          HighLevelOpcode.and CoreEffect.readRegisterD
+          HighLevelOpcode.and read8RegisterD
         , -- 0xA3
-          HighLevelOpcode.and CoreEffect.readRegisterE
+          HighLevelOpcode.and read8RegisterE
         , -- 0xA4
-          HighLevelOpcode.and CoreEffect.readRegisterH
+          HighLevelOpcode.and read8RegisterH
         , -- 0xA5
-          HighLevelOpcode.and CoreEffect.readRegisterL
+          HighLevelOpcode.and read8RegisterL
         , -- 0xA6
-          HighLevelOpcode.and readIndirectHL
+          HighLevelOpcode.and read8IndirectHL
         , -- 0xA7
-          HighLevelOpcode.and CoreEffect.readRegisterA
+          HighLevelOpcode.and read8RegisterA
         , -- 0xA8
-          HighLevelOpcode.xor CoreEffect.readRegisterB
+          HighLevelOpcode.xor read8RegisterB
         , -- 0xA9
-          HighLevelOpcode.xor CoreEffect.readRegisterC
+          HighLevelOpcode.xor read8RegisterC
         , -- 0xAA
-          HighLevelOpcode.xor CoreEffect.readRegisterD
+          HighLevelOpcode.xor read8RegisterD
         , -- 0xAB
-          HighLevelOpcode.xor CoreEffect.readRegisterE
+          HighLevelOpcode.xor read8RegisterE
         , -- 0xAC
-          HighLevelOpcode.xor CoreEffect.readRegisterH
+          HighLevelOpcode.xor read8RegisterH
         , -- 0xAD
-          HighLevelOpcode.xor CoreEffect.readRegisterL
+          HighLevelOpcode.xor read8RegisterL
         , -- 0xAE
-          HighLevelOpcode.xor readIndirectHL
+          HighLevelOpcode.xor read8IndirectHL
         , -- 0xAF
-          HighLevelOpcode.xor CoreEffect.readRegisterA
+          HighLevelOpcode.xor read8RegisterA
         , -- 0xB0
-          HighLevelOpcode.or CoreEffect.readRegisterB
+          HighLevelOpcode.or read8RegisterB
         , -- 0xB1
-          HighLevelOpcode.or CoreEffect.readRegisterC
+          HighLevelOpcode.or read8RegisterC
         , -- 0xB2
-          HighLevelOpcode.or CoreEffect.readRegisterD
+          HighLevelOpcode.or read8RegisterD
         , -- 0xB3
-          HighLevelOpcode.or CoreEffect.readRegisterE
+          HighLevelOpcode.or read8RegisterE
         , -- 0xB4
-          HighLevelOpcode.or CoreEffect.readRegisterH
+          HighLevelOpcode.or read8RegisterH
         , -- 0xB5
-          HighLevelOpcode.or CoreEffect.readRegisterL
+          HighLevelOpcode.or read8RegisterL
         , -- 0xB6
-          HighLevelOpcode.or readIndirectHL
+          HighLevelOpcode.or read8IndirectHL
         , -- 0xB7
-          HighLevelOpcode.or CoreEffect.readRegisterA
+          HighLevelOpcode.or read8RegisterA
         , -- 0xB8
-          HighLevelOpcode.cp CoreEffect.readRegisterB
+          HighLevelOpcode.cp read8RegisterB
         , -- 0xB9
-          HighLevelOpcode.cp CoreEffect.readRegisterC
+          HighLevelOpcode.cp read8RegisterC
         , -- 0xBA
-          HighLevelOpcode.cp CoreEffect.readRegisterD
+          HighLevelOpcode.cp read8RegisterD
         , -- 0xBB
-          HighLevelOpcode.cp CoreEffect.readRegisterE
+          HighLevelOpcode.cp read8RegisterE
         , -- 0xBC
-          HighLevelOpcode.cp CoreEffect.readRegisterH
+          HighLevelOpcode.cp read8RegisterH
         , -- 0xBD
-          HighLevelOpcode.cp CoreEffect.readRegisterL
+          HighLevelOpcode.cp read8RegisterL
         , -- 0xBE
-          HighLevelOpcode.cp readIndirectHL
+          HighLevelOpcode.cp read8IndirectHL
         , -- 0xBF
-          HighLevelOpcode.cp CoreEffect.readRegisterA
+          HighLevelOpcode.cp read8RegisterA
         , -- 0xC0
           HighLevelOpcode.ret Condition.NotZero
         , -- 0xC1
-          HighLevelOpcode.pop CoreEffect.writeRegisterBC
+          HighLevelOpcode.pop write16RegisterBC
         , -- 0xC2
-          HighLevelOpcode.jp Condition.NotZero readMemory16AdvancePC
+          HighLevelOpcode.jp Condition.NotZero read16Immediate
         , -- 0xC3
-          HighLevelOpcode.jp Condition.Always readMemory16AdvancePC
+          HighLevelOpcode.jp Condition.Always read16Immediate
         , -- 0xC4
           HighLevelOpcode.call Condition.NotZero
         , -- 0xC5
-          HighLevelOpcode.push CoreEffect.readRegisterBC
+          HighLevelOpcode.push read16RegisterBC
         , -- 0xC6
-          HighLevelOpcode.add readMemory8AdvancePC
+          HighLevelOpcode.add read8Immediate
         , -- 0xC7
           HighLevelOpcode.rst 0x00
         , -- 0xC8
@@ -432,35 +429,31 @@ opcodes =
         , -- 0xC9
           HighLevelOpcode.ret Condition.Always
         , -- 0xCA
-          HighLevelOpcode.jp Condition.Zero readMemory16AdvancePC
+          HighLevelOpcode.jp Condition.Zero read16Immediate
         , -- 0xCB
-          HighLevelOpcode.extensionOpcode
-            (\opcode ->
-                Array.get opcode prefixedOpcodes
-                    |> Maybe.withDefault identity
-            )
+          HighLevelOpcode.extensionOpcode prefixedOpcodes
         , -- 0xCC
           HighLevelOpcode.call Condition.Zero
         , -- 0xCD
           HighLevelOpcode.call Condition.Always
         , -- 0xCE
-          HighLevelOpcode.adc readMemory8AdvancePC
+          HighLevelOpcode.adc read8Immediate
         , -- 0xCF
           HighLevelOpcode.rst 0x08
         , -- 0xD0
           HighLevelOpcode.ret Condition.NotCarry
         , -- 0xD1
-          HighLevelOpcode.pop CoreEffect.writeRegisterDE
+          HighLevelOpcode.pop write16RegisterDE
         , -- 0xD2
-          HighLevelOpcode.jp Condition.NotCarry readMemory16AdvancePC
+          HighLevelOpcode.jp Condition.NotCarry read16Immediate
         , -- 0xD3
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xD4
           HighLevelOpcode.call Condition.NotCarry
         , -- 0xD5
-          HighLevelOpcode.push CoreEffect.readRegisterDE
+          HighLevelOpcode.push read16RegisterDE
         , -- 0xD6
-          HighLevelOpcode.sub readMemory8AdvancePC
+          HighLevelOpcode.sub read8Immediate
         , -- 0xD7
           HighLevelOpcode.rst 0x10
         , -- 0xD8
@@ -468,7 +461,7 @@ opcodes =
         , -- 0xD9
           HighLevelOpcode.reti
         , -- 0xDA
-          HighLevelOpcode.jp Condition.Carry readMemory16AdvancePC
+          HighLevelOpcode.jp Condition.Carry read16Immediate
         , -- 0xDB
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xDC
@@ -476,23 +469,23 @@ opcodes =
         , -- 0xDD
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xDE
-          HighLevelOpcode.sbc readMemory8AdvancePC
+          HighLevelOpcode.sbc read8Immediate
         , -- 0xDF
           HighLevelOpcode.rst 0x18
         , -- 0xE0
-          HighLevelOpcode.ld (readMemory8AdvancePC |> asZeroPageAddress |> writeMemory8) CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectWord8Operand read8RegisterA
         , -- 0xE1
-          HighLevelOpcode.pop CoreEffect.writeRegisterHL
+          HighLevelOpcode.pop write16RegisterHL
         , -- 0xE2
-          HighLevelOpcode.ld (CoreEffect.readRegisterC |> asZeroPageAddress |> writeMemory8) CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectC read8RegisterA
         , -- 0xE3
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xE4
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xE5
-          HighLevelOpcode.push CoreEffect.readRegisterHL
+          HighLevelOpcode.push read16RegisterHL
         , -- 0xE6
-          HighLevelOpcode.and readMemory8AdvancePC
+          HighLevelOpcode.and read8Immediate
         , -- 0xE7
           HighLevelOpcode.rst 0x20
         , -- 0xE8
@@ -500,7 +493,7 @@ opcodes =
         , -- 0xE9
           HighLevelOpcode.jpIndirectHL
         , -- 0xEA
-          HighLevelOpcode.ld (writeMemory8 readMemory16AdvancePC) CoreEffect.readRegisterA
+          HighLevelOpcode.ld write8IndirectWord16Operand read8RegisterA
         , -- 0xEB
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xEC
@@ -508,32 +501,31 @@ opcodes =
         , -- 0xED
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xEE
-          HighLevelOpcode.xor readMemory8AdvancePC
+          HighLevelOpcode.xor read8Immediate
         , -- 0xEF
           HighLevelOpcode.rst 0x28
         , -- 0xF0
-          HighLevelOpcode.ld CoreEffect.writeRegisterA (readMemory8AdvancePC |> asZeroPageAddress |> readMemory8)
+          HighLevelOpcode.ld write8RegisterA read8IndirectWord8Operand
         , -- 0xF1
-          HighLevelOpcode.pop CoreEffect.writeRegisterAF
+          HighLevelOpcode.pop write16RegisterAF
         , -- 0xF2
-          HighLevelOpcode.ld CoreEffect.writeRegisterA (CoreEffect.readRegisterC |> asZeroPageAddress |> readMemory8)
+          HighLevelOpcode.ld write8RegisterA read8IndirectC
         , -- 0xF3
           HighLevelOpcode.di
         , -- 0xF4
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xF5
-          HighLevelOpcode.push CoreEffect.readRegisterAF
+          HighLevelOpcode.push read8RegisterAF
         , -- 0xF6
-          HighLevelOpcode.or readMemory8AdvancePC
+          HighLevelOpcode.or read8Immediate
         , -- 0xF7
           HighLevelOpcode.rst 0x30
         , -- 0xF8
           HighLevelOpcode.ldHLSPPlusSignedImmediate
         , -- 0xF9
-          -- Special case: Requires 4 extra cycles as this is a 16bit load.
-          HighLevelOpcode.ld CoreEffect.writeRegisterSP (CoreEffect.extraCycles 4 >> CoreEffect.readRegisterHL)
+          HighLevelOpcode.ldSPHL
         , -- 0xFA
-          HighLevelOpcode.ld CoreEffect.writeRegisterA (readMemory8 readMemory16AdvancePC)
+          HighLevelOpcode.ld write8RegisterA read8IndirectWord16Operand
         , -- 0xFB
           HighLevelOpcode.ei
         , -- 0xFC
@@ -541,7 +533,7 @@ opcodes =
         , -- 0xFD
           HighLevelOpcode.nop --Illegal Opcode
         , -- 0xFE
-          HighLevelOpcode.cp readMemory8AdvancePC
+          HighLevelOpcode.cp read8Immediate
         , -- 0xFF
           HighLevelOpcode.rst 0x38
         ]
@@ -551,601 +543,515 @@ prefixedOpcodes : Array Effect
 prefixedOpcodes =
     Array.fromList
         [ -- 0x00
-          HighLevelOpcode.rlc CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.rlc read8RegisterB write8RegisterB
         , -- 0x01
-          HighLevelOpcode.rlc CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.rlc read8RegisterC write8RegisterC
         , -- 0x02
-          HighLevelOpcode.rlc CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.rlc read8RegisterD write8RegisterD
         , -- 0x03
-          HighLevelOpcode.rlc CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.rlc read8RegisterE write8RegisterE
         , -- 0x04
-          HighLevelOpcode.rlc CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.rlc read8RegisterH write8RegisterH
         , -- 0x05
-          HighLevelOpcode.rlc CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.rlc read8RegisterL write8RegisterL
         , -- 0x06
-          HighLevelOpcode.rlc readIndirectHL writeIndirectHL
+          HighLevelOpcode.rlc read8IndirectHL write8IndirectHL
         , -- 0x07
-          HighLevelOpcode.rlc CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.rlc read8RegisterA write8RegisterA
         , -- 0x08
-          HighLevelOpcode.rrc CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.rrc read8RegisterB write8RegisterB
         , -- 0x09
-          HighLevelOpcode.rrc CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.rrc read8RegisterC write8RegisterC
         , -- 0x0A
-          HighLevelOpcode.rrc CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.rrc read8RegisterD write8RegisterD
         , -- 0x0B
-          HighLevelOpcode.rrc CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.rrc read8RegisterE write8RegisterE
         , -- 0x0C
-          HighLevelOpcode.rrc CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.rrc read8RegisterH write8RegisterH
         , -- 0x0D
-          HighLevelOpcode.rrc CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.rrc read8RegisterL write8RegisterL
         , -- 0x0E
-          HighLevelOpcode.rrc readIndirectHL writeIndirectHL
+          HighLevelOpcode.rrc read8IndirectHL write8IndirectHL
         , -- 0x0F
-          HighLevelOpcode.rrc CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.rrc read8RegisterA write8RegisterA
         , -- 0x10
-          HighLevelOpcode.rl CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.rl read8RegisterB write8RegisterB
         , -- 0x11
-          HighLevelOpcode.rl CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.rl read8RegisterC write8RegisterC
         , -- 0x12
-          HighLevelOpcode.rl CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.rl read8RegisterD write8RegisterD
         , -- 0x13
-          HighLevelOpcode.rl CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.rl read8RegisterE write8RegisterE
         , -- 0x14
-          HighLevelOpcode.rl CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.rl read8RegisterH write8RegisterH
         , -- 0x15
-          HighLevelOpcode.rl CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.rl read8RegisterL write8RegisterL
         , -- 0x16
-          HighLevelOpcode.rl readIndirectHL writeIndirectHL
+          HighLevelOpcode.rl read8IndirectHL write8IndirectHL
         , -- 0x17
-          HighLevelOpcode.rl CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.rl read8RegisterA write8RegisterA
         , -- 0x18
-          HighLevelOpcode.rr CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.rr read8RegisterB write8RegisterB
         , -- 0x19
-          HighLevelOpcode.rr CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.rr read8RegisterC write8RegisterC
         , -- 0x1A
-          HighLevelOpcode.rr CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.rr read8RegisterD write8RegisterD
         , -- 0x1B
-          HighLevelOpcode.rr CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.rr read8RegisterE write8RegisterE
         , -- 0x1C
-          HighLevelOpcode.rr CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.rr read8RegisterH write8RegisterH
         , -- 0x1D
-          HighLevelOpcode.rr CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.rr read8RegisterL write8RegisterL
         , -- 0x1E
-          HighLevelOpcode.rr readIndirectHL writeIndirectHL
+          HighLevelOpcode.rr read8IndirectHL write8IndirectHL
         , -- 0x1F
-          HighLevelOpcode.rr CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.rr read8RegisterA write8RegisterA
         , -- 0x20
-          HighLevelOpcode.sla CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.sla read8RegisterB write8RegisterB
         , -- 0x21
-          HighLevelOpcode.sla CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.sla read8RegisterC write8RegisterC
         , -- 0x22
-          HighLevelOpcode.sla CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.sla read8RegisterD write8RegisterD
         , -- 0x23
-          HighLevelOpcode.sla CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.sla read8RegisterE write8RegisterE
         , -- 0x24
-          HighLevelOpcode.sla CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.sla read8RegisterH write8RegisterH
         , -- 0x25
-          HighLevelOpcode.sla CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.sla read8RegisterL write8RegisterL
         , -- 0x26
-          HighLevelOpcode.sla readIndirectHL writeIndirectHL
+          HighLevelOpcode.sla read8IndirectHL write8IndirectHL
         , -- 0x27
-          HighLevelOpcode.sla CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.sla read8RegisterA write8RegisterA
         , -- 0x28
-          HighLevelOpcode.sra CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.sra read8RegisterB write8RegisterB
         , -- 0x29
-          HighLevelOpcode.sra CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.sra read8RegisterC write8RegisterC
         , -- 0x2A
-          HighLevelOpcode.sra CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.sra read8RegisterD write8RegisterD
         , -- 0x2B
-          HighLevelOpcode.sra CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.sra read8RegisterE write8RegisterE
         , -- 0x2C
-          HighLevelOpcode.sra CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.sra read8RegisterH write8RegisterH
         , -- 0x2D
-          HighLevelOpcode.sra CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.sra read8RegisterL write8RegisterL
         , -- 0x2E
-          HighLevelOpcode.sra readIndirectHL writeIndirectHL
+          HighLevelOpcode.sra read8IndirectHL write8IndirectHL
         , -- 0x2F
-          HighLevelOpcode.sra CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.sra read8RegisterA write8RegisterA
         , -- 0x30
-          HighLevelOpcode.swap CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.swap read8RegisterB write8RegisterB
         , -- 0x31
-          HighLevelOpcode.swap CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.swap read8RegisterC write8RegisterC
         , -- 0x32
-          HighLevelOpcode.swap CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.swap read8RegisterD write8RegisterD
         , -- 0x33
-          HighLevelOpcode.swap CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.swap read8RegisterE write8RegisterE
         , -- 0x34
-          HighLevelOpcode.swap CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.swap read8RegisterH write8RegisterH
         , -- 0x35
-          HighLevelOpcode.swap CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.swap read8RegisterL write8RegisterL
         , -- 0x36
-          HighLevelOpcode.swap readIndirectHL writeIndirectHL
+          HighLevelOpcode.swap read8IndirectHL write8IndirectHL
         , -- 0x37
-          HighLevelOpcode.swap CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.swap read8RegisterA write8RegisterA
         , -- 0x38
-          HighLevelOpcode.srl CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.srl read8RegisterB write8RegisterB
         , -- 0x39
-          HighLevelOpcode.srl CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.srl read8RegisterC write8RegisterC
         , -- 0x3A
-          HighLevelOpcode.srl CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.srl read8RegisterD write8RegisterD
         , -- 0x3B
-          HighLevelOpcode.srl CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.srl read8RegisterE write8RegisterE
         , -- 0x3C
-          HighLevelOpcode.srl CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.srl read8RegisterH write8RegisterH
         , -- 0x3D
-          HighLevelOpcode.srl CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.srl read8RegisterL write8RegisterL
         , -- 0x3E
-          HighLevelOpcode.srl readIndirectHL writeIndirectHL
+          HighLevelOpcode.srl read8IndirectHL write8IndirectHL
         , -- 0x3F
-          HighLevelOpcode.srl CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.srl read8RegisterA write8RegisterA
         , -- 0x40
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 0 read8RegisterB
         , -- 0x41
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 0 read8RegisterC
         , -- 0x42
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 0 read8RegisterD
         , -- 0x43
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 0 read8RegisterE
         , -- 0x44
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 0 read8RegisterH
         , -- 0x45
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 0 read8RegisterL
         , -- 0x46
-          HighLevelOpcode.bit 0 readIndirectHL
+          HighLevelOpcode.bit 0 read8IndirectHL
         , -- 0x47
-          HighLevelOpcode.bit 0 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 0 read8RegisterA
         , -- 0x48
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 1 read8RegisterB
         , -- 0x49
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 1 read8RegisterC
         , -- 0x4A
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 1 read8RegisterD
         , -- 0x4B
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 1 read8RegisterE
         , -- 0x4C
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 1 read8RegisterH
         , -- 0x4D
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 1 read8RegisterL
         , -- 0x4E
-          HighLevelOpcode.bit 1 readIndirectHL
+          HighLevelOpcode.bit 1 read8IndirectHL
         , -- 0x4F
-          HighLevelOpcode.bit 1 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 1 read8RegisterA
         , -- 0x50
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 2 read8RegisterB
         , -- 0x51
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 2 read8RegisterC
         , -- 0x52
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 2 read8RegisterD
         , -- 0x53
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 2 read8RegisterE
         , -- 0x54
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 2 read8RegisterH
         , -- 0x55
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 2 read8RegisterL
         , -- 0x56
-          HighLevelOpcode.bit 2 readIndirectHL
+          HighLevelOpcode.bit 2 read8IndirectHL
         , -- 0x57
-          HighLevelOpcode.bit 2 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 2 read8RegisterA
         , -- 0x58
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 3 read8RegisterB
         , -- 0x59
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 3 read8RegisterC
         , -- 0x5A
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 3 read8RegisterD
         , -- 0x5B
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 3 read8RegisterE
         , -- 0x5C
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 3 read8RegisterH
         , -- 0x5D
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 3 read8RegisterL
         , -- 0x5E
-          HighLevelOpcode.bit 3 readIndirectHL
+          HighLevelOpcode.bit 3 read8IndirectHL
         , -- 0x5F
-          HighLevelOpcode.bit 3 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 3 read8RegisterA
         , -- 0x60
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 4 read8RegisterB
         , -- 0x61
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 4 read8RegisterC
         , -- 0x62
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 4 read8RegisterD
         , -- 0x63
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 4 read8RegisterE
         , -- 0x64
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 4 read8RegisterH
         , -- 0x65
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 4 read8RegisterL
         , -- 0x66
-          HighLevelOpcode.bit 4 readIndirectHL
+          HighLevelOpcode.bit 4 read8IndirectHL
         , -- 0x67
-          HighLevelOpcode.bit 4 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 4 read8RegisterA
         , -- 0x68
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 5 read8RegisterB
         , -- 0x69
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 5 read8RegisterC
         , -- 0x6A
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 5 read8RegisterD
         , -- 0x6B
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 5 read8RegisterE
         , -- 0x6C
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 5 read8RegisterH
         , -- 0x6D
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 5 read8RegisterL
         , -- 0x6E
-          HighLevelOpcode.bit 5 readIndirectHL
+          HighLevelOpcode.bit 5 read8IndirectHL
         , -- 0x6F
-          HighLevelOpcode.bit 5 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 5 read8RegisterA
         , -- 0x70
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 6 read8RegisterB
         , -- 0x71
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 6 read8RegisterC
         , -- 0x72
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 6 read8RegisterD
         , -- 0x73
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 6 read8RegisterE
         , -- 0x74
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 6 read8RegisterH
         , -- 0x75
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 6 read8RegisterL
         , -- 0x76
-          HighLevelOpcode.bit 6 readIndirectHL
+          HighLevelOpcode.bit 6 read8IndirectHL
         , -- 0x77
-          HighLevelOpcode.bit 6 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 6 read8RegisterA
         , -- 0x78
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterB
+          HighLevelOpcode.bit 7 read8RegisterB
         , -- 0x79
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterC
+          HighLevelOpcode.bit 7 read8RegisterC
         , -- 0x7A
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterD
+          HighLevelOpcode.bit 7 read8RegisterD
         , -- 0x7B
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterE
+          HighLevelOpcode.bit 7 read8RegisterE
         , -- 0x7C
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterH
+          HighLevelOpcode.bit 7 read8RegisterH
         , -- 0x7D
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterL
+          HighLevelOpcode.bit 7 read8RegisterL
         , -- 0x7E
-          HighLevelOpcode.bit 7 readIndirectHL
+          HighLevelOpcode.bit 7 read8IndirectHL
         , -- 0x7F
-          HighLevelOpcode.bit 7 CoreEffect.readRegisterA
+          HighLevelOpcode.bit 7 read8RegisterA
         , -- 0x80
-          HighLevelOpcode.res 0 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 0 read8RegisterB write8RegisterB
         , -- 0x81
-          HighLevelOpcode.res 0 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 0 read8RegisterC write8RegisterC
         , -- 0x82
-          HighLevelOpcode.res 0 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 0 read8RegisterD write8RegisterD
         , -- 0x83
-          HighLevelOpcode.res 0 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 0 read8RegisterE write8RegisterE
         , -- 0x84
-          HighLevelOpcode.res 0 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 0 read8RegisterH write8RegisterH
         , -- 0x85
-          HighLevelOpcode.res 0 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 0 read8RegisterL write8RegisterL
         , -- 0x86
-          HighLevelOpcode.res 0 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 0 read8IndirectHL write8IndirectHL
         , -- 0x87
-          HighLevelOpcode.res 0 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 0 read8RegisterA write8RegisterA
         , -- 0x88
-          HighLevelOpcode.res 1 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 1 read8RegisterB write8RegisterB
         , -- 0x89
-          HighLevelOpcode.res 1 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 1 read8RegisterC write8RegisterC
         , -- 0x8A
-          HighLevelOpcode.res 1 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 1 read8RegisterD write8RegisterD
         , -- 0x8B
-          HighLevelOpcode.res 1 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 1 read8RegisterE write8RegisterE
         , -- 0x8C
-          HighLevelOpcode.res 1 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 1 read8RegisterH write8RegisterH
         , -- 0x8D
-          HighLevelOpcode.res 1 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 1 read8RegisterL write8RegisterL
         , -- 0x8E
-          HighLevelOpcode.res 1 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 1 read8IndirectHL write8IndirectHL
         , -- 0x8F
-          HighLevelOpcode.res 1 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 1 read8RegisterA write8RegisterA
         , -- 0x90
-          HighLevelOpcode.res 2 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 2 read8RegisterB write8RegisterB
         , -- 0x91
-          HighLevelOpcode.res 2 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 2 read8RegisterC write8RegisterC
         , -- 0x92
-          HighLevelOpcode.res 2 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 2 read8RegisterD write8RegisterD
         , -- 0x93
-          HighLevelOpcode.res 2 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 2 read8RegisterE write8RegisterE
         , -- 0x94
-          HighLevelOpcode.res 2 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 2 read8RegisterH write8RegisterH
         , -- 0x95
-          HighLevelOpcode.res 2 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 2 read8RegisterL write8RegisterL
         , -- 0x96
-          HighLevelOpcode.res 2 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 2 read8IndirectHL write8IndirectHL
         , -- 0x97
-          HighLevelOpcode.res 2 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 2 read8RegisterA write8RegisterA
         , -- 0x98
-          HighLevelOpcode.res 3 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 3 read8RegisterB write8RegisterB
         , -- 0x99
-          HighLevelOpcode.res 3 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 3 read8RegisterC write8RegisterC
         , -- 0x9A
-          HighLevelOpcode.res 3 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 3 read8RegisterD write8RegisterD
         , -- 0x9B
-          HighLevelOpcode.res 3 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 3 read8RegisterE write8RegisterE
         , -- 0x9C
-          HighLevelOpcode.res 3 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 3 read8RegisterH write8RegisterH
         , -- 0x9D
-          HighLevelOpcode.res 3 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 3 read8RegisterL write8RegisterL
         , -- 0x9E
-          HighLevelOpcode.res 3 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 3 read8IndirectHL write8IndirectHL
         , -- 0x9F
-          HighLevelOpcode.res 3 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 3 read8RegisterA write8RegisterA
         , -- 0xA0
-          HighLevelOpcode.res 4 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 4 read8RegisterB write8RegisterB
         , -- 0xA1
-          HighLevelOpcode.res 4 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 4 read8RegisterC write8RegisterC
         , -- 0xA2
-          HighLevelOpcode.res 4 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 4 read8RegisterD write8RegisterD
         , -- 0xA3
-          HighLevelOpcode.res 4 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 4 read8RegisterE write8RegisterE
         , -- 0xA4
-          HighLevelOpcode.res 4 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 4 read8RegisterH write8RegisterH
         , -- 0xA5
-          HighLevelOpcode.res 4 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 4 read8RegisterL write8RegisterL
         , -- 0xA6
-          HighLevelOpcode.res 4 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 4 read8IndirectHL write8IndirectHL
         , -- 0xA7
-          HighLevelOpcode.res 4 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 4 read8RegisterA write8RegisterA
         , -- 0xA8
-          HighLevelOpcode.res 5 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 5 read8RegisterB write8RegisterB
         , -- 0xA9
-          HighLevelOpcode.res 5 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 5 read8RegisterC write8RegisterC
         , -- 0xAA
-          HighLevelOpcode.res 5 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 5 read8RegisterD write8RegisterD
         , -- 0xAB
-          HighLevelOpcode.res 5 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 5 read8RegisterE write8RegisterE
         , -- 0xAC
-          HighLevelOpcode.res 5 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 5 read8RegisterH write8RegisterH
         , -- 0xAD
-          HighLevelOpcode.res 5 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 5 read8RegisterL write8RegisterL
         , -- 0xAE
-          HighLevelOpcode.res 5 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 5 read8IndirectHL write8IndirectHL
         , -- 0xAF
-          HighLevelOpcode.res 5 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 5 read8RegisterA write8RegisterA
         , -- 0xB0
-          HighLevelOpcode.res 6 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 6 read8RegisterB write8RegisterB
         , -- 0xB1
-          HighLevelOpcode.res 6 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 6 read8RegisterC write8RegisterC
         , -- 0xB2
-          HighLevelOpcode.res 6 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 6 read8RegisterD write8RegisterD
         , -- 0xB3
-          HighLevelOpcode.res 6 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 6 read8RegisterE write8RegisterE
         , -- 0xB4
-          HighLevelOpcode.res 6 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 6 read8RegisterH write8RegisterH
         , -- 0xB5
-          HighLevelOpcode.res 6 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 6 read8RegisterL write8RegisterL
         , -- 0xB6
-          HighLevelOpcode.res 6 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 6 read8IndirectHL write8IndirectHL
         , -- 0xB7
-          HighLevelOpcode.res 6 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 6 read8RegisterA write8RegisterA
         , -- 0xB8
-          HighLevelOpcode.res 7 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.res 7 read8RegisterB write8RegisterB
         , -- 0xB9
-          HighLevelOpcode.res 7 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.res 7 read8RegisterC write8RegisterC
         , -- 0xBA
-          HighLevelOpcode.res 7 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.res 7 read8RegisterD write8RegisterD
         , -- 0xBB
-          HighLevelOpcode.res 7 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.res 7 read8RegisterE write8RegisterE
         , -- 0xBC
-          HighLevelOpcode.res 7 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.res 7 read8RegisterH write8RegisterH
         , -- 0xBD
-          HighLevelOpcode.res 7 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.res 7 read8RegisterL write8RegisterL
         , -- 0xBE
-          HighLevelOpcode.res 7 readIndirectHL writeIndirectHL
+          HighLevelOpcode.res 7 read8IndirectHL write8IndirectHL
         , -- 0xBF
-          HighLevelOpcode.res 7 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.res 7 read8RegisterA write8RegisterA
         , -- 0xC0
-          HighLevelOpcode.set 0 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 0 read8RegisterB write8RegisterB
         , -- 0xC1
-          HighLevelOpcode.set 0 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 0 read8RegisterC write8RegisterC
         , -- 0xC2
-          HighLevelOpcode.set 0 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 0 read8RegisterD write8RegisterD
         , -- 0xC3
-          HighLevelOpcode.set 0 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 0 read8RegisterE write8RegisterE
         , -- 0xC4
-          HighLevelOpcode.set 0 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 0 read8RegisterH write8RegisterH
         , -- 0xC5
-          HighLevelOpcode.set 0 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 0 read8RegisterL write8RegisterL
         , -- 0xC6
-          HighLevelOpcode.set 0 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 0 read8IndirectHL write8IndirectHL
         , -- 0xC7
-          HighLevelOpcode.set 0 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 0 read8RegisterA write8RegisterA
         , -- 0xC8
-          HighLevelOpcode.set 1 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 1 read8RegisterB write8RegisterB
         , -- 0xC9
-          HighLevelOpcode.set 1 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 1 read8RegisterC write8RegisterC
         , -- 0xCA
-          HighLevelOpcode.set 1 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 1 read8RegisterD write8RegisterD
         , -- 0xCB
-          HighLevelOpcode.set 1 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 1 read8RegisterE write8RegisterE
         , -- 0xCC
-          HighLevelOpcode.set 1 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 1 read8RegisterH write8RegisterH
         , -- 0xCD
-          HighLevelOpcode.set 1 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 1 read8RegisterL write8RegisterL
         , -- 0xCE
-          HighLevelOpcode.set 1 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 1 read8IndirectHL write8IndirectHL
         , -- 0xCF
-          HighLevelOpcode.set 1 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 1 read8RegisterA write8RegisterA
         , -- 0xD0
-          HighLevelOpcode.set 2 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 2 read8RegisterB write8RegisterB
         , -- 0xD1
-          HighLevelOpcode.set 2 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 2 read8RegisterC write8RegisterC
         , -- 0xD2
-          HighLevelOpcode.set 2 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 2 read8RegisterD write8RegisterD
         , -- 0xD3
-          HighLevelOpcode.set 2 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 2 read8RegisterE write8RegisterE
         , -- 0xD4
-          HighLevelOpcode.set 2 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 2 read8RegisterH write8RegisterH
         , -- 0xD5
-          HighLevelOpcode.set 2 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 2 read8RegisterL write8RegisterL
         , -- 0xD6
-          HighLevelOpcode.set 2 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 2 read8IndirectHL write8IndirectHL
         , -- 0xD7
-          HighLevelOpcode.set 2 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 2 read8RegisterA write8RegisterA
         , -- 0xD8
-          HighLevelOpcode.set 3 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 3 read8RegisterB write8RegisterB
         , -- 0xD9
-          HighLevelOpcode.set 3 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 3 read8RegisterC write8RegisterC
         , -- 0xDA
-          HighLevelOpcode.set 3 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 3 read8RegisterD write8RegisterD
         , -- 0xDB
-          HighLevelOpcode.set 3 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 3 read8RegisterE write8RegisterE
         , -- 0xDC
-          HighLevelOpcode.set 3 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 3 read8RegisterH write8RegisterH
         , -- 0xDD
-          HighLevelOpcode.set 3 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 3 read8RegisterL write8RegisterL
         , -- 0xDE
-          HighLevelOpcode.set 3 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 3 read8IndirectHL write8IndirectHL
         , -- 0xDF
-          HighLevelOpcode.set 3 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 3 read8RegisterA write8RegisterA
         , -- 0xE0
-          HighLevelOpcode.set 4 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 4 read8RegisterB write8RegisterB
         , -- 0xE1
-          HighLevelOpcode.set 4 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 4 read8RegisterC write8RegisterC
         , -- 0xE2
-          HighLevelOpcode.set 4 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 4 read8RegisterD write8RegisterD
         , -- 0xE3
-          HighLevelOpcode.set 4 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 4 read8RegisterE write8RegisterE
         , -- 0xE4
-          HighLevelOpcode.set 4 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 4 read8RegisterH write8RegisterH
         , -- 0xE5
-          HighLevelOpcode.set 4 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 4 read8RegisterL write8RegisterL
         , -- 0xE6
-          HighLevelOpcode.set 4 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 4 read8IndirectHL write8IndirectHL
         , -- 0xE7
-          HighLevelOpcode.set 4 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 4 read8RegisterA write8RegisterA
         , -- 0xE8
-          HighLevelOpcode.set 5 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 5 read8RegisterB write8RegisterB
         , -- 0xE9
-          HighLevelOpcode.set 5 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 5 read8RegisterC write8RegisterC
         , -- 0xEA
-          HighLevelOpcode.set 5 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 5 read8RegisterD write8RegisterD
         , -- 0xEB
-          HighLevelOpcode.set 5 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 5 read8RegisterE write8RegisterE
         , -- 0xEC
-          HighLevelOpcode.set 5 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 5 read8RegisterH write8RegisterH
         , -- 0xED
-          HighLevelOpcode.set 5 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 5 read8RegisterL write8RegisterL
         , -- 0xEE
-          HighLevelOpcode.set 5 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 5 read8IndirectHL write8IndirectHL
         , -- 0xEF
-          HighLevelOpcode.set 5 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 5 read8RegisterA write8RegisterA
         , -- 0xF0
-          HighLevelOpcode.set 6 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 6 read8RegisterB write8RegisterB
         , -- 0xF1
-          HighLevelOpcode.set 6 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 6 read8RegisterC write8RegisterC
         , -- 0xF2
-          HighLevelOpcode.set 6 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 6 read8RegisterD write8RegisterD
         , -- 0xF3
-          HighLevelOpcode.set 6 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 6 read8RegisterE write8RegisterE
         , -- 0xF4
-          HighLevelOpcode.set 6 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 6 read8RegisterH write8RegisterH
         , -- 0xF5
-          HighLevelOpcode.set 6 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 6 read8RegisterL write8RegisterL
         , -- 0xF6
-          HighLevelOpcode.set 6 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 6 read8IndirectHL write8IndirectHL
         , -- 0xF7
-          HighLevelOpcode.set 6 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 6 read8RegisterA write8RegisterA
         , -- 0xF8
-          HighLevelOpcode.set 7 CoreEffect.readRegisterB CoreEffect.writeRegisterB
+          HighLevelOpcode.set 7 read8RegisterB write8RegisterB
         , -- 0xF9
-          HighLevelOpcode.set 7 CoreEffect.readRegisterC CoreEffect.writeRegisterC
+          HighLevelOpcode.set 7 read8RegisterC write8RegisterC
         , -- 0xFA
-          HighLevelOpcode.set 7 CoreEffect.readRegisterD CoreEffect.writeRegisterD
+          HighLevelOpcode.set 7 read8RegisterD write8RegisterD
         , -- 0xFB
-          HighLevelOpcode.set 7 CoreEffect.readRegisterE CoreEffect.writeRegisterE
+          HighLevelOpcode.set 7 read8RegisterE write8RegisterE
         , -- 0xFC
-          HighLevelOpcode.set 7 CoreEffect.readRegisterH CoreEffect.writeRegisterH
+          HighLevelOpcode.set 7 read8RegisterH write8RegisterH
         , -- 0xFD
-          HighLevelOpcode.set 7 CoreEffect.readRegisterL CoreEffect.writeRegisterL
+          HighLevelOpcode.set 7 read8RegisterL write8RegisterL
         , -- 0xFE
-          HighLevelOpcode.set 7 readIndirectHL writeIndirectHL
+          HighLevelOpcode.set 7 read8IndirectHL write8IndirectHL
         , -- 0xFF
-          HighLevelOpcode.set 7 CoreEffect.readRegisterA CoreEffect.writeRegisterA
+          HighLevelOpcode.set 7 read8RegisterA write8RegisterA
         ]
-
-
-
--- (HL) reader and writer
-
-
-readIndirectHL : Reader Int
-readIndirectHL =
-    CoreEffect.readRegisterHL |> readMemory8
-
-
-writeIndirectHL : Writer Int
-writeIndirectHL =
-    CoreEffect.readRegisterHL |> writeMemory8
-
-
-
--- (HL+) and (HL-) reader and writer
-
-
-readIndirectHLPostIncrement : Reader Int
-readIndirectHLPostIncrement gameBoy =
-    let
-        hlValue =
-            CPU.readRegisterHL gameBoy.cpu
-
-        updatedCpu =
-            CPU.writeRegisterHL (hlValue + 1) gameBoy.cpu
-    in
-    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPUAndCycles updatedCpu (gameBoy.lastInstructionCycles + 4) gameBoy )
-
-
-readIndirectHLPostDecrement : Reader Int
-readIndirectHLPostDecrement gameBoy =
-    let
-        hlValue =
-            CPU.readRegisterHL gameBoy.cpu
-
-        updatedCpu =
-            CPU.writeRegisterHL (hlValue - 1) gameBoy.cpu
-    in
-    ( MMU.readWord8 gameBoy hlValue, GameBoy.setCPUAndCycles updatedCpu (gameBoy.lastInstructionCycles + 4) gameBoy )
-
-
-writeIndirectHLPostIncrement : Writer Int
-writeIndirectHLPostIncrement value gameBoy =
-    let
-        hlValue =
-            CPU.readRegisterHL gameBoy.cpu
-
-        updatedGameBoy =
-            MMU.writeWord8 hlValue value gameBoy
-
-        updatedCpu =
-            CPU.writeRegisterHL (hlValue + 1) updatedGameBoy.cpu
-    in
-    GameBoy.setCPUAndCycles updatedCpu (updatedGameBoy.lastInstructionCycles + 4) updatedGameBoy
-
-
-writeIndirectHLPostDecrement : Writer Int
-writeIndirectHLPostDecrement value gameBoy =
-    let
-        hlValue =
-            CPU.readRegisterHL gameBoy.cpu
-
-        updatedGameBoy =
-            MMU.writeWord8 hlValue value gameBoy
-
-        updatedCpu =
-            CPU.writeRegisterHL (hlValue - 1) updatedGameBoy.cpu
-    in
-    GameBoy.setCPUAndCycles updatedCpu (updatedGameBoy.lastInstructionCycles + 4) updatedGameBoy
-
-
-
--- Helpers
-
-
-asZeroPageAddress : Reader Int -> Reader Int
-asZeroPageAddress =
-    mapReader addZeroPageOffset
-
-
-addZeroPageOffset : Int -> Int
-addZeroPageOffset value =
-    value + 0xFF00

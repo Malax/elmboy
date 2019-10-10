@@ -14,8 +14,8 @@ import Component.PPU as PPU
 import Component.PPU.Types exposing (PPUInterrupt(..))
 import Component.Timer as Timer
 import Constants
-import CoreEffect
 import Effect exposing (Effect)
+import Effect.Operand
 import GameBoy exposing (GameBoy)
 
 
@@ -173,5 +173,5 @@ performInterrupt : Int -> Int -> Effect
 performInterrupt interruptServiceRoutineAddress modifiedInterruptFlag gameBoy =
     gameBoy
         |> GameBoy.setCPU (CPU.setInterruptData False modifiedInterruptFlag False gameBoy.cpu)
-        |> Opcode.push CoreEffect.readRegisterPC
-        |> CoreEffect.writeRegisterPC interruptServiceRoutineAddress
+        |> Opcode.push Effect.Operand.read16RegisterPC
+        |> Effect.Operand.write16RegisterPC interruptServiceRoutineAddress

@@ -23,7 +23,7 @@ module GameBoy exposing
 
 import Component.APU as APU exposing (APU)
 import Component.CPU as CPU exposing (CPU)
-import Component.Cartridge exposing (Cartridge)
+import Component.Cartridge as Cartridge exposing (Cartridge)
 import Component.Joypad as Joypad exposing (GameBoyButton(..), Joypad)
 import Component.PPU as PPU
 import Component.PPU.GameBoyScreen exposing (GameBoyScreen)
