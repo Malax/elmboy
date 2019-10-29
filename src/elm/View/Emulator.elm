@@ -8,7 +8,7 @@ import Bootstrap.Grid.Row as Row
 import Bootstrap.Utilities.Display as Display
 import Bootstrap.Utilities.Spacing as Spacing
 import GameBoy
-import Html exposing (Html, a, div, em, h1, h4, hr, i, kbd, p, small, span, strong, text)
+import Html exposing (Html, a, div, em, h1, h4, hr, i, kbd, li, p, small, span, strong, text, ul)
 import Html.Attributes exposing (class, href, target)
 import Model exposing (Model)
 import Msg exposing (Msg(..))
@@ -95,9 +95,18 @@ projectDescription =
             ]
         , hr [] []
         , h4 [] [ text "About this Project" ]
-        , p [] [ text "This is an early and work-in-progress version of my side-project which I started out of love for retro games, functional programming and Elm. I always wanted to create my own emulator and this project is the, albeit prelimiary, result. It is the most fun I ever had with a side-project and quite the challenge. Even tough it's unfinished, I already spend a lot of time on the project and wanted to finally get it in the hands of people." ]
-        , p [] [ text "It is not intended to be a very accurate emulator (although it passes Blargg's CPU test suite) nor to support every ROM out there. It is also very slow in it's current form. I plan to continue working on the project, improving compatibility, performance and correctness. The projects ", a [ href "https://github.com/Malax/elmboy/blob/master/README.md", target "_blank" ] [ text "README.md" ], text " has some more technical details about possible improvements. I also have some things in mind about the projects educational value going forward. We will see where it goes in that regard." ]
+        , p [] [ text "This is a work-in-progress version of my side-project which I started out of love for retro games, functional programming and Elm. I always wanted to create my own emulator and this project is the, albeit prelimiary, result. It is the most fun I ever had with a side-project and quite the challenge. Even tough it's unfinished, I already spend a lot of time on the project and wanted to finally get it in the hands of people." ]
+        , p [] [ text "It is not intended to be a very accurate emulator (although it passes Blargg's CPU test suite) nor to support every ROM out there." ]
         , p [] [ text "If you have any questions or just want to talk about all things Game Boy, functional programming or Elm, you can find me as ", em [] [ text "Malax" ], text " on the Elm Slack, on Twitter and GitHub." ]
+        , h4 [] [ text "Talk Recordings and Podcasts" ]
+        , p []
+            [ p [] [ text "Since the release of Elmboy, I gave a couple of talks and appeared in a podcast where I talk about this project. If you want to learn more, those resources are your best bet." ]
+            , ul []
+                [ li [] [ a [ href "https://www.youtube.com/watch?v=vI30OvU3QW0" ] [ text "Talk: Oslo Elm Day 2019 - Emulating the Nintendo Game Boy CPU with Elm" ] ]
+                , li [] [ text "Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm (Recording not yet released)" ]
+                , li [] [ a [ href "https://elmtown.simplecast.fm/a-game-boy-emulator-in-elm" ] [ text "Podcast: Elm Town 40 – A Game Boy Emulator in Elm" ] ]
+                ]
+            ]
         ]
 
 
