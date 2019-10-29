@@ -18,6 +18,14 @@ A Nintendo™ Game Boy™ Emulator written in Elm.
 
 **Some games are playable, but the emulator is not yet very accurate. Expect bugs and non-working games.**
 
+## Talk Recordings and Podcasts
+Since the release of Elmboy, I gave a couple of talks and appeared in a podcast where I talk about this project.
+If you want to learn more, those resources are your best bet.
+- [Talk: Oslo Elm Day 2019 - Emulating the Nintendo Game Boy CPU with Elm](https://www.youtube.com/watch?v=vI30OvU3QW0)
+- Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm (Recording not yet released)
+- [Podcast: Elm Town 40 – A Game Boy Emulator in Elm](https://elmtown.simplecast.fm/a-game-boy-emulator-in-elm)
+
+
 ## Why Elm?
 You might think that Elm is a weird technology choice for writing an Emulator, and rightfully so. Emulators are highly stateful programs and their state changes a lot and very fast. With Elm being a purely-functional language everything has to be immutable and state must to be passed around the program. Additionally, running in the browser has its own set of issues, especially in the performance department.
 
