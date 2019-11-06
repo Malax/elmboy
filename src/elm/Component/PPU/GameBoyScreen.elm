@@ -35,8 +35,8 @@ pushPixel pixel (GameBoyScreen batchedPixels pixelsInBuffer buffer) =
         GameBoyScreen batchedPixels updatedPixelsInBuffer updatedBuffer
 
 
-pushPixels : GameBoyScreen -> List Pixel -> GameBoyScreen
-pushPixels screen pixels =
+pushPixels : List Pixel -> GameBoyScreen -> GameBoyScreen
+pushPixels pixels screen =
     List.foldl pushPixel screen pixels
 
 

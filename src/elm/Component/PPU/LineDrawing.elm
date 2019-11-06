@@ -31,7 +31,7 @@ drawLine screenY ({ backgroundPalette, objectPalette0, objectPalette1, screen, s
                 |> Array.toList
                 |> List.map (Pixel.bake backgroundPalette objectPalette0 objectPalette1)
     in
-    PPUTypes.setScreen (GameBoyScreen.pushPixels screen linePixels) ppu
+    PPUTypes.setScreen (GameBoyScreen.pushPixels linePixels screen) ppu
 
 
 {-| Reads an amount of pixels, starting from the given coordinate, from a background map. Windows are technically exactly the same as backgrounds,
