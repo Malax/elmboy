@@ -22,7 +22,7 @@ A Nintendo™ Game Boy™ Emulator written in Elm.
 Since the release of Elmboy, I gave a couple of talks and appeared in a podcast where I talk about this project.
 If you want to learn more, those resources are your best bet.
 - [Talk: Oslo Elm Day 2019 - Emulating the Nintendo Game Boy CPU with Elm](https://www.youtube.com/watch?v=vI30OvU3QW0)
-- Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm (Recording not yet released)
+- [Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm](https://www.youtube.com/watch?v=a52p6ji1WZs)
 - [Podcast: Elm Town 40 – A Game Boy Emulator in Elm](https://elmtown.simplecast.fm/a-game-boy-emulator-in-elm)
 
 
