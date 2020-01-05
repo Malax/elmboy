@@ -103,7 +103,7 @@ projectDescription =
             [ p [] [ text "Since the release of Elmboy, I gave a couple of talks and appeared in a podcast where I talk about this project. If you want to learn more, those resources are your best bet." ]
             , ul []
                 [ li [] [ a [ href "https://www.youtube.com/watch?v=vI30OvU3QW0" ] [ text "Talk: Oslo Elm Day 2019 - Emulating the Nintendo Game Boy CPU with Elm" ] ]
-                , li [] [ text "Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm (Recording not yet released)" ]
+                , li [] [ a [ href "https://www.youtube.com/watch?v=a52p6ji1WZs" ] [ text "Talk: Elm Europe 2019 - Emulating the Nintendo Game Boy Audio Hardware with Elm" ] ]
                 , li [] [ a [ href "https://elmtown.simplecast.fm/a-game-boy-emulator-in-elm" ] [ text "Podcast: Elm Town 40 – A Game Boy Emulator in Elm" ] ]
                 ]
             ]
