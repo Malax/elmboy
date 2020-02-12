@@ -95,7 +95,7 @@ projectDescription =
             ]
         , hr [] []
         , h4 [] [ text "About this Project" ]
-        , p [] [ text "This is a work-in-progress version of my side-project which I started out of love for retro games, functional programming and Elm. I always wanted to create my own emulator and this project is the, albeit prelimiary, result. It is the most fun I ever had with a side-project and quite the challenge. Even tough it's unfinished, I already spend a lot of time on the project and wanted to finally get it in the hands of people." ]
+        , p [] [ text "This is a work-in-progress version of my side-project which I started out of love for retro games, functional programming and Elm. I always wanted to create my own emulator and this project is the, albeit prelimiary, result. It is the most fun I ever had with a side-project and quite the challenge. Even though it's unfinished, I already spend a lot of time on the project and wanted to finally get it in the hands of people." ]
         , p [] [ text "It is not intended to be a very accurate emulator (although it passes Blargg's CPU test suite) nor to support every ROM out there." ]
         , p [] [ text "If you have any questions or just want to talk about all things Game Boy, functional programming or Elm, you can find me as ", em [] [ text "Malax" ], text " on the Elm Slack, on Twitter and GitHub." ]
         , h4 [] [ text "Talk Recordings and Podcasts" ]
