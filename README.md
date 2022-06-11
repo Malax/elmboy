@@ -1,5 +1,4 @@
-# Elmboy 
-[![Build Status](https://travis-ci.org/Malax/elmboy.svg?branch=master)](https://travis-ci.org/Malax/elmboy)
+# Elmboy ![Build Status](https://github.com/Malax/elmboy/actions/workflows/ci.yml/badge.svg)
 
 A Nintendo™ Game Boy™ Emulator written in Elm. 
 
